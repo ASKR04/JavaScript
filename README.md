@@ -14,9 +14,9 @@ Each project in this repository is designed to be useful, documented, and struct
 
 ## Portfolio Progress
 
-| Project | Phase | Date | Engineering evidence |
-| --- | --- | --- | --- |
-| SignalForge | Foundation | 2026-08-10 | React/TypeScript architecture, responsive dashboard, typed domain model, and Mermaid documentation |
-| SignalForge | Editable workspace | 2026-08-10 | Immutable state transitions, versioned browser persistence, runtime data guards, accessible form controls, and Vitest coverage |
+| Project | Phase | Date | Engineering evidence | Review |
+| --- | --- | --- | --- | --- |
+| SignalForge | Foundation | 2026-08-10 | React/TypeScript architecture, responsive dashboard, typed domain model, and Mermaid documentation | Merged on `main` |
+| SignalForge | Editable workspace | 2026-08-10 | Immutable state transitions, versioned browser persistence, runtime data guards, accessible form controls, and Vitest coverage | [PR #1](https://github.com/ASKR04/JavaScript/pull/1) |
 
 See the [SignalForge architecture notes](./signalforge/docs/architecture.md) for the current component and data flow diagrams.
