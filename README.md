@@ -1,56 +1,99 @@
-# Developer Project Lab
+# SignalForge
 
-This repository is a weekly portfolio-building workspace. Each project is planned, built, documented, verified, and committed like production software, with one meaningful progress commit per scheduled work session.
+SignalForge is a local-first planning dashboard for developers who want to turn project ideas into well-structured, portfolio-ready software. It helps connect the parts that usually live in separate places: product purpose, feature scope, architecture decisions, implementation progress, commit notes, and final project storytelling.
 
-## Current Proposal: SignalForge
+The goal is simple: help a developer build projects with enough clarity that the code, documentation, and Git history all explain the same engineering story.
 
-SignalForge is an original project-planning and execution dashboard for software engineers who want their GitHub activity to tell a stronger story. Instead of only tracking tasks, it connects a project idea to architecture decisions, daily commits, feature proof, test status, and a final portfolio narrative.
+## Problem
 
-The first week will build SignalForge as a polished front-end application with local-first data. Later weeks can extend it with backend persistence, GitHub integration, AI-assisted project scoring, exportable README generation, and analytics.
+Many portfolio projects start with energy but lose shape over time. Requirements drift, architecture decisions are forgotten, commit messages become random, and the final README often gets written after the project is already finished.
 
-## Why This Project Is Useful
+SignalForge treats documentation and execution as part of the same workflow. A project begins with a clear brief, grows through feature planning and decision records, and ends with a useful summary that can be reused in a GitHub README, resume note, or portfolio case study.
 
-- Helps plan portfolio projects before writing code.
-- Tracks daily engineering progress in a way that maps naturally to Git commits.
-- Produces recruiter-friendly summaries, diagrams, feature evidence, and retrospectives.
-- Can later become a real personal operating system for building advanced GitHub projects.
+## Core Features
 
-## Proposed Tools
+- Project brief for defining the problem, audience, value, and success criteria.
+- Roadmap workspace for breaking work into focused milestones.
+- Feature board for tracking planned, active, blocked, and completed work.
+- Commit planner for shaping daily engineering progress into meaningful commit messages.
+- Architecture decision records for capturing technical choices and tradeoffs.
+- Portfolio summary for collecting highlights, proof points, and final documentation notes.
 
-- React with TypeScript for a maintainable front-end codebase.
-- Vite for fast local development and production builds.
-- CSS modules or modern plain CSS for a custom, professional UI.
-- LocalStorage or IndexedDB for the first local-first version.
-- Vitest for focused unit tests once application logic is introduced.
-- Mermaid diagrams in documentation for architecture and workflow explanation.
-- Optional later backend: Node.js and Express or a lightweight API service if persistence, authentication, or GitHub sync becomes useful.
-
-## Week 1 Plan
-
-| Day | Goal | Expected Commit |
-| --- | --- | --- |
-| 1 | Approve project, scaffold app, document architecture, create initial UI shell | `docs: propose SignalForge architecture` or `chore: scaffold signalforge app` |
-| 2 | Build project workspace dashboard and weekly roadmap model | `feat(signalforge): add roadmap dashboard` |
-| 3 | Add feature cards, status transitions, and daily commit planning | `feat(signalforge): add commit planning workflow` |
-| 4 | Add architecture decision records and diagram preview content | `feat(signalforge): add architecture decision tracking` |
-| 5 | Add validation, empty states, responsive polish, and persistence | `feat(signalforge): persist project workspace state` |
-| 6 | Add tests, sample data, keyboard-friendly workflows, and UI refinement | `test(signalforge): cover planning state logic` |
-| 7 | Finalize documentation, polish UX, verify build, and write retrospective | `docs(signalforge): add week one retrospective` |
-
-## Architecture Overview
+## Architecture
 
 ```mermaid
 flowchart LR
-    User["Engineer"] --> UI["SignalForge UI"]
-    UI --> State["Project State Store"]
-    State --> Storage["Browser Storage"]
-    State --> Views["Dashboard, Roadmap, Decisions, Commit Plan"]
-    Views --> Export["Portfolio Summary and README Notes"]
+    User["Developer"] --> App["SignalForge App"]
+    App --> Dashboard["Dashboard"]
+    App --> Roadmap["Roadmap"]
+    App --> Decisions["Architecture Decisions"]
+    App --> Summary["Portfolio Summary"]
+    Dashboard --> Store["Project State"]
+    Roadmap --> Store
+    Decisions --> Store
+    Summary --> Store
+    Store --> Persistence["Local Persistence"]
+    Persistence --> Browser["Browser Storage"]
 ```
 
-## Approval Status
+## Data Flow
 
-Status: pending approval.
+```mermaid
+sequenceDiagram
+    participant Developer
+    participant Interface
+    participant State
+    participant Storage
 
-Before implementation begins, review the proposal above. Once approved, the first build step will scaffold the application and create the initial professional UI shell.
+    Developer->>Interface: updates a project plan
+    Interface->>State: applies a typed state change
+    State->>State: validates project structure
+    State->>Storage: saves the workspace locally
+    State-->>Interface: returns the updated project view
+```
+
+## Tech Stack
+
+- React for the user interface.
+- TypeScript for predictable application state and safer refactoring.
+- Vite for development and build tooling.
+- CSS for a custom responsive interface.
+- Browser storage for the first local-first version.
+- Vitest for state and utility tests as the app logic grows.
+
+## Planned Application Structure
+
+```text
+src/
+  app/
+    App.tsx
+    routes.ts
+  components/
+    AppShell.tsx
+    StatusBadge.tsx
+    Toolbar.tsx
+  features/
+    dashboard/
+    roadmap/
+    decisions/
+    summary/
+  lib/
+    persistence.ts
+    project-state.ts
+    validation.ts
+  styles/
+    global.css
+```
+
+## Design Principles
+
+- Keep the interface useful on day one, even before external integrations exist.
+- Favor clear project evidence over decorative metrics.
+- Make project planning feel like engineering work, not administration.
+- Keep state local-first so the app remains fast and private.
+- Document important tradeoffs as the product evolves.
+
+## Status
+
+SignalForge is in the architecture and scaffolding stage. The next step is to build the initial application shell with navigation, sample project data, and the first dashboard view.
 
