@@ -95,5 +95,4 @@ src/
 
 ## Status
 
-SignalForge is in the architecture and scaffolding stage. The next step is to build the initial application shell with navigation, sample project data, and the first dashboard view.
-
+SignalForge has an initial application shell with navigation, sample project data, a dashboard, roadmap, architecture decision view, and portfolio summary view. The next step is to make the workspace editable and persist changes locally.
