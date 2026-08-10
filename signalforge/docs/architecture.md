@@ -1,4 +1,4 @@
-# SignalForge Architecture Proposal
+# SignalForge Architecture
 
 ## Product Summary
 
@@ -52,6 +52,25 @@ sequenceDiagram
     Store-->>View: render updated planning state
 ```
 
+## Implemented Persistence Boundary
+
+```mermaid
+flowchart LR
+    Controls["Brief and status controls"] --> Actions["Pure immutable state helpers"]
+    Actions --> React["React workspace state"]
+    React --> Debounce["300 ms autosave boundary"]
+    Debounce --> Snapshot["Versioned JSON snapshot"]
+    Snapshot --> LocalStorage["Browser localStorage"]
+    LocalStorage --> Guard["Runtime schema guard"]
+    Guard -->|valid| React
+    Guard -->|invalid or outdated| Defaults["Typed sample workspace"]
+    Defaults --> React
+```
+
+The persistence adapter is deliberately small and browser-native. Each snapshot includes a schema version and timestamp. Loading is defensive: invalid JSON, outdated versions, or malformed project records are ignored rather than allowed to break application startup. The adapter accepts narrow storage interfaces so its behavior can be tested without a browser environment.
+
+State changes are implemented as pure functions keyed by stable feature and roadmap IDs. This prevents accidental mutation, makes status changes predictable, and keeps the UI independent from future storage adapters.
+
 ## Proposed Folder Structure
 
 ```text
@@ -87,7 +106,20 @@ signalforge/
 - Add tests for state transitions and validation once the state model exists.
 - Keep documentation current with each major feature commit.
 
-## Approval Gate
+## Current Implementation Map
 
-Implementation should begin only after the project proposal is approved. The first implementation commit should scaffold the app and create the initial layout, sample state, and navigation.
+```text
+src/
+  app/App.tsx                         # workspace ownership and autosave lifecycle
+  components/WorkspaceToolbar.tsx    # save feedback and reset control
+  features/dashboard/                # brief editor and feature workflow controls
+  features/roadmap/Roadmap.tsx       # milestone workflow controls
+  lib/project-state.ts                # typed models and starter workspace
+  lib/workspace-state.ts              # immutable state transitions
+  lib/persistence.ts                  # versioned storage adapter and guards
+  lib/workspace-state.test.ts         # transition and persistence tests
+```
 
+## Approval and Delivery State
+
+The proposal was followed by the initial implementation and responsive application scaffold. Work now remains within the approved SignalForge scope. The next planned increment is creation and removal of custom features and milestones with input validation.

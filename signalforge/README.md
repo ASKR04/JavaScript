@@ -15,6 +15,7 @@ SignalForge treats documentation and execution as part of the same workflow. A p
 - Project brief for defining the problem, audience, value, and success criteria.
 - Roadmap workspace for breaking work into focused milestones.
 - Feature board for tracking planned, active, blocked, and completed work.
+- Versioned local persistence with autosave feedback and safe sample reset.
 - Commit planner for shaping daily engineering progress into meaningful commit messages.
 - Architecture decision records for capturing technical choices and tradeoffs.
 - Portfolio summary for collecting highlights, proof points, and final documentation notes.
@@ -95,4 +96,13 @@ src/
 
 ## Status
 
-SignalForge has an initial application shell with navigation, sample project data, a dashboard, roadmap, architecture decision view, and portfolio summary view. The next step is to make the workspace editable and persist changes locally.
+SignalForge now has an editable project brief, feature and milestone status controls, debounced browser persistence, save-state feedback, and a safe reset flow. Runtime guards reject malformed or outdated saved data, while pure state helpers keep updates testable and immutable.
+
+The next proof point is custom feature and milestone creation, including validation for useful titles and outcomes.
+
+## Progress Log
+
+| Phase | Date | Completed | Verification |
+| --- | --- | --- | --- |
+| Foundation | 2026-08-10 | Proposed the architecture, scaffolded the React/TypeScript app, and built the responsive dashboard views. | Production build |
+| Editable workspace | 2026-08-10 | Added editable brief fields, workflow status controls, versioned local autosave, reset behavior, and state/persistence tests. | 4 Vitest tests, production build, desktop and 390px responsive checks |

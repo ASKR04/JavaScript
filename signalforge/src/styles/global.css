@@ -22,6 +22,18 @@ body {
   margin: 0;
 }
 
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+select {
+  cursor: pointer;
+}
+
 a {
   color: inherit;
 }
@@ -83,6 +95,62 @@ a {
   gap: 24px;
   align-content: start;
   padding: 32px;
+}
+
+.workspace-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  width: min(100%, 1120px);
+  padding: 4px 2px;
+}
+
+.save-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0 0;
+  color: #536171;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.save-status span {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #0f766e;
+}
+
+.save-status-saving span {
+  background: #d97706;
+}
+
+.save-status-error span {
+  background: #b42318;
+}
+
+.secondary-button {
+  padding: 10px 14px;
+  border: 1px solid #cfc4b5;
+  border-radius: 7px;
+  color: #273244;
+  background: #fffdf9;
+  font-weight: 800;
+}
+
+.secondary-button:hover {
+  border-color: #0f766e;
+  color: #0f766e;
+}
+
+.secondary-button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid rgb(15 118 110 / 0.22);
+  outline-offset: 2px;
 }
 
 .panel {
@@ -172,6 +240,76 @@ a {
 .feature-card,
 .decision-card {
   padding: 18px;
+}
+
+.feature-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.feature-card .status-control {
+  margin-top: auto;
+}
+
+.brief-editor {
+  padding-top: 8px;
+  border-top: 1px solid #e7ded1;
+}
+
+.compact-heading {
+  margin: 20px 0 18px;
+}
+
+.compact-heading h3 {
+  margin: 7px 0 0;
+  font-size: 1.35rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.form-grid label,
+.status-control {
+  display: grid;
+  gap: 7px;
+  color: #273244;
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.full-field {
+  grid-column: 1 / -1;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  border: 1px solid #cfc4b5;
+  border-radius: 7px;
+  color: #17202f;
+  background: #fff;
+}
+
+input,
+select {
+  min-height: 44px;
+  padding: 9px 11px;
+}
+
+textarea {
+  min-height: 92px;
+  padding: 11px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.roadmap-status-control {
+  max-width: 220px;
+  margin-top: 14px;
 }
 
 .status-badge {
@@ -302,8 +440,17 @@ a {
   }
 
   .timeline-item,
-  .summary-list div {
+  .summary-list div,
+  .form-grid {
     grid-template-columns: 1fr;
   }
-}
 
+  .full-field {
+    grid-column: auto;
+  }
+
+  .workspace-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
