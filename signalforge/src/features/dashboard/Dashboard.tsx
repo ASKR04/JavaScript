@@ -3,18 +3,27 @@ import type {
   WorkStatus,
 } from "../../lib/project-state";
 import { workStatuses } from "../../lib/project-state";
-import type { ProjectBriefPatch } from "../../lib/workspace-state";
+import type {
+  ProjectBriefPatch,
+  WorkItemDraft,
+  WorkItemErrors,
+} from "../../lib/workspace-state";
 import { StatusBadge } from "../../components/StatusBadge";
+import { WorkItemComposer } from "../../components/WorkItemComposer";
 import { ProjectBriefEditor } from "./ProjectBriefEditor";
 
 type DashboardProps = {
   workspace: ProjectWorkspace;
+  onFeatureCreate: (draft: WorkItemDraft) => WorkItemErrors;
+  onFeatureRemove: (featureId: string) => void;
   onBriefChange: (patch: ProjectBriefPatch) => void;
   onFeatureStatusChange: (featureId: string, status: WorkStatus) => void;
 };
 
 export function Dashboard({
   workspace,
+  onFeatureCreate,
+  onFeatureRemove,
   onBriefChange,
   onFeatureStatusChange,
 }: DashboardProps) {
@@ -48,7 +57,17 @@ export function Dashboard({
       <div className="feature-grid">
         {workspace.features.map((feature) => (
           <article className="feature-card" key={feature.id}>
-            <StatusBadge status={feature.status} />
+            <div className="card-toolbar">
+              <StatusBadge status={feature.status} />
+              <button
+                className="text-button danger-button"
+                type="button"
+                onClick={() => onFeatureRemove(feature.id)}
+                aria-label={`Remove feature ${feature.title}`}
+              >
+                Remove
+              </button>
+            </div>
             <h3>{feature.title}</h3>
             <p>{feature.description}</p>
             <label className="status-control">
@@ -72,6 +91,15 @@ export function Dashboard({
           </article>
         ))}
       </div>
+
+      <WorkItemComposer
+        title="Plan another product capability"
+        description="Capture a distinct capability and the value it should deliver. New features start in the planned state."
+        titleLabel="Feature title"
+        detailsLabel="Feature outcome"
+        submitLabel="Add feature"
+        onSubmit={onFeatureCreate}
+      />
 
       <ProjectBriefEditor workspace={workspace} onChange={onBriefChange} />
     </section>

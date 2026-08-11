@@ -71,6 +71,23 @@ The persistence adapter is deliberately small and browser-native. Each snapshot 
 
 State changes are implemented as pure functions keyed by stable feature and roadmap IDs. This prevents accidental mutation, makes status changes predictable, and keeps the UI independent from future storage adapters.
 
+## Plan Composition Flow
+
+```mermaid
+flowchart LR
+    Form["Feature or milestone form"] --> Validation["Trim, length, and duplicate validation"]
+    Validation -->|invalid| Errors["Inline accessible errors"]
+    Validation -->|valid| Mutation["Pure immutable collection update"]
+    Mutation --> UUID["Stable browser-generated UUID"]
+    UUID --> State["React workspace state"]
+    Remove["Confirmed removal"] --> Mutation
+    Mutation --> Resequence["Roadmap resequencing"]
+    Resequence --> State
+    State --> Autosave["Existing local autosave"]
+```
+
+Feature and milestone forms share a focused composer component while domain validation remains framework-independent. Mutations return validation errors alongside the next workspace so invalid changes never reach persistence. Milestone removal also derives new display sequences from list order, avoiding gaps without changing stable record IDs.
+
 ## Proposed Folder Structure
 
 ```text
@@ -112,6 +129,7 @@ signalforge/
 src/
   app/App.tsx                         # workspace ownership and autosave lifecycle
   components/WorkspaceToolbar.tsx    # save feedback and reset control
+  components/WorkItemComposer.tsx    # reusable accessible creation form
   features/dashboard/                # brief editor and feature workflow controls
   features/roadmap/Roadmap.tsx       # milestone workflow controls
   lib/project-state.ts                # typed models and starter workspace
@@ -122,4 +140,4 @@ src/
 
 ## Approval and Delivery State
 
-The proposal was followed by the initial implementation and responsive application scaffold. Work now remains within the approved SignalForge scope. The next planned increment is creation and removal of custom features and milestones with input validation.
+The proposal was followed by the initial implementation and responsive application scaffold. Work now remains within the approved SignalForge scope. The current increment adds creation and removal of custom features and milestones with input validation. The next planned increment is editable architecture decisions and portable project-story export.

@@ -145,6 +145,23 @@ a {
   color: #0f766e;
 }
 
+.primary-button {
+  justify-self: start;
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid #0f766e;
+  border-radius: 7px;
+  color: #fff;
+  background: #0f766e;
+  font-weight: 800;
+}
+
+.primary-button:hover {
+  background: #115e59;
+}
+
+.primary-button:focus-visible,
+.text-button:focus-visible,
 .secondary-button:focus-visible,
 input:focus-visible,
 select:focus-visible,
@@ -251,6 +268,72 @@ textarea:focus-visible {
   margin-top: auto;
 }
 
+.card-toolbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.text-button {
+  padding: 3px 0;
+  border: 0;
+  color: #536171;
+  background: transparent;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.danger-button:hover {
+  color: #b42318;
+}
+
+.work-item-composer {
+  display: grid;
+  gap: 18px;
+  padding: 22px;
+  border: 1px dashed #b9ada0;
+  border-radius: 8px;
+  background: #f7f3ec;
+}
+
+.work-item-composer .compact-heading {
+  margin: 0;
+}
+
+.work-item-composer .compact-heading p:last-child {
+  margin: 8px 0 0;
+}
+
+.composer-fields {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.7fr) minmax(260px, 1.3fr);
+  gap: 18px;
+}
+
+.composer-fields label {
+  display: grid;
+  align-content: start;
+  gap: 7px;
+  color: #273244;
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.composer-fields textarea {
+  min-height: 80px;
+}
+
+.field-error {
+  color: #b42318;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+[aria-invalid="true"] {
+  border-color: #b42318;
+}
+
 .brief-editor {
   padding-top: 8px;
   border-top: 1px solid #e7ded1;
@@ -348,6 +431,10 @@ textarea {
   gap: 14px;
 }
 
+.timeline + .work-item-composer {
+  margin-top: 22px;
+}
+
 .timeline-item {
   display: grid;
   grid-template-columns: 52px minmax(0, 1fr);
@@ -441,7 +528,8 @@ textarea {
 
   .timeline-item,
   .summary-list div,
-  .form-grid {
+  .form-grid,
+  .composer-fields {
     grid-template-columns: 1fr;
   }
 

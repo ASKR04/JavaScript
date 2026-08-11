@@ -15,6 +15,7 @@ SignalForge treats documentation and execution as part of the same workflow. A p
 - Project brief for defining the problem, audience, value, and success criteria.
 - Roadmap workspace for breaking work into focused milestones.
 - Feature board for tracking planned, active, blocked, and completed work.
+- Validated feature and milestone creation with safe, confirmed removal.
 - Versioned local persistence with autosave feedback and safe sample reset.
 - Commit planner for shaping daily engineering progress into meaningful commit messages.
 - Architecture decision records for capturing technical choices and tradeoffs.
@@ -96,9 +97,9 @@ src/
 
 ## Status
 
-SignalForge now has an editable project brief, feature and milestone status controls, debounced browser persistence, save-state feedback, and a safe reset flow. Runtime guards reject malformed or outdated saved data, while pure state helpers keep updates testable and immutable.
+SignalForge now supports an editable project brief, custom feature and milestone creation, status controls, confirmed removal, debounced browser persistence, save-state feedback, and a safe reset flow. Creation forms reject incomplete and duplicate plans, while roadmap numbering stays coherent after removals.
 
-The next proof point is custom feature and milestone creation, including validation for useful titles and outcomes.
+The next proof point is architecture decision creation and a portable project-story export.
 
 ## Progress Log
 
@@ -106,3 +107,4 @@ The next proof point is custom feature and milestone creation, including validat
 | --- | --- | --- | --- | --- |
 | Foundation | 2026-08-10 | Proposed the architecture, scaffolded the React/TypeScript app, and built the responsive dashboard views. | Production build | Merged on `main` |
 | Editable workspace | 2026-08-10 | Added editable brief fields, workflow status controls, versioned local autosave, reset behavior, and state/persistence tests. | 4 Vitest tests, production build, desktop and 390px responsive checks | [PR #1](https://github.com/ASKR04/JavaScript/pull/1) |
+| Plan composition | 2026-08-11 | Added validated feature and milestone creation, stable IDs, confirmed removal, and automatic roadmap resequencing. | 6 Vitest tests, production build, 1440px desktop and 390px responsive checks | [PR #1](https://github.com/ASKR04/JavaScript/pull/1) |

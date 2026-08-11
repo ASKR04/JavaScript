@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+import { WorkspaceToolbar } from "../components/WorkspaceToolbar";
 import { Dashboard } from "../features/dashboard/Dashboard";
 import { Decisions } from "../features/decisions/Decisions";
 import { Roadmap } from "../features/roadmap/Roadmap";
@@ -9,6 +11,10 @@ import {
   saveWorkspace,
 } from "../lib/persistence";
 import {
+  addFeature,
+  addRoadmapItem,
+  removeFeature,
+  removeRoadmapItem,
   updateFeatureStatus,
   updateProjectBrief,
   updateRoadmapStatus,
@@ -73,6 +79,26 @@ export function App() {
         />
         <Dashboard
           workspace={workspace}
+          onFeatureCreate={(draft) => {
+            const result = addFeature(workspace, draft);
+            if (Object.keys(result.errors).length === 0) {
+              setWorkspace(result.workspace);
+            }
+            return result.errors;
+          }}
+          onFeatureRemove={(featureId) => {
+            const feature = workspace.features.find(
+              (item) => item.id === featureId,
+            );
+            if (
+              feature &&
+              window.confirm(
+                `Remove the feature "${feature.title}" from this workspace?`,
+              )
+            ) {
+              setWorkspace((current) => removeFeature(current, featureId));
+            }
+          }}
           onBriefChange={(patch) =>
             setWorkspace((current) => updateProjectBrief(current, patch))
           }
@@ -84,6 +110,24 @@ export function App() {
         />
         <Roadmap
           items={workspace.roadmap}
+          onCreate={(draft) => {
+            const result = addRoadmapItem(workspace, draft);
+            if (Object.keys(result.errors).length === 0) {
+              setWorkspace(result.workspace);
+            }
+            return result.errors;
+          }}
+          onRemove={(roadmapId) => {
+            const milestone = workspace.roadmap.find(
+              (item) => item.id === roadmapId,
+            );
+            if (
+              milestone &&
+              window.confirm(`Remove the milestone "${milestone.title}"?`)
+            ) {
+              setWorkspace((current) => removeRoadmapItem(current, roadmapId));
+            }
+          }}
           onStatusChange={(roadmapId, status) =>
             setWorkspace((current) =>
               updateRoadmapStatus(current, roadmapId, status),
@@ -96,5 +140,3 @@ export function App() {
     </main>
   );
 }
-import { useEffect, useState } from "react";
-import { WorkspaceToolbar } from "../components/WorkspaceToolbar";

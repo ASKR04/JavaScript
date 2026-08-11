@@ -49,7 +49,7 @@ export const projectWorkspace: ProjectWorkspace = {
   value:
     "SignalForge keeps project purpose, feature scope, technical decisions, and commit evidence visible in one focused workspace.",
   nextProofPoint:
-    "Add feature and milestone creation so users can shape the workspace beyond the starter plan.",
+    "Add architecture decision creation and a portable project-story export.",
   features: [
     {
       id: "project-brief",

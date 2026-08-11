@@ -6,6 +6,10 @@ import {
   saveWorkspace,
 } from "./persistence";
 import {
+  addFeature,
+  addRoadmapItem,
+  removeFeature,
+  removeRoadmapItem,
   updateFeatureStatus,
   updateProjectBrief,
   updateRoadmapStatus,
@@ -58,6 +62,65 @@ describe("workspace state", () => {
     expect(withRoadmapBlocked.features[0].status).toBe("blocked");
     expect(withRoadmapBlocked.roadmap[1].status).toBe("blocked");
     expect(workspace.features[0].status).toBe("complete");
+  });
+
+  it("adds trimmed features and rejects duplicate or incomplete drafts", () => {
+    const workspace = createDefaultWorkspace();
+    const added = addFeature(
+      workspace,
+      {
+        title: "  Release checklist  ",
+        details: "  Track the evidence required before launch.  ",
+      },
+      "release-checklist",
+    );
+
+    expect(added.errors).toEqual({});
+    expect(added.workspace.features.at(-1)).toEqual({
+      id: "release-checklist",
+      title: "Release checklist",
+      description: "Track the evidence required before launch.",
+      status: "planned",
+    });
+    expect(workspace.features).toHaveLength(4);
+
+    const invalid = addFeature(workspace, {
+      title: "PROJECT BRIEF",
+      details: "Too short",
+    });
+    expect(invalid.workspace).toBe(workspace);
+    expect(invalid.errors.title).toContain("not already");
+    expect(invalid.errors.details).toContain("12 characters");
+  });
+
+  it("adds milestones and resequences the roadmap after removal", () => {
+    const workspace = createDefaultWorkspace();
+    const added = addRoadmapItem(
+      workspace,
+      {
+        title: "Responsive audit",
+        details: "Verify the primary workflows at mobile and desktop sizes.",
+      },
+      "responsive-audit",
+    );
+
+    expect(added.workspace.roadmap.at(-1)?.sequence).toBe("05");
+
+    const withoutSecondItem = removeRoadmapItem(
+      added.workspace,
+      "editable-planning",
+    );
+    expect(withoutSecondItem.roadmap.map((item) => item.sequence)).toEqual([
+      "01",
+      "02",
+      "03",
+      "04",
+    ]);
+
+    const withoutFeature = removeFeature(workspace, "commit-planner");
+    expect(withoutFeature.features.map((feature) => feature.id)).not.toContain(
+      "commit-planner",
+    );
   });
 });
 
