@@ -11,10 +11,13 @@ import {
   saveWorkspace,
 } from "../lib/persistence";
 import {
+  addArchitectureDecision,
   addFeature,
   addRoadmapItem,
+  removeArchitectureDecision,
   removeFeature,
   removeRoadmapItem,
+  updateArchitectureDecision,
   updateFeatureStatus,
   updateProjectBrief,
   updateRoadmapStatus,
@@ -134,7 +137,40 @@ export function App() {
             )
           }
         />
-        <Decisions decisions={workspace.decisions} />
+        <Decisions
+          decisions={workspace.decisions}
+          onCreate={(draft) => {
+            const result = addArchitectureDecision(workspace, draft);
+            if (Object.keys(result.errors).length === 0) {
+              setWorkspace(result.workspace);
+            }
+            return result.errors;
+          }}
+          onRemove={(decisionId) => {
+            const decision = workspace.decisions.find(
+              (item) => item.id === decisionId,
+            );
+            if (
+              decision &&
+              window.confirm(`Remove architecture decision ${decision.id}?`)
+            ) {
+              setWorkspace((current) =>
+                removeArchitectureDecision(current, decisionId),
+              );
+            }
+          }}
+          onUpdate={(decisionId, draft) => {
+            const result = updateArchitectureDecision(
+              workspace,
+              decisionId,
+              draft,
+            );
+            if (Object.keys(result.errors).length === 0) {
+              setWorkspace(result.workspace);
+            }
+            return result.errors;
+          }}
+        />
         <Summary workspace={workspace} />
       </section>
     </main>

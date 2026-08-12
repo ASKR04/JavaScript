@@ -88,6 +88,24 @@ flowchart LR
 
 Feature and milestone forms share a focused composer component while domain validation remains framework-independent. Mutations return validation errors alongside the next workspace so invalid changes never reach persistence. Milestone removal also derives new display sequences from list order, avoiding gaps without changing stable record IDs.
 
+## Architecture Decision Workflow
+
+```mermaid
+flowchart LR
+    Draft["Decision draft"] --> Rules["Trim, length, and duplicate rules"]
+    Rules -->|invalid| Feedback["Field-level accessible feedback"]
+    Rules -->|valid| Record["Immutable ADR record"]
+    Record --> Sequence["Next human-readable ADR sequence"]
+    Sequence --> Workspace["React workspace state"]
+    Edit["Focused card edit"] --> Rules
+    Remove["Confirmed removal"] --> Workspace
+    Workspace --> Autosave["Versioned local autosave"]
+```
+
+Architecture decisions use the same pure mutation boundary as features and milestones, but retain their domain-specific fields: title, context, and consequence. Creation derives the next `ADR-###` identifier from the active log, while edits preserve the record identifier. Validation excludes the current record during edits so a title may remain unchanged, while still preventing ambiguous duplicate decisions elsewhere in the log.
+
+Each decision card keeps an isolated draft until the user saves it. This prevents incomplete typing from entering shared workspace state and provides a clear boundary for validation feedback. Successful updates then flow through the existing debounced persistence adapter without adding browser concerns to the decision UI.
+
 ## Proposed Folder Structure
 
 ```text
@@ -132,6 +150,7 @@ src/
   components/WorkItemComposer.tsx    # reusable accessible creation form
   features/dashboard/                # brief editor and feature workflow controls
   features/roadmap/Roadmap.tsx       # milestone workflow controls
+  features/decisions/Decisions.tsx   # validated ADR creation and editing
   lib/project-state.ts                # typed models and starter workspace
   lib/workspace-state.ts              # immutable state transitions
   lib/persistence.ts                  # versioned storage adapter and guards
@@ -140,4 +159,4 @@ src/
 
 ## Approval and Delivery State
 
-The proposal was followed by the initial implementation and responsive application scaffold. Work now remains within the approved SignalForge scope. The current increment adds creation and removal of custom features and milestones with input validation. The next planned increment is editable architecture decisions and portable project-story export.
+The proposal was followed by the initial implementation and responsive application scaffold. Work remains within the approved SignalForge scope. The current increment adds validated architecture decision creation, editing, and removal while preserving the local-first state boundary. The next planned increment is a portable project-story export.

@@ -1,4 +1,5 @@
 import type {
+  ArchitectureDecision,
   Feature,
   ProjectWorkspace,
   RoadmapItem,
@@ -15,6 +16,19 @@ export type WorkItemErrors = Partial<Record<keyof WorkItemDraft, string>>;
 export type WorkspaceMutationResult = {
   workspace: ProjectWorkspace;
   errors: WorkItemErrors;
+};
+
+export type DecisionDraft = {
+  title: string;
+  context: string;
+  impact: string;
+};
+
+export type DecisionErrors = Partial<Record<keyof DecisionDraft, string>>;
+
+export type DecisionMutationResult = {
+  workspace: ProjectWorkspace;
+  errors: DecisionErrors;
 };
 
 export type ProjectBriefPatch = Partial<
@@ -85,6 +99,50 @@ export function validateWorkItemDraft(
 
 function hasErrors(errors: WorkItemErrors): boolean {
   return Object.keys(errors).length > 0;
+}
+
+export function validateDecisionDraft(
+  draft: DecisionDraft,
+  existingTitles: string[],
+): DecisionErrors {
+  const title = draft.title.trim();
+  const context = draft.context.trim();
+  const impact = draft.impact.trim();
+  const errors: DecisionErrors = {};
+
+  if (title.length < 3) {
+    errors.title = "Use at least 3 characters for a useful decision title.";
+  } else if (
+    existingTitles.some(
+      (existingTitle) =>
+        existingTitle.trim().toLowerCase() === title.toLowerCase(),
+    )
+  ) {
+    errors.title = "Choose a title that is not already in the decision log.";
+  }
+
+  if (context.length < 12) {
+    errors.context = "Explain the decision context in at least 12 characters.";
+  }
+
+  if (impact.length < 12) {
+    errors.impact = "Describe the consequence in at least 12 characters.";
+  }
+
+  return errors;
+}
+
+function hasDecisionErrors(errors: DecisionErrors): boolean {
+  return Object.keys(errors).length > 0;
+}
+
+function nextDecisionId(decisions: ArchitectureDecision[]): string {
+  const highestSequence = decisions.reduce((highest, decision) => {
+    const match = /^ADR-(\d+)$/i.exec(decision.id);
+    return match ? Math.max(highest, Number(match[1])) : highest;
+  }, 0);
+
+  return `ADR-${String(highestSequence + 1).padStart(3, "0")}`;
 }
 
 function createWorkItemId(): string {
@@ -165,5 +223,74 @@ export function removeRoadmapItem(
         ...item,
         sequence: String(index + 1).padStart(2, "0"),
       })),
+  };
+}
+
+export function addArchitectureDecision(
+  workspace: ProjectWorkspace,
+  draft: DecisionDraft,
+): DecisionMutationResult {
+  const errors = validateDecisionDraft(
+    draft,
+    workspace.decisions.map((decision) => decision.title),
+  );
+  if (hasDecisionErrors(errors)) return { workspace, errors };
+
+  const decision: ArchitectureDecision = {
+    id: nextDecisionId(workspace.decisions),
+    title: draft.title.trim(),
+    context: draft.context.trim(),
+    impact: draft.impact.trim(),
+  };
+
+  return {
+    workspace: {
+      ...workspace,
+      decisions: [...workspace.decisions, decision],
+    },
+    errors: {},
+  };
+}
+
+export function updateArchitectureDecision(
+  workspace: ProjectWorkspace,
+  decisionId: string,
+  draft: DecisionDraft,
+): DecisionMutationResult {
+  const errors = validateDecisionDraft(
+    draft,
+    workspace.decisions
+      .filter((decision) => decision.id !== decisionId)
+      .map((decision) => decision.title),
+  );
+  if (hasDecisionErrors(errors)) return { workspace, errors };
+
+  return {
+    workspace: {
+      ...workspace,
+      decisions: workspace.decisions.map((decision) =>
+        decision.id === decisionId
+          ? {
+              ...decision,
+              title: draft.title.trim(),
+              context: draft.context.trim(),
+              impact: draft.impact.trim(),
+            }
+          : decision,
+      ),
+    },
+    errors: {},
+  };
+}
+
+export function removeArchitectureDecision(
+  workspace: ProjectWorkspace,
+  decisionId: string,
+): ProjectWorkspace {
+  return {
+    ...workspace,
+    decisions: workspace.decisions.filter(
+      (decision) => decision.id !== decisionId,
+    ),
   };
 }

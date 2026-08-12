@@ -459,6 +459,64 @@ textarea {
   gap: 14px;
 }
 
+.decision-editor {
+  display: grid;
+  gap: 14px;
+}
+
+.decision-editor label,
+.decision-composer-fields label {
+  display: grid;
+  gap: 7px;
+  color: #273244;
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.decision-editor textarea {
+  min-height: 112px;
+}
+
+.decision-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.save-confirmation {
+  color: #14613a;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.decision-composer {
+  display: grid;
+  gap: 18px;
+  margin-top: 22px;
+  padding: 22px;
+  border: 1px dashed #b9ada0;
+  border-radius: 8px;
+  background: #f7f3ec;
+}
+
+.decision-composer .compact-heading {
+  margin: 0;
+}
+
+.decision-composer .compact-heading p:last-child {
+  margin: 8px 0 0;
+}
+
+.decision-composer-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.decision-composer-fields .long-field {
+  grid-column: 1 / -1;
+}
+
 .decision-id {
   margin-bottom: 8px;
   color: #0f766e;
@@ -529,11 +587,13 @@ textarea {
   .timeline-item,
   .summary-list div,
   .form-grid,
-  .composer-fields {
+  .composer-fields,
+  .decision-composer-fields {
     grid-template-columns: 1fr;
   }
 
-  .full-field {
+  .full-field,
+  .decision-composer-fields .long-field {
     grid-column: auto;
   }
 

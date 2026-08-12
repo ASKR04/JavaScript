@@ -6,10 +6,13 @@ import {
   saveWorkspace,
 } from "./persistence";
 import {
+  addArchitectureDecision,
   addFeature,
   addRoadmapItem,
+  removeArchitectureDecision,
   removeFeature,
   removeRoadmapItem,
+  updateArchitectureDecision,
   updateFeatureStatus,
   updateProjectBrief,
   updateRoadmapStatus,
@@ -121,6 +124,65 @@ describe("workspace state", () => {
     expect(withoutFeature.features.map((feature) => feature.id)).not.toContain(
       "commit-planner",
     );
+  });
+
+  it("adds a validated architecture decision with a stable sequence", () => {
+    const workspace = createDefaultWorkspace();
+    const added = addArchitectureDecision(workspace, {
+      title: "  Export without a server  ",
+      context: "  Project stories should remain available offline.  ",
+      impact: "  Generate downloadable content in the browser.  ",
+    });
+
+    expect(added.errors).toEqual({});
+    expect(added.workspace.decisions.at(-1)).toEqual({
+      id: "ADR-003",
+      title: "Export without a server",
+      context: "Project stories should remain available offline.",
+      impact: "Generate downloadable content in the browser.",
+    });
+    expect(workspace.decisions).toHaveLength(2);
+
+    const invalid = addArchitectureDecision(workspace, {
+      title: "START LOCAL-FIRST",
+      context: "Too short",
+      impact: "Also short",
+    });
+    expect(invalid.workspace).toBe(workspace);
+    expect(invalid.errors.title).toContain("not already");
+    expect(invalid.errors.context).toContain("12 characters");
+    expect(invalid.errors.impact).toContain("12 characters");
+  });
+
+  it("updates and removes architecture decisions immutably", () => {
+    const workspace = createDefaultWorkspace();
+    const updated = updateArchitectureDecision(workspace, "ADR-002", {
+      title: "Keep domain state typed",
+      context: "Editable planning adds more state transitions over time.",
+      impact: "Pure typed helpers remain independently testable.",
+    });
+
+    expect(updated.errors).toEqual({});
+    expect(updated.workspace.decisions[1].title).toBe(
+      "Keep domain state typed",
+    );
+    expect(workspace.decisions[1].title).toBe("Keep project state typed");
+
+    const duplicate = updateArchitectureDecision(workspace, "ADR-002", {
+      title: "Start local-first",
+      context: "This is valid context for the duplicate title check.",
+      impact: "This is a valid consequence for the same check.",
+    });
+    expect(duplicate.workspace).toBe(workspace);
+    expect(duplicate.errors.title).toContain("not already");
+
+    const removed = removeArchitectureDecision(
+      updated.workspace,
+      "ADR-001",
+    );
+    expect(removed.decisions.map((decision) => decision.id)).toEqual([
+      "ADR-002",
+    ]);
   });
 });
 
