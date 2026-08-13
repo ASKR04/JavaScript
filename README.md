@@ -20,5 +20,6 @@ Each project in this repository is designed to be useful, documented, and struct
 | SignalForge | Editable workspace | 2026-08-10 | Immutable state transitions, versioned browser persistence, runtime data guards, accessible form controls, and Vitest coverage | [PR #1](https://github.com/ASKR04/JavaScript/pull/1) |
 | SignalForge | Plan composition | 2026-08-11 | Validated feature and milestone creation, stable IDs, confirmed removal, and deterministic roadmap resequencing | [PR #1](https://github.com/ASKR04/JavaScript/pull/1) |
 | SignalForge | Decision log | 2026-08-12 | Validated ADR creation and editing, stable human-readable sequences, confirmed removal, responsive forms, and immutable state tests | [PR #1](https://github.com/ASKR04/JavaScript/pull/1) |
+| SignalForge | Project story export | 2026-08-13 | Deterministic Markdown generation, evidence metrics, safe filenames, browser-native download, clipboard sharing, and responsive accessible feedback | [PR #1](https://github.com/ASKR04/JavaScript/pull/1) |
 
 See the [SignalForge architecture notes](./signalforge/docs/architecture.md) for the current component and data flow diagrams.

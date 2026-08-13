@@ -49,7 +49,7 @@ export const projectWorkspace: ProjectWorkspace = {
   value:
     "SignalForge keeps project purpose, feature scope, technical decisions, and commit evidence visible in one focused workspace.",
   nextProofPoint:
-    "Generate a portable project story from the evidence captured here.",
+    "Connect daily implementation notes to commit-ready narrative evidence.",
   features: [
     {
       id: "project-brief",
@@ -77,7 +77,7 @@ export const projectWorkspace: ProjectWorkspace = {
       title: "Portfolio summary",
       description:
         "Collect final highlights and technical evidence that can be reused in a README or case study.",
-      status: "planned",
+      status: "complete",
     },
   ],
   roadmap: [
@@ -111,7 +111,7 @@ export const projectWorkspace: ProjectWorkspace = {
       title: "Project story export",
       outcome:
         "Generate a clean portfolio summary from the project evidence captured in the app.",
-      status: "planned",
+      status: "complete",
     },
   ],
   decisions: [

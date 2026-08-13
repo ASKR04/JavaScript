@@ -20,6 +20,7 @@ SignalForge treats documentation and execution as part of the same workflow. A p
 - Commit planner for shaping daily engineering progress into meaningful commit messages.
 - Editable architecture decision records for capturing technical choices and tradeoffs.
 - Portfolio summary for collecting highlights, proof points, and final documentation notes.
+- Portable Markdown project-story export with completion metrics, safe filenames, clipboard sharing, and local download.
 
 ## Architecture
 
@@ -99,7 +100,9 @@ src/
 
 SignalForge now supports an editable project brief, custom feature and milestone creation, status controls, confirmed removal, debounced browser persistence, save-state feedback, and a safe reset flow. Its architecture decision log supports validated creation, focused edits, stable human-readable ADR identifiers, and confirmed removal. Creation forms reject incomplete and duplicate records, while roadmap numbering stays coherent after removals.
 
-The next proof point is a portable project-story export generated from the evidence captured in the workspace.
+The portfolio summary now turns live workspace evidence into a structured Markdown case study. Users can download a safe project-specific file or copy the story to their clipboard without sending project data to a server. The export covers the product brief, feature and milestone delivery status, architecture decisions, portfolio highlights, and a generation date.
+
+The next proof point is a commit narrative planner that connects daily implementation notes to reusable project evidence.
 
 ## Progress Log
 
@@ -109,3 +112,4 @@ The next proof point is a portable project-story export generated from the evide
 | Editable workspace | 2026-08-10 | Added editable brief fields, workflow status controls, versioned local autosave, reset behavior, and state/persistence tests. | 4 Vitest tests, production build, desktop and 390px responsive checks | [PR #1](https://github.com/ASKR04/JavaScript/pull/1) |
 | Plan composition | 2026-08-11 | Added validated feature and milestone creation, stable IDs, confirmed removal, and automatic roadmap resequencing. | 6 Vitest tests, production build, 1440px desktop and 390px responsive checks | [PR #1](https://github.com/ASKR04/JavaScript/pull/1) |
 | Decision log | 2026-08-12 | Added validated ADR creation, editable decision cards, stable ADR sequences, confirmed removal, and autosaved immutable state transitions. | 8 Vitest tests, production build, 1440px desktop and 390px interaction checks | [PR #1](https://github.com/ASKR04/JavaScript/pull/1) |
+| Project story export | 2026-08-13 | Added deterministic Markdown generation, live evidence metrics, safe filenames, browser download, clipboard sharing, and accessible feedback. | 11 Vitest tests, production build, 1440px desktop and 390px responsive interaction checks | [PR #1](https://github.com/ASKR04/JavaScript/pull/1) |

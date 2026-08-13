@@ -106,6 +106,26 @@ Architecture decisions use the same pure mutation boundary as features and miles
 
 Each decision card keeps an isolated draft until the user saves it. This prevents incomplete typing from entering shared workspace state and provides a clear boundary for validation feedback. Successful updates then flow through the existing debounced persistence adapter without adding browser concerns to the decision UI.
 
+## Project Story Export Flow
+
+```mermaid
+flowchart LR
+    Workspace["Typed workspace evidence"] --> Generator["Pure Markdown generator"]
+    Generator --> Metrics["Derived completion metrics"]
+    Generator --> Escape["Markdown-safe user content"]
+    Metrics --> Summary["Portfolio summary preview"]
+    Escape --> Story["Structured project story"]
+    Story --> Filename["Normalized project filename"]
+    Story --> Download["Browser Blob download"]
+    Story --> Clipboard["Clipboard handoff"]
+    Download --> Feedback["Accessible live feedback"]
+    Clipboard --> Feedback
+```
+
+Export generation is deliberately framework-independent. A pure function receives the current typed workspace and an optional date, then produces deterministic Markdown containing the product snapshot, delivery evidence, feature scope, roadmap, decisions, and portfolio highlights. Tests can therefore verify the full artifact without mocking browser APIs.
+
+The React summary view owns only the delivery adapters: it derives evidence metrics for the interface, creates a short-lived browser Blob for download, and requests clipboard access for quick sharing. Project names are normalized into safe filenames, while Markdown control characters in editable workspace fields are escaped so user content cannot accidentally corrupt the generated document structure. No export data crosses a network boundary.
+
 ## Proposed Folder Structure
 
 ```text
@@ -151,7 +171,10 @@ src/
   features/dashboard/                # brief editor and feature workflow controls
   features/roadmap/Roadmap.tsx       # milestone workflow controls
   features/decisions/Decisions.tsx   # validated ADR creation and editing
+  features/summary/Summary.tsx       # evidence metrics and browser export actions
   lib/project-state.ts                # typed models and starter workspace
+  lib/project-story.ts                # pure Markdown export and filename helpers
+  lib/project-story.test.ts           # deterministic export coverage
   lib/workspace-state.ts              # immutable state transitions
   lib/persistence.ts                  # versioned storage adapter and guards
   lib/workspace-state.test.ts         # transition and persistence tests
@@ -159,4 +182,4 @@ src/
 
 ## Approval and Delivery State
 
-The proposal was followed by the initial implementation and responsive application scaffold. Work remains within the approved SignalForge scope. The current increment adds validated architecture decision creation, editing, and removal while preserving the local-first state boundary. The next planned increment is a portable project-story export.
+The proposal was followed by the initial implementation and responsive application scaffold. Work remains within the approved SignalForge scope. The current increment adds a portable project-story export while preserving the local-first state boundary. The next planned increment is a commit narrative planner that connects implementation notes to reusable evidence.
