@@ -1,7 +1,12 @@
-import type { ProjectWorkspace, WorkStatus } from "./project-state";
+import {
+  commitKinds,
+  type CommitKind,
+  type ProjectWorkspace,
+  type WorkStatus,
+} from "./project-state";
 
 const STORAGE_KEY = "signalforge.workspace.v1";
-const SNAPSHOT_VERSION = 1;
+const SNAPSHOT_VERSION = 2;
 
 type StorageReader = Pick<Storage, "getItem">;
 type StorageWriter = Pick<Storage, "setItem" | "removeItem">;
@@ -37,7 +42,15 @@ function hasValidStatus(value: Record<string, unknown>): boolean {
   return validStatuses.includes(value.status as WorkStatus);
 }
 
-export function isProjectWorkspace(value: unknown): value is ProjectWorkspace {
+function hasValidCommitKind(value: Record<string, unknown>): boolean {
+  return commitKinds.includes(value.kind as CommitKind);
+}
+
+type LegacyProjectWorkspace = Omit<ProjectWorkspace, "commitNarratives">;
+
+function isLegacyProjectWorkspace(
+  value: unknown,
+): value is LegacyProjectWorkspace {
   if (!isRecord(value)) return false;
 
   const hasBrief = hasStringFields(value, [
@@ -74,6 +87,31 @@ export function isProjectWorkspace(value: unknown): value is ProjectWorkspace {
   return hasBrief && featuresAreValid && roadmapIsValid && decisionsAreValid;
 }
 
+export function isProjectWorkspace(value: unknown): value is ProjectWorkspace {
+  if (!isLegacyProjectWorkspace(value) || !isRecord(value)) return false;
+
+  const commitNarratives = (value as Record<string, unknown>)
+    .commitNarratives;
+
+  const commitNarrativesAreValid =
+    Array.isArray(commitNarratives) &&
+    commitNarratives.every(
+      (narrative: unknown) =>
+        isRecord(narrative) &&
+        hasStringFields(narrative, [
+          "id",
+          "date",
+          "scope",
+          "summary",
+          "implementation",
+          "evidence",
+        ]) &&
+        hasValidCommitKind(narrative),
+    );
+
+  return commitNarrativesAreValid;
+}
+
 export function loadWorkspace(
   storage: StorageReader,
 ): WorkspaceSnapshot | null {
@@ -82,10 +120,22 @@ export function loadWorkspace(
     if (!serialized) return null;
 
     const snapshot: unknown = JSON.parse(serialized);
+    if (!isRecord(snapshot) || typeof snapshot.savedAt !== "string") {
+      return null;
+    }
+
     if (
-      !isRecord(snapshot) ||
+      snapshot.version === 1 &&
+      isLegacyProjectWorkspace(snapshot.workspace)
+    ) {
+      return {
+        workspace: { ...snapshot.workspace, commitNarratives: [] },
+        savedAt: snapshot.savedAt,
+      };
+    }
+
+    if (
       snapshot.version !== SNAPSHOT_VERSION ||
-      typeof snapshot.savedAt !== "string" ||
       !isProjectWorkspace(snapshot.workspace)
     ) {
       return null;

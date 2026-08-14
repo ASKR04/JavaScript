@@ -7,15 +7,19 @@ import {
 } from "./persistence";
 import {
   addArchitectureDecision,
+  addCommitNarrative,
   addFeature,
   addRoadmapItem,
   removeArchitectureDecision,
+  removeCommitNarrative,
   removeFeature,
   removeRoadmapItem,
   updateArchitectureDecision,
   updateFeatureStatus,
   updateProjectBrief,
   updateRoadmapStatus,
+  formatCommitBody,
+  formatCommitSubject,
 } from "./workspace-state";
 
 class MemoryStorage {
@@ -184,6 +188,58 @@ describe("workspace state", () => {
       "ADR-002",
     ]);
   });
+
+  it("creates a validated, reusable commit narrative", () => {
+    const workspace = createDefaultWorkspace();
+    const added = addCommitNarrative(
+      workspace,
+      {
+        date: "2026-08-14",
+        kind: "feat",
+        scope: "commit-planner",
+        summary: "connect work notes to evidence",
+        implementation:
+          "Added a structured narrative composer and persistent evidence cards.",
+        evidence: "Covered validation and generated commit copy with tests.",
+      },
+      "commit-narrative",
+    );
+
+    expect(added.errors).toEqual({});
+    expect(added.workspace.commitNarratives[0].id).toBe("commit-narrative");
+    expect(formatCommitSubject(added.workspace.commitNarratives[0])).toBe(
+      "feat(commit-planner): connect work notes to evidence",
+    );
+    expect(formatCommitBody(added.workspace.commitNarratives[0])).toContain(
+      "Verification:\n- Covered validation",
+    );
+    expect(workspace.commitNarratives).toHaveLength(1);
+
+    const removed = removeCommitNarrative(
+      added.workspace,
+      "commit-narrative",
+    );
+    expect(removed.commitNarratives).toEqual(workspace.commitNarratives);
+  });
+
+  it("rejects commit narratives without reviewable evidence", () => {
+    const workspace = createDefaultWorkspace();
+    const invalid = addCommitNarrative(workspace, {
+      date: "2026-02-30",
+      kind: "feat",
+      scope: "Signal Forge",
+      summary: "tiny",
+      implementation: "Too vague",
+      evidence: "No tests",
+    });
+
+    expect(invalid.workspace).toBe(workspace);
+    expect(invalid.errors.date).toContain("valid calendar date");
+    expect(invalid.errors.scope).toContain("lowercase scope");
+    expect(invalid.errors.summary).toContain("8 characters");
+    expect(invalid.errors.implementation).toContain("20 characters");
+    expect(invalid.errors.evidence).toContain("proof point");
+  });
 });
 
 describe("workspace persistence", () => {
@@ -211,5 +267,23 @@ describe("workspace persistence", () => {
     saveWorkspace(storage, createDefaultWorkspace());
     clearWorkspace(storage);
     expect(loadWorkspace(storage)).toBeNull();
+  });
+
+  it("migrates version one snapshots without losing saved planning work", () => {
+    const storage = new MemoryStorage();
+    const { commitNarratives: _, ...legacyWorkspace } =
+      createDefaultWorkspace();
+    storage.setItem(
+      "signalforge.workspace.v1",
+      JSON.stringify({
+        version: 1,
+        workspace: legacyWorkspace,
+        savedAt: "2026-08-13T15:00:00.000Z",
+      }),
+    );
+
+    const loaded = loadWorkspace(storage);
+    expect(loaded?.workspace.name).toBe("SignalForge");
+    expect(loaded?.workspace.commitNarratives).toEqual([]);
   });
 });

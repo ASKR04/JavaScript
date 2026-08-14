@@ -16,8 +16,12 @@ describe("project story export", () => {
 
     expect(markdown).toContain("# SignalForge");
     expect(markdown).toContain("## Delivery evidence");
-    expect(markdown).toContain("- 2 of 4 features complete");
+    expect(markdown).toContain("- 3 of 4 features complete");
     expect(markdown).toContain("04. **Project story export**");
+    expect(markdown).toContain("## Commit narrative");
+    expect(markdown).toContain(
+      "### feat(signalforge): add portable project story export",
+    );
     expect(markdown).toContain("### ADR-001 · Start local-first");
     expect(markdown).toContain("August 13, 2026");
   });
@@ -29,6 +33,7 @@ describe("project story export", () => {
       features: [],
       roadmap: [],
       decisions: [],
+      commitNarratives: [],
     };
     const markdown = createProjectStoryMarkdown(workspace);
 
@@ -36,6 +41,7 @@ describe("project story export", () => {
     expect(markdown).toContain("No features recorded yet.");
     expect(markdown).toContain("No milestones recorded yet.");
     expect(markdown).toContain("No architecture decisions recorded yet.");
+    expect(markdown).toContain("No commit narratives recorded yet.");
   });
 
   it("derives safe filenames and completion metrics", () => {
@@ -46,11 +52,12 @@ describe("project story export", () => {
     );
     expect(createProjectStoryFilename("***")).toBe("project-story.md");
     expect(getProjectStoryMetrics(workspace)).toEqual({
-      completedFeatures: 2,
+      completedFeatures: 3,
       completedMilestones: 3,
       totalFeatures: 4,
       totalMilestones: 4,
       decisionCount: 2,
+      commitNarrativeCount: 1,
     });
   });
 });

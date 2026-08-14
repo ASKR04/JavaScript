@@ -529,6 +529,127 @@ textarea {
   line-height: 1.5;
 }
 
+.commit-panel {
+  display: grid;
+  gap: 24px;
+}
+
+.commit-composer {
+  display: grid;
+  gap: 18px;
+  padding: 22px;
+  border: 1px dashed #b9ada0;
+  border-radius: 8px;
+  background: #f7f3ec;
+}
+
+.commit-meta-fields,
+.commit-evidence-fields {
+  display: grid;
+  gap: 18px;
+}
+
+.commit-meta-fields {
+  grid-template-columns: minmax(150px, 0.65fr) minmax(130px, 0.5fr) minmax(220px, 1fr);
+}
+
+.commit-evidence-fields {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.commit-composer label {
+  display: grid;
+  align-content: start;
+  gap: 7px;
+  color: #273244;
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.commit-subject-preview {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  overflow-wrap: anywhere;
+  color: #0f766e;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.commit-subject-preview small {
+  flex: 0 0 auto;
+  color: #687585;
+  font: inherit;
+}
+
+.commit-narrative-list {
+  display: grid;
+  gap: 14px;
+}
+
+.commit-narrative-card {
+  display: grid;
+  gap: 14px;
+  padding: 20px;
+  border: 1px solid #e7ded1;
+  border-radius: 8px;
+  background: #fbf7f1;
+}
+
+.commit-narrative-card time {
+  color: #687585;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.commit-narrative-card code {
+  overflow-wrap: anywhere;
+  color: #0b5f5b;
+  font-size: 0.94rem;
+  font-weight: 800;
+}
+
+.commit-narrative-card > p,
+.commit-proof p {
+  margin-bottom: 0;
+}
+
+.commit-proof {
+  padding: 14px 16px;
+  border-left: 3px solid #0f766e;
+  background: rgb(15 118 110 / 0.06);
+}
+
+.commit-proof strong {
+  color: #273244;
+  font-size: 0.82rem;
+}
+
+.commit-copy-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.commit-copy-row span {
+  color: #14613a;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.commit-copy-row .copy-error {
+  color: #b42318;
+}
+
+.empty-state {
+  margin: 0;
+  padding: 22px;
+  border: 1px dashed #b9ada0;
+  border-radius: 8px;
+  text-align: center;
+}
+
 .summary-list {
   display: grid;
   gap: 16px;
@@ -579,7 +700,7 @@ textarea {
 
 .story-metrics {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
   margin: 0;
 }
@@ -645,6 +766,15 @@ textarea {
   .decision-list {
     grid-template-columns: 1fr;
   }
+
+  .story-metrics,
+  .commit-meta-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .commit-meta-fields label:last-child {
+    grid-column: 1 / -1;
+  }
 }
 
 @media (max-width: 560px) {
@@ -658,13 +788,21 @@ textarea {
   .story-metrics,
   .form-grid,
   .composer-fields,
-  .decision-composer-fields {
+  .decision-composer-fields,
+  .commit-meta-fields,
+  .commit-evidence-fields {
     grid-template-columns: 1fr;
   }
 
   .full-field,
-  .decision-composer-fields .long-field {
+  .decision-composer-fields .long-field,
+  .commit-meta-fields label:last-child {
     grid-column: auto;
+  }
+
+  .commit-copy-row {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .workspace-toolbar {

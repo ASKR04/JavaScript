@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { WorkspaceToolbar } from "../components/WorkspaceToolbar";
+import { CommitPlanner } from "../features/commits/CommitPlanner";
 import { Dashboard } from "../features/dashboard/Dashboard";
 import { Decisions } from "../features/decisions/Decisions";
 import { Roadmap } from "../features/roadmap/Roadmap";
@@ -12,9 +13,11 @@ import {
 } from "../lib/persistence";
 import {
   addArchitectureDecision,
+  addCommitNarrative,
   addFeature,
   addRoadmapItem,
   removeArchitectureDecision,
+  removeCommitNarrative,
   removeFeature,
   removeRoadmapItem,
   updateArchitectureDecision,
@@ -70,6 +73,7 @@ export function App() {
           <a href="#dashboard">Dashboard</a>
           <a href="#roadmap">Roadmap</a>
           <a href="#decisions">Decisions</a>
+          <a href="#commits">Commits</a>
           <a href="#summary">Summary</a>
         </nav>
       </aside>
@@ -169,6 +173,31 @@ export function App() {
               setWorkspace(result.workspace);
             }
             return result.errors;
+          }}
+        />
+        <CommitPlanner
+          narratives={workspace.commitNarratives}
+          onCreate={(draft) => {
+            const result = addCommitNarrative(workspace, draft);
+            if (Object.keys(result.errors).length === 0) {
+              setWorkspace(result.workspace);
+            }
+            return result.errors;
+          }}
+          onRemove={(narrativeId) => {
+            const narrative = workspace.commitNarratives.find(
+              (item) => item.id === narrativeId,
+            );
+            if (
+              narrative &&
+              window.confirm(
+                `Remove the commit narrative "${narrative.summary}"?`,
+              )
+            ) {
+              setWorkspace((current) =>
+                removeCommitNarrative(current, narrativeId),
+              );
+            }
           }}
         />
         <Summary workspace={workspace} />

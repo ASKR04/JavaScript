@@ -1,5 +1,16 @@
 export type WorkStatus = "planned" | "active" | "blocked" | "complete";
 
+export const commitKinds = [
+  "feat",
+  "fix",
+  "refactor",
+  "test",
+  "docs",
+  "chore",
+] as const;
+
+export type CommitKind = (typeof commitKinds)[number];
+
 export const workStatuses: WorkStatus[] = [
   "planned",
   "active",
@@ -29,6 +40,16 @@ export type ArchitectureDecision = {
   impact: string;
 };
 
+export type CommitNarrative = {
+  id: string;
+  date: string;
+  kind: CommitKind;
+  scope: string;
+  summary: string;
+  implementation: string;
+  evidence: string;
+};
+
 export type ProjectWorkspace = {
   name: string;
   description: string;
@@ -38,6 +59,7 @@ export type ProjectWorkspace = {
   features: Feature[];
   roadmap: RoadmapItem[];
   decisions: ArchitectureDecision[];
+  commitNarratives: CommitNarrative[];
 };
 
 export const projectWorkspace: ProjectWorkspace = {
@@ -49,7 +71,7 @@ export const projectWorkspace: ProjectWorkspace = {
   value:
     "SignalForge keeps project purpose, feature scope, technical decisions, and commit evidence visible in one focused workspace.",
   nextProofPoint:
-    "Connect daily implementation notes to commit-ready narrative evidence.",
+    "Add portable workspace backup and restore with migration-safe validation.",
   features: [
     {
       id: "project-brief",
@@ -70,7 +92,7 @@ export const projectWorkspace: ProjectWorkspace = {
       title: "Commit planner",
       description:
         "Translate implementation work into clear commit messages and proof points for the project history.",
-      status: "planned",
+      status: "complete",
     },
     {
       id: "portfolio-summary",
@@ -130,6 +152,19 @@ export const projectWorkspace: ProjectWorkspace = {
         "The app will grow from static sample data into editable state, validation, and exports.",
       impact:
         "Typed models make state transitions easier to test and refactor as features expand.",
+    },
+  ],
+  commitNarratives: [
+    {
+      id: "project-story-export",
+      date: "2026-08-13",
+      kind: "feat",
+      scope: "signalforge",
+      summary: "add portable project story export",
+      implementation:
+        "Generated deterministic Markdown from the live workspace and added browser-native download and clipboard actions.",
+      evidence:
+        "Covered escaping, safe filenames, evidence metrics, responsive behavior, and the production build.",
     },
   ],
 };

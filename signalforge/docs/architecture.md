@@ -126,6 +126,24 @@ Export generation is deliberately framework-independent. A pure function receive
 
 The React summary view owns only the delivery adapters: it derives evidence metrics for the interface, creates a short-lived browser Blob for download, and requests clipboard access for quick sharing. Project names are normalized into safe filenames, while Markdown control characters in editable workspace fields are escaped so user content cannot accidentally corrupt the generated document structure. No export data crosses a network boundary.
 
+## Commit Narrative Workflow
+
+```mermaid
+flowchart LR
+    Notes["Daily implementation notes"] --> Composer["Structured commit composer"]
+    Composer --> Rules["Date, scope, subject, and evidence validation"]
+    Rules -->|invalid| Feedback["Accessible field feedback"]
+    Rules -->|valid| Narrative["Typed commit narrative"]
+    Narrative --> Workspace["Local workspace state"]
+    Workspace --> Storage["Versioned browser snapshot"]
+    Narrative --> Clipboard["Review-ready commit message"]
+    Narrative --> Export["Portable project story"]
+```
+
+Commit narratives preserve three distinct kinds of evidence: a conventional subject that summarizes the change, an implementation note that explains the meaningful work, and a verification note that records tests, reviews, or measurable outcomes. Subject previews enforce the 72-character commit convention before records enter shared state.
+
+The persistence boundary now writes version-two snapshots containing commit narratives. A narrow version-one migration restores earlier project planning data and initializes an empty narrative collection, so adding the feature does not silently discard an existing local workspace.
+
 ## Proposed Folder Structure
 
 ```text
@@ -138,7 +156,8 @@ signalforge/
       AppShell.tsx
       StatusBadge.tsx
       Toolbar.tsx
-    features/
+  features/
+    commits/CommitPlanner.tsx         # validated commit evidence composer and clipboard handoff
       dashboard/
       roadmap/
       decisions/
@@ -182,4 +201,4 @@ src/
 
 ## Approval and Delivery State
 
-The proposal was followed by the initial implementation and responsive application scaffold. Work remains within the approved SignalForge scope. The current increment adds a portable project-story export while preserving the local-first state boundary. The next planned increment is a commit narrative planner that connects implementation notes to reusable evidence.
+The proposal was followed by the initial implementation and responsive application scaffold. Work remains within the approved SignalForge scope. The current increment adds a commit narrative planner that turns daily notes into review-ready commit messages and reusable verification evidence while preserving older saved work through a storage migration. The next planned increment is portable workspace backup and restore with migration-safe validation.

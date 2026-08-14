@@ -1,10 +1,30 @@
 import type {
   ArchitectureDecision,
+  CommitKind,
+  CommitNarrative,
   Feature,
   ProjectWorkspace,
   RoadmapItem,
   WorkStatus,
 } from "./project-state";
+
+export type CommitNarrativeDraft = {
+  date: string;
+  kind: CommitKind;
+  scope: string;
+  summary: string;
+  implementation: string;
+  evidence: string;
+};
+
+export type CommitNarrativeErrors = Partial<
+  Record<keyof CommitNarrativeDraft, string>
+>;
+
+export type CommitNarrativeMutationResult = {
+  workspace: ProjectWorkspace;
+  errors: CommitNarrativeErrors;
+};
 
 export type WorkItemDraft = {
   title: string;
@@ -147,6 +167,97 @@ function nextDecisionId(decisions: ArchitectureDecision[]): string {
 
 function createWorkItemId(): string {
   return crypto.randomUUID();
+}
+
+export function formatCommitSubject(
+  draft: Pick<CommitNarrativeDraft, "kind" | "scope" | "summary">,
+): string {
+  return `${draft.kind}(${draft.scope.trim()}): ${draft.summary.trim()}`;
+}
+
+export function formatCommitBody(
+  narrative: Pick<CommitNarrative, "implementation" | "evidence">,
+): string {
+  return `${narrative.implementation.trim()}\n\nVerification:\n- ${narrative.evidence.trim()}`;
+}
+
+export function validateCommitNarrativeDraft(
+  draft: CommitNarrativeDraft,
+): CommitNarrativeErrors {
+  const errors: CommitNarrativeErrors = {};
+  const scope = draft.scope.trim();
+  const summary = draft.summary.trim();
+  const implementation = draft.implementation.trim();
+  const evidence = draft.evidence.trim();
+  const date = new Date(`${draft.date}T00:00:00.000Z`);
+
+  if (
+    !/^\d{4}-\d{2}-\d{2}$/.test(draft.date) ||
+    Number.isNaN(date.getTime()) ||
+    date.toISOString().slice(0, 10) !== draft.date
+  ) {
+    errors.date = "Choose a valid calendar date.";
+  }
+
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(scope)) {
+    errors.scope = "Use a lowercase scope such as signalforge or story-export.";
+  }
+
+  if (summary.length < 8) {
+    errors.summary = "Describe the delivered change in at least 8 characters.";
+  } else if (formatCommitSubject(draft).length > 72) {
+    errors.summary = "Keep the complete commit subject within 72 characters.";
+  }
+
+  if (implementation.length < 20) {
+    errors.implementation =
+      "Capture a concrete implementation note in at least 20 characters.";
+  }
+
+  if (evidence.length < 12) {
+    errors.evidence = "Record a test, review, metric, or other proof point.";
+  }
+
+  return errors;
+}
+
+export function addCommitNarrative(
+  workspace: ProjectWorkspace,
+  draft: CommitNarrativeDraft,
+  id?: string,
+): CommitNarrativeMutationResult {
+  const errors = validateCommitNarrativeDraft(draft);
+  if (Object.keys(errors).length > 0) return { workspace, errors };
+
+  const narrative: CommitNarrative = {
+    id: id ?? createWorkItemId(),
+    date: draft.date,
+    kind: draft.kind,
+    scope: draft.scope.trim(),
+    summary: draft.summary.trim(),
+    implementation: draft.implementation.trim(),
+    evidence: draft.evidence.trim(),
+  };
+
+  return {
+    workspace: {
+      ...workspace,
+      commitNarratives: [narrative, ...workspace.commitNarratives],
+    },
+    errors: {},
+  };
+}
+
+export function removeCommitNarrative(
+  workspace: ProjectWorkspace,
+  narrativeId: string,
+): ProjectWorkspace {
+  return {
+    ...workspace,
+    commitNarratives: workspace.commitNarratives.filter(
+      (narrative) => narrative.id !== narrativeId,
+    ),
+  };
 }
 
 export function addFeature(

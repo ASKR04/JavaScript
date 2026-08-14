@@ -96,6 +96,10 @@ export function Summary({ workspace }: SummaryProps) {
             <dt>{metrics.decisionCount}</dt>
             <dd>decisions captured</dd>
           </div>
+          <div>
+            <dt>{metrics.commitNarrativeCount}</dt>
+            <dd>commits evidenced</dd>
+          </div>
         </dl>
 
         <div className="story-export-actions">
