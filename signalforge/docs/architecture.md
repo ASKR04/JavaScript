@@ -144,6 +144,26 @@ Commit narratives preserve three distinct kinds of evidence: a conventional subj
 
 The persistence boundary now writes version-two snapshots containing commit narratives. A narrow version-one migration restores earlier project planning data and initializes an empty narrative collection, so adding the feature does not silently discard an existing local workspace.
 
+## Portable Workspace Transfer
+
+```mermaid
+flowchart LR
+    Workspace["Typed workspace"] --> Encoder["Versioned JSON encoder"]
+    Encoder --> Download["Local backup download"]
+    File["Selected backup file"] --> Parser["Format and metadata parser"]
+    Parser --> Version["Supported schema check"]
+    Version --> Migration["Shared workspace migration"]
+    Migration --> Guard["Runtime data guard"]
+    Guard -->|invalid| Feedback["Accessible error feedback"]
+    Guard -->|valid| Confirm["Replacement confirmation"]
+    Confirm --> State["React workspace state"]
+    State --> Autosave["Versioned browser autosave"]
+```
+
+Backups use a recognizable format identifier, workspace schema version, ISO export timestamp, and the full typed workspace. The pure parser distinguishes malformed JSON, unrelated documents, unsupported future versions, invalid metadata, and incomplete domain data so the interface can explain why a file was rejected without exposing parsing details.
+
+Restore and local persistence share one migration function. Version-one data gains an empty commit narrative collection before it reaches the runtime guard, while version-two data must satisfy the complete current model. The toolbar owns only browser file and download adapters; React state changes only after parsing succeeds and the user confirms replacement.
+
 ## Proposed Folder Structure
 
 ```text
@@ -185,7 +205,7 @@ signalforge/
 ```text
 src/
   app/App.tsx                         # workspace ownership and autosave lifecycle
-  components/WorkspaceToolbar.tsx    # save feedback and reset control
+  components/WorkspaceToolbar.tsx    # save feedback, portable transfer, and reset controls
   components/WorkItemComposer.tsx    # reusable accessible creation form
   features/dashboard/                # brief editor and feature workflow controls
   features/roadmap/Roadmap.tsx       # milestone workflow controls
@@ -194,6 +214,8 @@ src/
   lib/project-state.ts                # typed models and starter workspace
   lib/project-story.ts                # pure Markdown export and filename helpers
   lib/project-story.test.ts           # deterministic export coverage
+  lib/workspace-backup.ts             # portable encoder, parser, filename, and migration boundary
+  lib/workspace-backup.test.ts        # current, legacy, invalid, and future-format coverage
   lib/workspace-state.ts              # immutable state transitions
   lib/persistence.ts                  # versioned storage adapter and guards
   lib/workspace-state.test.ts         # transition and persistence tests
@@ -201,4 +223,4 @@ src/
 
 ## Approval and Delivery State
 
-The proposal was followed by the initial implementation and responsive application scaffold. Work remains within the approved SignalForge scope. The current increment adds a commit narrative planner that turns daily notes into review-ready commit messages and reusable verification evidence while preserving older saved work through a storage migration. The next planned increment is portable workspace backup and restore with migration-safe validation.
+The proposal was followed by the initial implementation and responsive application scaffold. Work remains within the approved SignalForge scope. The current increment adds portable workspace backup and restore with migration-safe validation, confirmation before replacement, and accessible browser feedback. The next planned increment is the final responsive quality review, documentation pass, and project retrospective.

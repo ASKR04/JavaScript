@@ -529,6 +529,42 @@ textarea {
   line-height: 1.5;
 }
 
+.workspace-toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.workspace-transfer {
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+}
+
+.transfer-feedback {
+  margin: 0;
+  color: #14613a;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.transfer-feedback-error {
+  color: #b42318;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .commit-panel {
   display: grid;
   gap: 24px;
@@ -808,5 +844,14 @@ textarea {
   .workspace-toolbar {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .workspace-transfer {
+    justify-items: start;
+    width: 100%;
+  }
+
+  .workspace-toolbar-actions {
+    justify-content: flex-start;
   }
 }

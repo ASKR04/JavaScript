@@ -6,7 +6,7 @@ import {
 } from "./project-state";
 
 const STORAGE_KEY = "signalforge.workspace.v1";
-const SNAPSHOT_VERSION = 2;
+export const WORKSPACE_SCHEMA_VERSION = 2;
 
 type StorageReader = Pick<Storage, "getItem">;
 type StorageWriter = Pick<Storage, "setItem" | "removeItem">;
@@ -87,6 +87,21 @@ function isLegacyProjectWorkspace(
   return hasBrief && featuresAreValid && roadmapIsValid && decisionsAreValid;
 }
 
+export function migrateProjectWorkspace(
+  version: unknown,
+  value: unknown,
+): ProjectWorkspace | null {
+  if (version === 1 && isLegacyProjectWorkspace(value)) {
+    return { ...value, commitNarratives: [] };
+  }
+
+  if (version === WORKSPACE_SCHEMA_VERSION && isProjectWorkspace(value)) {
+    return value;
+  }
+
+  return null;
+}
+
 export function isProjectWorkspace(value: unknown): value is ProjectWorkspace {
   if (!isLegacyProjectWorkspace(value) || !isRecord(value)) return false;
 
@@ -124,25 +139,14 @@ export function loadWorkspace(
       return null;
     }
 
-    if (
-      snapshot.version === 1 &&
-      isLegacyProjectWorkspace(snapshot.workspace)
-    ) {
-      return {
-        workspace: { ...snapshot.workspace, commitNarratives: [] },
-        savedAt: snapshot.savedAt,
-      };
-    }
-
-    if (
-      snapshot.version !== SNAPSHOT_VERSION ||
-      !isProjectWorkspace(snapshot.workspace)
-    ) {
-      return null;
-    }
+    const workspace = migrateProjectWorkspace(
+      snapshot.version,
+      snapshot.workspace,
+    );
+    if (!workspace) return null;
 
     return {
-      workspace: snapshot.workspace,
+      workspace,
       savedAt: snapshot.savedAt,
     };
   } catch {
@@ -156,7 +160,7 @@ export function saveWorkspace(
   now = new Date(),
 ): WorkspaceSnapshot {
   const snapshot: StoredSnapshot = {
-    version: SNAPSHOT_VERSION,
+    version: WORKSPACE_SCHEMA_VERSION,
     workspace,
     savedAt: now.toISOString(),
   };

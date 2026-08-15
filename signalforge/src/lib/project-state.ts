@@ -71,7 +71,7 @@ export const projectWorkspace: ProjectWorkspace = {
   value:
     "SignalForge keeps project purpose, feature scope, technical decisions, and commit evidence visible in one focused workspace.",
   nextProofPoint:
-    "Add portable workspace backup and restore with migration-safe validation.",
+    "Complete responsive quality checks and document the finished workflow.",
   features: [
     {
       id: "project-brief",

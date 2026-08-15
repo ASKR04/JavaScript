@@ -17,6 +17,7 @@ SignalForge treats documentation and execution as part of the same workflow. A p
 - Feature board for tracking planned, active, blocked, and completed work.
 - Validated feature and milestone creation with safe, confirmed removal.
 - Versioned local persistence with autosave feedback and safe sample reset.
+- Portable JSON workspace backups with schema validation and version-one migration on restore.
 - Commit narrative planner for shaping daily implementation notes into conventional commit messages and durable verification evidence.
 - Editable architecture decision records for capturing technical choices and tradeoffs.
 - Portfolio summary for collecting highlights, proof points, and final documentation notes.
@@ -106,7 +107,9 @@ The portfolio summary now turns live workspace evidence into a structured Markdo
 
 The commit narrative planner connects daily delivery notes to conventional commit subjects, implementation context, and verification proof. Narratives are validated, saved locally, copyable as ready-to-use commit messages, and included in the project-story export. Existing version-one browser snapshots migrate without losing earlier planning work.
 
-The next proof point is portable workspace backup and restore with migration-safe validation.
+Workspace data can now move safely between browsers or machines through a readable JSON backup. Downloads include format, schema, and export metadata; restores reject unrelated, malformed, incomplete, or future-version files before asking the user to replace local state. Version-one backups migrate through the same tested boundary as browser persistence.
+
+The next proof point is the final responsive quality review and finished-workflow documentation.
 
 ## Progress Log
 
@@ -118,3 +121,4 @@ The next proof point is portable workspace backup and restore with migration-saf
 | Decision log | 2026-08-12 | Added validated ADR creation, editable decision cards, stable ADR sequences, confirmed removal, and autosaved immutable state transitions. | 8 Vitest tests, production build, 1440px desktop and 390px interaction checks | [PR #1](https://github.com/ASKR04/JavaScript/pull/1) |
 | Project story export | 2026-08-13 | Added deterministic Markdown generation, live evidence metrics, safe filenames, browser download, clipboard sharing, and accessible feedback. | 11 Vitest tests, production build, 1440px desktop and 390px responsive interaction checks | [PR #1](https://github.com/ASKR04/JavaScript/pull/1) |
 | Commit narrative planner | 2026-08-14 | Added conventional commit composition, subject-length guidance, implementation and verification evidence, version-one storage migration, clipboard handoff, and project-story integration. | 14 Vitest tests, production build, desktop and mobile responsive checks | [PR #1](https://github.com/ASKR04/JavaScript/pull/1) |
+| Workspace portability | 2026-08-15 | Added readable JSON backup downloads, validated restore confirmation, shared schema migration, safe filenames, and accessible transfer feedback. | 20 Vitest tests, production build, desktop and 390px restore interaction checks | [PR #1](https://github.com/ASKR04/JavaScript/pull/1) |

@@ -82,6 +82,11 @@ export function App() {
         <WorkspaceToolbar
           status={saveStatus}
           savedAt={savedAt}
+          workspace={workspace}
+          onRestore={(restoredWorkspace) => {
+            setSavedAt(null);
+            setWorkspace(restoredWorkspace);
+          }}
           onReset={resetWorkspace}
         />
         <Dashboard
