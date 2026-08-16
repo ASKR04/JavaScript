@@ -15,9 +15,13 @@ SignalForge treats documentation and execution as part of the same workflow. A p
 - Project brief for defining the problem, audience, value, and success criteria.
 - Roadmap workspace for breaking work into focused milestones.
 - Feature board for tracking planned, active, blocked, and completed work.
-- Commit planner for shaping daily engineering progress into meaningful commit messages.
-- Architecture decision records for capturing technical choices and tradeoffs.
+- Validated feature and milestone creation with safe, confirmed removal.
+- Versioned local persistence with autosave feedback and safe sample reset.
+- Portable JSON workspace backups with schema validation and version-one migration on restore.
+- Commit narrative planner for shaping daily implementation notes into conventional commit messages and durable verification evidence.
+- Editable architecture decision records for capturing technical choices and tradeoffs.
 - Portfolio summary for collecting highlights, proof points, and final documentation notes.
+- Portable Markdown project-story export with completion metrics, safe filenames, clipboard sharing, and local download.
 
 ## Architecture
 
@@ -27,10 +31,12 @@ flowchart LR
     App --> Dashboard["Dashboard"]
     App --> Roadmap["Roadmap"]
     App --> Decisions["Architecture Decisions"]
+    App --> Commits["Commit Narrative Planner"]
     App --> Summary["Portfolio Summary"]
     Dashboard --> Store["Project State"]
     Roadmap --> Store
     Decisions --> Store
+    Commits --> Store
     Summary --> Store
     Store --> Persistence["Local Persistence"]
     Persistence --> Browser["Browser Storage"]
@@ -95,4 +101,24 @@ src/
 
 ## Status
 
-SignalForge has an initial application shell with navigation, sample project data, a dashboard, roadmap, architecture decision view, and portfolio summary view. The next step is to make the workspace editable and persist changes locally.
+SignalForge now supports an editable project brief, custom feature and milestone creation, status controls, confirmed removal, debounced browser persistence, save-state feedback, and a safe reset flow. Its architecture decision log supports validated creation, focused edits, stable human-readable ADR identifiers, and confirmed removal. Creation forms reject incomplete and duplicate records, while roadmap numbering stays coherent after removals.
+
+The portfolio summary now turns live workspace evidence into a structured Markdown case study. Users can download a safe project-specific file or copy the story to their clipboard without sending project data to a server. The export covers the product brief, feature and milestone delivery status, architecture decisions, commit narratives, portfolio highlights, and a generation date.
+
+The commit narrative planner connects daily delivery notes to conventional commit subjects, implementation context, and verification proof. Narratives are validated, saved locally, copyable as ready-to-use commit messages, and included in the project-story export. Existing version-one browser snapshots migrate without losing earlier planning work.
+
+Workspace data can now move safely between browsers or machines through a readable JSON backup. Downloads include format, schema, and export metadata; restores reject unrelated, malformed, incomplete, or future-version files before asking the user to replace local state. Version-one backups migrate through the same tested boundary as browser persistence.
+
+The next proof point is the final responsive quality review and finished-workflow documentation.
+
+## Progress Log
+
+| Phase | Date | Completed | Verification | Review |
+| --- | --- | --- | --- | --- |
+| Foundation | 2026-08-10 | Proposed the architecture, scaffolded the React/TypeScript app, and built the responsive dashboard views. | Production build | Merged on `main` |
+| Editable workspace | 2026-08-10 | Added editable brief fields, workflow status controls, versioned local autosave, reset behavior, and state/persistence tests. | 4 Vitest tests, production build, desktop and 390px responsive checks | [PR #1](https://github.com/ASKR04/JavaScript/pull/1) |
+| Plan composition | 2026-08-11 | Added validated feature and milestone creation, stable IDs, confirmed removal, and automatic roadmap resequencing. | 6 Vitest tests, production build, 1440px desktop and 390px responsive checks | [PR #1](https://github.com/ASKR04/JavaScript/pull/1) |
+| Decision log | 2026-08-12 | Added validated ADR creation, editable decision cards, stable ADR sequences, confirmed removal, and autosaved immutable state transitions. | 8 Vitest tests, production build, 1440px desktop and 390px interaction checks | [PR #1](https://github.com/ASKR04/JavaScript/pull/1) |
+| Project story export | 2026-08-13 | Added deterministic Markdown generation, live evidence metrics, safe filenames, browser download, clipboard sharing, and accessible feedback. | 11 Vitest tests, production build, 1440px desktop and 390px responsive interaction checks | [PR #1](https://github.com/ASKR04/JavaScript/pull/1) |
+| Commit narrative planner | 2026-08-14 | Added conventional commit composition, subject-length guidance, implementation and verification evidence, version-one storage migration, clipboard handoff, and project-story integration. | 14 Vitest tests, production build, desktop and mobile responsive checks | [PR #1](https://github.com/ASKR04/JavaScript/pull/1) |
+| Workspace portability | 2026-08-15 | Added readable JSON backup downloads, validated restore confirmation, shared schema migration, safe filenames, and accessible transfer feedback. | 20 Vitest tests, production build, desktop and 390px restore interaction checks | [PR #1](https://github.com/ASKR04/JavaScript/pull/1) |

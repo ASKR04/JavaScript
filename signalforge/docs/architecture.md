@@ -1,4 +1,4 @@
-# SignalForge Architecture Proposal
+# SignalForge Architecture
 
 ## Product Summary
 
@@ -52,6 +52,118 @@ sequenceDiagram
     Store-->>View: render updated planning state
 ```
 
+## Implemented Persistence Boundary
+
+```mermaid
+flowchart LR
+    Controls["Brief and status controls"] --> Actions["Pure immutable state helpers"]
+    Actions --> React["React workspace state"]
+    React --> Debounce["300 ms autosave boundary"]
+    Debounce --> Snapshot["Versioned JSON snapshot"]
+    Snapshot --> LocalStorage["Browser localStorage"]
+    LocalStorage --> Guard["Runtime schema guard"]
+    Guard -->|valid| React
+    Guard -->|invalid or outdated| Defaults["Typed sample workspace"]
+    Defaults --> React
+```
+
+The persistence adapter is deliberately small and browser-native. Each snapshot includes a schema version and timestamp. Loading is defensive: invalid JSON, outdated versions, or malformed project records are ignored rather than allowed to break application startup. The adapter accepts narrow storage interfaces so its behavior can be tested without a browser environment.
+
+State changes are implemented as pure functions keyed by stable feature and roadmap IDs. This prevents accidental mutation, makes status changes predictable, and keeps the UI independent from future storage adapters.
+
+## Plan Composition Flow
+
+```mermaid
+flowchart LR
+    Form["Feature or milestone form"] --> Validation["Trim, length, and duplicate validation"]
+    Validation -->|invalid| Errors["Inline accessible errors"]
+    Validation -->|valid| Mutation["Pure immutable collection update"]
+    Mutation --> UUID["Stable browser-generated UUID"]
+    UUID --> State["React workspace state"]
+    Remove["Confirmed removal"] --> Mutation
+    Mutation --> Resequence["Roadmap resequencing"]
+    Resequence --> State
+    State --> Autosave["Existing local autosave"]
+```
+
+Feature and milestone forms share a focused composer component while domain validation remains framework-independent. Mutations return validation errors alongside the next workspace so invalid changes never reach persistence. Milestone removal also derives new display sequences from list order, avoiding gaps without changing stable record IDs.
+
+## Architecture Decision Workflow
+
+```mermaid
+flowchart LR
+    Draft["Decision draft"] --> Rules["Trim, length, and duplicate rules"]
+    Rules -->|invalid| Feedback["Field-level accessible feedback"]
+    Rules -->|valid| Record["Immutable ADR record"]
+    Record --> Sequence["Next human-readable ADR sequence"]
+    Sequence --> Workspace["React workspace state"]
+    Edit["Focused card edit"] --> Rules
+    Remove["Confirmed removal"] --> Workspace
+    Workspace --> Autosave["Versioned local autosave"]
+```
+
+Architecture decisions use the same pure mutation boundary as features and milestones, but retain their domain-specific fields: title, context, and consequence. Creation derives the next `ADR-###` identifier from the active log, while edits preserve the record identifier. Validation excludes the current record during edits so a title may remain unchanged, while still preventing ambiguous duplicate decisions elsewhere in the log.
+
+Each decision card keeps an isolated draft until the user saves it. This prevents incomplete typing from entering shared workspace state and provides a clear boundary for validation feedback. Successful updates then flow through the existing debounced persistence adapter without adding browser concerns to the decision UI.
+
+## Project Story Export Flow
+
+```mermaid
+flowchart LR
+    Workspace["Typed workspace evidence"] --> Generator["Pure Markdown generator"]
+    Generator --> Metrics["Derived completion metrics"]
+    Generator --> Escape["Markdown-safe user content"]
+    Metrics --> Summary["Portfolio summary preview"]
+    Escape --> Story["Structured project story"]
+    Story --> Filename["Normalized project filename"]
+    Story --> Download["Browser Blob download"]
+    Story --> Clipboard["Clipboard handoff"]
+    Download --> Feedback["Accessible live feedback"]
+    Clipboard --> Feedback
+```
+
+Export generation is deliberately framework-independent. A pure function receives the current typed workspace and an optional date, then produces deterministic Markdown containing the product snapshot, delivery evidence, feature scope, roadmap, decisions, and portfolio highlights. Tests can therefore verify the full artifact without mocking browser APIs.
+
+The React summary view owns only the delivery adapters: it derives evidence metrics for the interface, creates a short-lived browser Blob for download, and requests clipboard access for quick sharing. Project names are normalized into safe filenames, while Markdown control characters in editable workspace fields are escaped so user content cannot accidentally corrupt the generated document structure. No export data crosses a network boundary.
+
+## Commit Narrative Workflow
+
+```mermaid
+flowchart LR
+    Notes["Daily implementation notes"] --> Composer["Structured commit composer"]
+    Composer --> Rules["Date, scope, subject, and evidence validation"]
+    Rules -->|invalid| Feedback["Accessible field feedback"]
+    Rules -->|valid| Narrative["Typed commit narrative"]
+    Narrative --> Workspace["Local workspace state"]
+    Workspace --> Storage["Versioned browser snapshot"]
+    Narrative --> Clipboard["Review-ready commit message"]
+    Narrative --> Export["Portable project story"]
+```
+
+Commit narratives preserve three distinct kinds of evidence: a conventional subject that summarizes the change, an implementation note that explains the meaningful work, and a verification note that records tests, reviews, or measurable outcomes. Subject previews enforce the 72-character commit convention before records enter shared state.
+
+The persistence boundary now writes version-two snapshots containing commit narratives. A narrow version-one migration restores earlier project planning data and initializes an empty narrative collection, so adding the feature does not silently discard an existing local workspace.
+
+## Portable Workspace Transfer
+
+```mermaid
+flowchart LR
+    Workspace["Typed workspace"] --> Encoder["Versioned JSON encoder"]
+    Encoder --> Download["Local backup download"]
+    File["Selected backup file"] --> Parser["Format and metadata parser"]
+    Parser --> Version["Supported schema check"]
+    Version --> Migration["Shared workspace migration"]
+    Migration --> Guard["Runtime data guard"]
+    Guard -->|invalid| Feedback["Accessible error feedback"]
+    Guard -->|valid| Confirm["Replacement confirmation"]
+    Confirm --> State["React workspace state"]
+    State --> Autosave["Versioned browser autosave"]
+```
+
+Backups use a recognizable format identifier, workspace schema version, ISO export timestamp, and the full typed workspace. The pure parser distinguishes malformed JSON, unrelated documents, unsupported future versions, invalid metadata, and incomplete domain data so the interface can explain why a file was rejected without exposing parsing details.
+
+Restore and local persistence share one migration function. Version-one data gains an empty commit narrative collection before it reaches the runtime guard, while version-two data must satisfy the complete current model. The toolbar owns only browser file and download adapters; React state changes only after parsing succeeds and the user confirms replacement.
+
 ## Proposed Folder Structure
 
 ```text
@@ -64,7 +176,8 @@ signalforge/
       AppShell.tsx
       StatusBadge.tsx
       Toolbar.tsx
-    features/
+  features/
+    commits/CommitPlanner.tsx         # validated commit evidence composer and clipboard handoff
       dashboard/
       roadmap/
       decisions/
@@ -87,7 +200,27 @@ signalforge/
 - Add tests for state transitions and validation once the state model exists.
 - Keep documentation current with each major feature commit.
 
-## Approval Gate
+## Current Implementation Map
 
-Implementation should begin only after the project proposal is approved. The first implementation commit should scaffold the app and create the initial layout, sample state, and navigation.
+```text
+src/
+  app/App.tsx                         # workspace ownership and autosave lifecycle
+  components/WorkspaceToolbar.tsx    # save feedback, portable transfer, and reset controls
+  components/WorkItemComposer.tsx    # reusable accessible creation form
+  features/dashboard/                # brief editor and feature workflow controls
+  features/roadmap/Roadmap.tsx       # milestone workflow controls
+  features/decisions/Decisions.tsx   # validated ADR creation and editing
+  features/summary/Summary.tsx       # evidence metrics and browser export actions
+  lib/project-state.ts                # typed models and starter workspace
+  lib/project-story.ts                # pure Markdown export and filename helpers
+  lib/project-story.test.ts           # deterministic export coverage
+  lib/workspace-backup.ts             # portable encoder, parser, filename, and migration boundary
+  lib/workspace-backup.test.ts        # current, legacy, invalid, and future-format coverage
+  lib/workspace-state.ts              # immutable state transitions
+  lib/persistence.ts                  # versioned storage adapter and guards
+  lib/workspace-state.test.ts         # transition and persistence tests
+```
 
+## Approval and Delivery State
+
+The proposal was followed by the initial implementation and responsive application scaffold. Work remains within the approved SignalForge scope. The current increment adds portable workspace backup and restore with migration-safe validation, confirmation before replacement, and accessible browser feedback. The next planned increment is the final responsive quality review, documentation pass, and project retrospective.

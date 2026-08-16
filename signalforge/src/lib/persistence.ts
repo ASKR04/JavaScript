@@ -1,0 +1,174 @@
+import {
+  commitKinds,
+  type CommitKind,
+  type ProjectWorkspace,
+  type WorkStatus,
+} from "./project-state";
+
+const STORAGE_KEY = "signalforge.workspace.v1";
+export const WORKSPACE_SCHEMA_VERSION = 2;
+
+type StorageReader = Pick<Storage, "getItem">;
+type StorageWriter = Pick<Storage, "setItem" | "removeItem">;
+
+export type WorkspaceSnapshot = {
+  workspace: ProjectWorkspace;
+  savedAt: string;
+};
+
+type StoredSnapshot = WorkspaceSnapshot & {
+  version: number;
+};
+
+const validStatuses: WorkStatus[] = [
+  "planned",
+  "active",
+  "blocked",
+  "complete",
+];
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function hasStringFields(
+  value: Record<string, unknown>,
+  fields: string[],
+): boolean {
+  return fields.every((field) => typeof value[field] === "string");
+}
+
+function hasValidStatus(value: Record<string, unknown>): boolean {
+  return validStatuses.includes(value.status as WorkStatus);
+}
+
+function hasValidCommitKind(value: Record<string, unknown>): boolean {
+  return commitKinds.includes(value.kind as CommitKind);
+}
+
+type LegacyProjectWorkspace = Omit<ProjectWorkspace, "commitNarratives">;
+
+function isLegacyProjectWorkspace(
+  value: unknown,
+): value is LegacyProjectWorkspace {
+  if (!isRecord(value)) return false;
+
+  const hasBrief = hasStringFields(value, [
+    "name",
+    "description",
+    "audience",
+    "value",
+    "nextProofPoint",
+  ]);
+  const featuresAreValid =
+    Array.isArray(value.features) &&
+    value.features.every(
+      (feature) =>
+        isRecord(feature) &&
+        hasStringFields(feature, ["id", "title", "description"]) &&
+        hasValidStatus(feature),
+    );
+  const roadmapIsValid =
+    Array.isArray(value.roadmap) &&
+    value.roadmap.every(
+      (item) =>
+        isRecord(item) &&
+        hasStringFields(item, ["id", "sequence", "title", "outcome"]) &&
+        hasValidStatus(item),
+    );
+  const decisionsAreValid =
+    Array.isArray(value.decisions) &&
+    value.decisions.every(
+      (decision) =>
+        isRecord(decision) &&
+        hasStringFields(decision, ["id", "title", "context", "impact"]),
+    );
+
+  return hasBrief && featuresAreValid && roadmapIsValid && decisionsAreValid;
+}
+
+export function migrateProjectWorkspace(
+  version: unknown,
+  value: unknown,
+): ProjectWorkspace | null {
+  if (version === 1 && isLegacyProjectWorkspace(value)) {
+    return { ...value, commitNarratives: [] };
+  }
+
+  if (version === WORKSPACE_SCHEMA_VERSION && isProjectWorkspace(value)) {
+    return value;
+  }
+
+  return null;
+}
+
+export function isProjectWorkspace(value: unknown): value is ProjectWorkspace {
+  if (!isLegacyProjectWorkspace(value) || !isRecord(value)) return false;
+
+  const commitNarratives = (value as Record<string, unknown>)
+    .commitNarratives;
+
+  const commitNarrativesAreValid =
+    Array.isArray(commitNarratives) &&
+    commitNarratives.every(
+      (narrative: unknown) =>
+        isRecord(narrative) &&
+        hasStringFields(narrative, [
+          "id",
+          "date",
+          "scope",
+          "summary",
+          "implementation",
+          "evidence",
+        ]) &&
+        hasValidCommitKind(narrative),
+    );
+
+  return commitNarrativesAreValid;
+}
+
+export function loadWorkspace(
+  storage: StorageReader,
+): WorkspaceSnapshot | null {
+  try {
+    const serialized = storage.getItem(STORAGE_KEY);
+    if (!serialized) return null;
+
+    const snapshot: unknown = JSON.parse(serialized);
+    if (!isRecord(snapshot) || typeof snapshot.savedAt !== "string") {
+      return null;
+    }
+
+    const workspace = migrateProjectWorkspace(
+      snapshot.version,
+      snapshot.workspace,
+    );
+    if (!workspace) return null;
+
+    return {
+      workspace,
+      savedAt: snapshot.savedAt,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function saveWorkspace(
+  storage: StorageWriter,
+  workspace: ProjectWorkspace,
+  now = new Date(),
+): WorkspaceSnapshot {
+  const snapshot: StoredSnapshot = {
+    version: WORKSPACE_SCHEMA_VERSION,
+    workspace,
+    savedAt: now.toISOString(),
+  };
+
+  storage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
+  return snapshot;
+}
+
+export function clearWorkspace(storage: StorageWriter): void {
+  storage.removeItem(STORAGE_KEY);
+}

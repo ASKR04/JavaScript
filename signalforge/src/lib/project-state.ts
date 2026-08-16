@@ -1,12 +1,32 @@
 export type WorkStatus = "planned" | "active" | "blocked" | "complete";
 
+export const commitKinds = [
+  "feat",
+  "fix",
+  "refactor",
+  "test",
+  "docs",
+  "chore",
+] as const;
+
+export type CommitKind = (typeof commitKinds)[number];
+
+export const workStatuses: WorkStatus[] = [
+  "planned",
+  "active",
+  "blocked",
+  "complete",
+];
+
 export type Feature = {
+  id: string;
   title: string;
   description: string;
   status: WorkStatus;
 };
 
 export type RoadmapItem = {
+  id: string;
   sequence: string;
   title: string;
   outcome: string;
@@ -20,6 +40,16 @@ export type ArchitectureDecision = {
   impact: string;
 };
 
+export type CommitNarrative = {
+  id: string;
+  date: string;
+  kind: CommitKind;
+  scope: string;
+  summary: string;
+  implementation: string;
+  evidence: string;
+};
+
 export type ProjectWorkspace = {
   name: string;
   description: string;
@@ -29,6 +59,7 @@ export type ProjectWorkspace = {
   features: Feature[];
   roadmap: RoadmapItem[];
   decisions: ArchitectureDecision[];
+  commitNarratives: CommitNarrative[];
 };
 
 export const projectWorkspace: ProjectWorkspace = {
@@ -40,61 +71,69 @@ export const projectWorkspace: ProjectWorkspace = {
   value:
     "SignalForge keeps project purpose, feature scope, technical decisions, and commit evidence visible in one focused workspace.",
   nextProofPoint:
-    "Add editable workspace state with local persistence so users can shape their own project plans.",
+    "Complete responsive quality checks and document the finished workflow.",
   features: [
     {
+      id: "project-brief",
       title: "Project brief",
       description:
         "Capture the problem, audience, value proposition, and measurable success criteria before implementation begins.",
-      status: "active",
+      status: "complete",
     },
     {
+      id: "roadmap-workspace",
       title: "Roadmap workspace",
       description:
         "Break the project into meaningful milestones that produce visible engineering progress.",
       status: "active",
     },
     {
+      id: "commit-planner",
       title: "Commit planner",
       description:
         "Translate implementation work into clear commit messages and proof points for the project history.",
-      status: "planned",
+      status: "complete",
     },
     {
+      id: "portfolio-summary",
       title: "Portfolio summary",
       description:
         "Collect final highlights and technical evidence that can be reused in a README or case study.",
-      status: "planned",
+      status: "complete",
     },
   ],
   roadmap: [
     {
+      id: "foundation",
       sequence: "01",
       title: "Foundation",
       outcome:
         "Create the app shell, sample workspace data, responsive layout, and initial documentation.",
-      status: "active",
+      status: "complete",
     },
     {
+      id: "editable-planning",
       sequence: "02",
       title: "Editable planning",
       outcome:
         "Introduce forms and state transitions for project briefs, features, and milestones.",
-      status: "planned",
+      status: "active",
     },
     {
+      id: "persistence",
       sequence: "03",
       title: "Persistence",
       outcome:
         "Save workspace snapshots locally and recover the last planning session on reload.",
-      status: "planned",
+      status: "complete",
     },
     {
+      id: "story-export",
       sequence: "04",
       title: "Project story export",
       outcome:
         "Generate a clean portfolio summary from the project evidence captured in the app.",
-      status: "planned",
+      status: "complete",
     },
   ],
   decisions: [
@@ -115,5 +154,21 @@ export const projectWorkspace: ProjectWorkspace = {
         "Typed models make state transitions easier to test and refactor as features expand.",
     },
   ],
+  commitNarratives: [
+    {
+      id: "project-story-export",
+      date: "2026-08-13",
+      kind: "feat",
+      scope: "signalforge",
+      summary: "add portable project story export",
+      implementation:
+        "Generated deterministic Markdown from the live workspace and added browser-native download and clipboard actions.",
+      evidence:
+        "Covered escaping, safe filenames, evidence metrics, responsive behavior, and the production build.",
+    },
+  ],
 };
 
+export function createDefaultWorkspace(): ProjectWorkspace {
+  return structuredClone(projectWorkspace);
+}
