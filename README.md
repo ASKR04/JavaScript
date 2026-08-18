@@ -27,6 +27,6 @@ Each project in this repository is designed to be useful, documented, and struct
 | SignalForge | Project story export | 2026-08-13 | Deterministic Markdown generation, evidence metrics, safe filenames, browser-native download, clipboard sharing, and responsive accessible feedback | [PR #1](https://github.com/ASKR04/JavaScript/pull/1) |
 | SignalForge | Commit narrative planner | 2026-08-14 | Conventional commit composition, reviewable implementation notes, verification evidence, storage migration, clipboard handoff, and project-story integration | [PR #1](https://github.com/ASKR04/JavaScript/pull/1) |
 | SignalForge | Workspace portability | 2026-08-15 | Versioned JSON backups, migration-safe runtime validation, confirmed restore, safe filenames, accessible feedback, and responsive interaction checks | [PR #1](https://github.com/ASKR04/JavaScript/pull/1) |
-| SignalForge | Portfolio closeout | 2026-08-17 | Tested readiness scoring, accessible completion checklist, responsive final review, retrospective, and next-project proposal | Pending review |
+| SignalForge | Portfolio closeout | 2026-08-17 | Tested readiness scoring, accessible completion checklist, responsive final review, retrospective, and next-project proposal | [PR #3](https://github.com/ASKR04/JavaScript/pull/3) |
 
 See the [SignalForge architecture notes](./signalforge/docs/architecture.md) for the current component and data flow diagrams.
