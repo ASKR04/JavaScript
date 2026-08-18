@@ -22,6 +22,7 @@ SignalForge treats documentation and execution as part of the same workflow. A p
 - Editable architecture decision records for capturing technical choices and tradeoffs.
 - Portfolio summary for collecting highlights, proof points, and final documentation notes.
 - Portable Markdown project-story export with completion metrics, safe filenames, clipboard sharing, and local download.
+- Portfolio-readiness scoring that surfaces incomplete scope, roadmap, architecture, and delivery evidence before publication.
 
 ## Architecture
 
@@ -109,7 +110,13 @@ The commit narrative planner connects daily delivery notes to conventional commi
 
 Workspace data can now move safely between browsers or machines through a readable JSON backup. Downloads include format, schema, and export metadata; restores reject unrelated, malformed, incomplete, or future-version files before asking the user to replace local state. Version-one backups migrate through the same tested boundary as browser persistence.
 
-The next proof point is the final responsive quality review and finished-workflow documentation.
+The finished workflow now closes the loop between planning and publication. A tested readiness model checks the project brief, feature delivery, roadmap closure, architecture decisions, and commit evidence. The Summary view presents the result as an accessible progress indicator and actionable checklist before a developer exports the final project story.
+
+## Retrospective
+
+SignalForge began as a static planning dashboard and finished as a private, portable workspace with explicit boundaries between typed domain logic, React interaction code, browser persistence, and export adapters. The most effective decision was keeping validation and state transitions framework-independent: this made features such as backup migration, story export, and readiness scoring straightforward to test without browser mocks.
+
+The week also exposed a useful product lesson. Capturing evidence is not the same as knowing work is ready to publish. The final readiness checklist turns the data already present in the workspace into a clear release decision, rather than adding another disconnected form. A future version could replace browser storage with an optional synchronized adapter, but the local-first core is complete and useful without accounts or external services.
 
 ## Progress Log
 
@@ -122,3 +129,4 @@ The next proof point is the final responsive quality review and finished-workflo
 | Project story export | 2026-08-13 | Added deterministic Markdown generation, live evidence metrics, safe filenames, browser download, clipboard sharing, and accessible feedback. | 11 Vitest tests, production build, 1440px desktop and 390px responsive interaction checks | [PR #1](https://github.com/ASKR04/JavaScript/pull/1) |
 | Commit narrative planner | 2026-08-14 | Added conventional commit composition, subject-length guidance, implementation and verification evidence, version-one storage migration, clipboard handoff, and project-story integration. | 14 Vitest tests, production build, desktop and mobile responsive checks | [PR #1](https://github.com/ASKR04/JavaScript/pull/1) |
 | Workspace portability | 2026-08-15 | Added readable JSON backup downloads, validated restore confirmation, shared schema migration, safe filenames, and accessible transfer feedback. | 20 Vitest tests, production build, desktop and 390px restore interaction checks | [PR #1](https://github.com/ASKR04/JavaScript/pull/1) |
+| Portfolio closeout | 2026-08-17 | Added pure readiness scoring, an accessible completion checklist, final responsive polish, finished-workflow documentation, and the EventWeave proposal. | 24 Vitest tests, production build, local-server smoke check, and responsive CSS/accessibility review | Pending review |

@@ -164,6 +164,28 @@ Backups use a recognizable format identifier, workspace schema version, ISO expo
 
 Restore and local persistence share one migration function. Version-one data gains an empty commit narrative collection before it reaches the runtime guard, while version-two data must satisfy the complete current model. The toolbar owns only browser file and download adapters; React state changes only after parsing succeeds and the user confirms replacement.
 
+## Portfolio Readiness Flow
+
+```mermaid
+flowchart LR
+    Workspace["Typed workspace evidence"] --> Evaluator["Pure readiness evaluator"]
+    Evaluator --> Brief["Brief completeness"]
+    Evaluator --> Delivery["Feature and roadmap closure"]
+    Evaluator --> Decisions["Architecture evidence"]
+    Evaluator --> Commits["Verified commit narratives"]
+    Brief --> Score["Deterministic completion score"]
+    Delivery --> Score
+    Decisions --> Score
+    Commits --> Score
+    Score --> Progress["Accessible progress indicator"]
+    Score --> Checklist["Actionable publication checklist"]
+    Checklist --> Export["Final project story export"]
+```
+
+Readiness is derived rather than persisted. The evaluator receives a workspace and returns five evidence checks, a completed count, a percentage, and a final ready flag. Empty collections never count as delivered, while text evidence must contain non-whitespace content. Keeping this logic pure prevents the publication signal from drifting away from the live workspace and makes edge cases independently testable.
+
+The Summary view exposes the result through a labelled progressbar and a semantic checklist. Status is not communicated by color alone: every check includes an icon, explicit text, and guidance for the next action. The layout collapses from two columns to one on narrow screens without changing reading order.
+
 ## Proposed Folder Structure
 
 ```text
@@ -211,6 +233,8 @@ src/
   features/roadmap/Roadmap.tsx       # milestone workflow controls
   features/decisions/Decisions.tsx   # validated ADR creation and editing
   features/summary/Summary.tsx       # evidence metrics and browser export actions
+  lib/portfolio-readiness.ts          # pure publication evidence evaluator
+  lib/portfolio-readiness.test.ts     # incomplete, complete, and empty-state coverage
   lib/project-state.ts                # typed models and starter workspace
   lib/project-story.ts                # pure Markdown export and filename helpers
   lib/project-story.test.ts           # deterministic export coverage
@@ -223,4 +247,4 @@ src/
 
 ## Approval and Delivery State
 
-The proposal was followed by the initial implementation and responsive application scaffold. Work remains within the approved SignalForge scope. The current increment adds portable workspace backup and restore with migration-safe validation, confirmation before replacement, and accessible browser feedback. The next planned increment is the final responsive quality review, documentation pass, and project retrospective.
+The approved SignalForge week is complete. The final increment adds derived portfolio-readiness guidance, closes the responsive and accessibility review, documents the finished workflow, and records the project retrospective. Further SignalForge work should be treated as maintenance or a separately approved enhancement rather than an extension of the original weekly scope.
