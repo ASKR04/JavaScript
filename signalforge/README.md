@@ -112,6 +112,8 @@ Workspace data can now move safely between browsers or machines through a readab
 
 The finished workflow now closes the loop between planning and publication. A tested readiness model checks the project brief, feature delivery, roadmap closure, architecture decisions, and commit evidence. The Summary view presents the result as an accessible progress indicator and actionable checklist before a developer exports the final project story.
 
+Keyboard navigation now includes a first-focus bypass link into the project workspace, high-contrast focus indicators for sidebar navigation and form controls, and a visible focus destination after the bypass. Smooth scrolling and readiness animation are disabled when the operating system requests reduced motion.
+
 ## Retrospective
 
 SignalForge began as a static planning dashboard and finished as a private, portable workspace with explicit boundaries between typed domain logic, React interaction code, browser persistence, and export adapters. The most effective decision was keeping validation and state transitions framework-independent: this made features such as backup migration, story export, and readiness scoring straightforward to test without browser mocks.
@@ -130,3 +132,4 @@ The week also exposed a useful product lesson. Capturing evidence is not the sam
 | Commit narrative planner | 2026-08-14 | Added conventional commit composition, subject-length guidance, implementation and verification evidence, version-one storage migration, clipboard handoff, and project-story integration. | 14 Vitest tests, production build, desktop and mobile responsive checks | [PR #1](https://github.com/ASKR04/JavaScript/pull/1) |
 | Workspace portability | 2026-08-15 | Added readable JSON backup downloads, validated restore confirmation, shared schema migration, safe filenames, and accessible transfer feedback. | 20 Vitest tests, production build, desktop and 390px restore interaction checks | [PR #1](https://github.com/ASKR04/JavaScript/pull/1) |
 | Portfolio closeout | 2026-08-17 | Added pure readiness scoring, an accessible completion checklist, final responsive polish, finished-workflow documentation, and the EventWeave proposal. | 24 Vitest tests, production build, local-server smoke check, and responsive CSS/accessibility review | [PR #3](https://github.com/ASKR04/JavaScript/pull/3) |
+| Accessibility maintenance | 2026-08-18 | Added a keyboard bypass path, visible navigation and control focus states, and reduced-motion behavior. | 24 Vitest tests, production build, and source-level accessibility review | Pending review |

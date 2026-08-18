@@ -64,6 +64,9 @@ export function App() {
 
   return (
     <main className="app-shell">
+      <a className="skip-link" href="#workspace">
+        Skip to project workspace
+      </a>
       <aside className="sidebar" aria-label="SignalForge sections">
         <div>
           <p className="eyebrow">SignalForge</p>
@@ -78,7 +81,12 @@ export function App() {
         </nav>
       </aside>
 
-      <section className="workspace" aria-label="Project workspace">
+      <section
+        className="workspace"
+        id="workspace"
+        tabIndex={-1}
+        aria-label="Project workspace"
+      >
         <WorkspaceToolbar
           status={saveStatus}
           savedAt={savedAt}

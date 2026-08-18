@@ -227,6 +227,7 @@ signalforge/
 ```text
 src/
   app/App.tsx                         # workspace ownership and autosave lifecycle
+                                      # and keyboard bypass destination
   components/WorkspaceToolbar.tsx    # save feedback, portable transfer, and reset controls
   components/WorkItemComposer.tsx    # reusable accessible creation form
   features/dashboard/                # brief editor and feature workflow controls
@@ -243,8 +244,11 @@ src/
   lib/workspace-state.ts              # immutable state transitions
   lib/persistence.ts                  # versioned storage adapter and guards
   lib/workspace-state.test.ts         # transition and persistence tests
+  styles/global.css                   # responsive layout, focus visibility, and reduced-motion rules
 ```
 
 ## Approval and Delivery State
 
 The approved SignalForge week is complete. The final increment adds derived portfolio-readiness guidance, closes the responsive and accessibility review, documents the finished workflow, and records the project retrospective. Further SignalForge work should be treated as maintenance or a separately approved enhancement rather than an extension of the original weekly scope.
+
+Post-closeout maintenance on 2026-08-18 strengthened the application shell without expanding product scope. The first keyboard stop now bypasses the persistent navigation and moves focus to the labelled workspace, interactive focus rings remain visible against both dark and light surfaces, and motion preferences control scrolling and progress transitions.
