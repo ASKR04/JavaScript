@@ -5,6 +5,7 @@ import {
   createProjectStoryMarkdown,
   getProjectStoryMetrics,
 } from "../../lib/project-story";
+import { getPortfolioReadiness } from "../../lib/portfolio-readiness";
 
 type SummaryProps = {
   workspace: ProjectWorkspace;
@@ -15,6 +16,7 @@ export function Summary({ workspace }: SummaryProps) {
     "idle" | "downloaded" | "copied" | "error"
   >("idle");
   const metrics = getProjectStoryMetrics(workspace);
+  const readiness = getPortfolioReadiness(workspace);
 
   function downloadProjectStory() {
     const markdown = createProjectStoryMarkdown(workspace);
@@ -70,6 +72,46 @@ export function Summary({ workspace }: SummaryProps) {
           <dd>{workspace.nextProofPoint}</dd>
         </div>
       </dl>
+
+      <section className="readiness-card" aria-labelledby="readiness-title">
+        <div className="readiness-heading">
+          <div>
+            <p className="eyebrow">Release confidence</p>
+            <h3 id="readiness-title">Portfolio readiness</h3>
+          </div>
+          <strong>{readiness.percent}%</strong>
+        </div>
+        <div
+          className="readiness-progress"
+          role="progressbar"
+          aria-label="Portfolio readiness"
+          aria-valuemin={0}
+          aria-valuemax={readiness.total}
+          aria-valuenow={readiness.completed}
+          aria-valuetext={`${readiness.completed} of ${readiness.total} readiness checks complete`}
+        >
+          <span style={{ width: `${readiness.percent}%` }} />
+        </div>
+        <p className="readiness-summary">
+          {readiness.ready
+            ? "This workspace has the planning and delivery evidence needed for a final project story."
+            : `${readiness.completed} of ${readiness.total} evidence checks are complete. Resolve the open items before publishing.`}
+        </p>
+        <ul className="readiness-list">
+          {readiness.items.map((item) => (
+            <li key={item.id} data-complete={item.complete}>
+              <span aria-hidden="true">{item.complete ? "✓" : "○"}</span>
+              <div>
+                <strong>{item.label}</strong>
+                <p>{item.guidance}</p>
+              </div>
+              <span className="visually-hidden">
+                {item.complete ? "Complete" : "Needs attention"}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
 
       <div className="story-export" aria-labelledby="story-export-title">
         <div className="story-export-copy">
