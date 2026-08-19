@@ -186,6 +186,22 @@ Readiness is derived rather than persisted. The evaluator receives a workspace a
 
 The Summary view exposes the result through a labelled progressbar and a semantic checklist. Status is not communicated by color alone: every check includes an icon, explicit text, and guidance for the next action. The layout collapses from two columns to one on narrow screens without changing reading order.
 
+## Validation Recovery Flow
+
+```mermaid
+flowchart LR
+    Submit["Validated form submission"] --> Rules["Pure domain validation"]
+    Rules -->|valid| State["Workspace mutation"]
+    State --> Reset["Reset draft and focus first field"]
+    Rules -->|invalid| Inline["Render linked field errors"]
+    Inline --> Summary["Announce error count"]
+    Summary --> Order["Resolve first error in reading order"]
+    Order --> Frame["Wait for rendered guidance"]
+    Frame --> Focus["Focus first invalid control"]
+```
+
+The reusable focus coordinator accepts an explicit field order, validation errors, and focus targets. It schedules focus after React renders updated `aria-invalid` and `aria-describedby` attributes, ensuring the destination and its guidance are available together. The coordinator is independent of form markup and has focused tests for reading order, unavailable targets, and valid submissions; the shared summary keeps visible and announced feedback consistent across planning, decision, and commit workflows.
+
 ## Proposed Folder Structure
 
 ```text
@@ -230,6 +246,7 @@ src/
                                       # and keyboard bypass destination
   components/WorkspaceToolbar.tsx    # save feedback, portable transfer, and reset controls
   components/WorkItemComposer.tsx    # reusable accessible creation form
+  components/ValidationSummary.tsx   # shared live error-count feedback
   features/dashboard/                # brief editor and feature workflow controls
   features/roadmap/Roadmap.tsx       # milestone workflow controls
   features/decisions/Decisions.tsx   # validated ADR creation and editing
@@ -242,6 +259,8 @@ src/
   lib/workspace-backup.ts             # portable encoder, parser, filename, and migration boundary
   lib/workspace-backup.test.ts        # current, legacy, invalid, and future-format coverage
   lib/workspace-state.ts              # immutable state transitions
+  lib/focus-validation.ts             # ordered post-render invalid-field focus
+  lib/focus-validation.test.ts        # focus scheduling and fallback coverage
   lib/persistence.ts                  # versioned storage adapter and guards
   lib/workspace-state.test.ts         # transition and persistence tests
   styles/global.css                   # responsive layout, focus visibility, and reduced-motion rules
@@ -252,3 +271,5 @@ src/
 The approved SignalForge week is complete. The final increment adds derived portfolio-readiness guidance, closes the responsive and accessibility review, documents the finished workflow, and records the project retrospective. Further SignalForge work should be treated as maintenance or a separately approved enhancement rather than an extension of the original weekly scope.
 
 Post-closeout maintenance on 2026-08-18 strengthened the application shell without expanding product scope. The first keyboard stop now bypasses the persistent navigation and moves focus to the labelled workspace, interactive focus rings remain visible against both dark and light surfaces, and motion preferences control scrolling and progress transitions.
+
+The 2026-08-19 maintenance increment improves error recovery without adding product scope. Every domain-validated composer now presents a live error count and returns focus to the first invalid control in declared reading order after React renders its linked guidance.
