@@ -9,8 +9,8 @@ import { createDefaultWorkspace } from "../lib/project-state";
 import {
   clearWorkspace,
   loadWorkspace,
-  saveWorkspace,
 } from "../lib/persistence";
+import { createWorkspaceAutosave } from "../lib/workspace-autosave";
 import {
   addArchitectureDecision,
   addCommitNarrative,
@@ -35,21 +35,31 @@ export function App() {
   const [saveStatus, setSaveStatus] = useState<"saving" | "saved" | "error">(
     "saved",
   );
+  const [autosave] = useState(() =>
+    createWorkspaceAutosave({
+      storage: window.localStorage,
+      schedule: (callback, delay) => window.setTimeout(callback, delay),
+      cancel: (timerId) => window.clearTimeout(timerId),
+      onStatusChange: (status, snapshot) => {
+        setSaveStatus(status);
+        if (snapshot) setSavedAt(snapshot.savedAt);
+      },
+    }),
+  );
 
   useEffect(() => {
-    setSaveStatus("saving");
-    const saveTimer = window.setTimeout(() => {
-      try {
-        const snapshot = saveWorkspace(window.localStorage, workspace);
-        setSavedAt(snapshot.savedAt);
-        setSaveStatus("saved");
-      } catch {
-        setSaveStatus("error");
-      }
-    }, 300);
+    autosave.queue(workspace);
+  }, [autosave, workspace]);
 
-    return () => window.clearTimeout(saveTimer);
-  }, [workspace]);
+  useEffect(() => {
+    const flushPendingSave = () => autosave.flush();
+    window.addEventListener("pagehide", flushPendingSave);
+
+    return () => {
+      window.removeEventListener("pagehide", flushPendingSave);
+      autosave.cancel();
+    };
+  }, [autosave]);
 
   function resetWorkspace() {
     const shouldReset = window.confirm(

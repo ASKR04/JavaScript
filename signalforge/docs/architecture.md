@@ -202,6 +202,22 @@ flowchart LR
 
 The reusable focus coordinator accepts an explicit field order, validation errors, and focus targets. It schedules focus after React renders updated `aria-invalid` and `aria-describedby` attributes, ensuring the destination and its guidance are available together. The coordinator is independent of form markup and has focused tests for reading order, unavailable targets, and valid submissions; the shared summary keeps visible and announced feedback consistent across planning, decision, and commit workflows.
 
+## Lifecycle-Safe Autosave Flow
+
+```mermaid
+flowchart LR
+    Edit["Workspace edit"] --> Queue["Queue 300 ms save"]
+    Queue --> Replace["Cancel older pending timer"]
+    Replace --> Latest["Retain newest workspace"]
+    Latest -->|timer completes| Storage["Versioned browser snapshot"]
+    PageHide["Page becomes hidden"] --> Flush["Cancel timer and flush now"]
+    Flush --> Storage
+    Storage -->|success| Saved["Saved timestamp"]
+    Storage -->|failure| Error["Visible save error"]
+```
+
+The autosave coordinator owns scheduling rather than React components. Rapid updates replace the pending timer and retain only the newest immutable workspace. A `pagehide` lifecycle listener flushes that pending value synchronously through the existing storage boundary before navigation, tab close, or mobile backgrounding can interrupt the debounce window. Scheduling, flush behavior, and storage failures are covered without browser timing mocks.
+
 ## Proposed Folder Structure
 
 ```text
@@ -261,6 +277,8 @@ src/
   lib/workspace-state.ts              # immutable state transitions
   lib/focus-validation.ts             # ordered post-render invalid-field focus
   lib/focus-validation.test.ts        # focus scheduling and fallback coverage
+  lib/workspace-autosave.ts           # coalesced saves and page lifecycle flush boundary
+  lib/workspace-autosave.test.ts      # scheduling, flush, and storage-error coverage
   lib/persistence.ts                  # versioned storage adapter and guards
   lib/workspace-state.test.ts         # transition and persistence tests
   styles/global.css                   # responsive layout, focus visibility, and reduced-motion rules
@@ -273,3 +291,5 @@ The approved SignalForge week is complete. The final increment adds derived port
 Post-closeout maintenance on 2026-08-18 strengthened the application shell without expanding product scope. The first keyboard stop now bypasses the persistent navigation and moves focus to the labelled workspace, interactive focus rings remain visible against both dark and light surfaces, and motion preferences control scrolling and progress transitions.
 
 The 2026-08-19 maintenance increment improves error recovery without adding product scope. Every domain-validated composer now presents a live error count and returns focus to the first invalid control in declared reading order after React renders its linked guidance.
+
+The 2026-08-20 maintenance increment protects the local-first contract at the page lifecycle boundary. Debounced changes are coalesced through a tested coordinator, and the newest pending workspace is flushed when the page is hidden.
