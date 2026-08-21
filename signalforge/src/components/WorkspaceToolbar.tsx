@@ -20,6 +20,7 @@ type WorkspaceToolbarProps = {
   savedAt: string | null;
   workspace: ProjectWorkspace;
   onRestore: (workspace: ProjectWorkspace) => void;
+  onRetrySave: () => void;
   onReset: () => void;
 };
 
@@ -37,6 +38,7 @@ export function WorkspaceToolbar({
   savedAt,
   workspace,
   onRestore,
+  onRetrySave,
   onReset,
 }: WorkspaceToolbarProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -46,7 +48,7 @@ export function WorkspaceToolbar({
     status === "saving"
       ? "Saving locally…"
       : status === "error"
-        ? "Local save failed"
+        ? "Local save failed; retry before closing"
         : formatSavedAt(savedAt);
 
   function downloadBackup() {
@@ -112,10 +114,21 @@ export function WorkspaceToolbar({
     <header className="workspace-toolbar">
       <div>
         <p className="eyebrow">Private by default</p>
-        <p className={`save-status save-status-${status}`} aria-live="polite">
-          <span aria-hidden="true" />
-          {statusText}
-        </p>
+        <div className="save-status-row">
+          <p className={`save-status save-status-${status}`} aria-live="polite">
+            <span aria-hidden="true" />
+            {statusText}
+          </p>
+          {status === "error" ? (
+            <button
+              className="text-button save-retry-button"
+              type="button"
+              onClick={onRetrySave}
+            >
+              Retry save
+            </button>
+          ) : null}
+        </div>
       </div>
       <div className="workspace-transfer">
         <div className="workspace-toolbar-actions">

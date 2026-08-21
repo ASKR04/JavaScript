@@ -31,5 +31,6 @@ Each project in this repository is designed to be useful, documented, and struct
 | SignalForge | Accessibility maintenance | 2026-08-18 | Keyboard bypass navigation, high-contrast focus visibility, and reduced-motion support | [PR #4](https://github.com/ASKR04/JavaScript/pull/4) |
 | SignalForge | Validation recovery | 2026-08-19 | Tested first-error focus recovery and live summaries across validated planning forms | [PR #4](https://github.com/ASKR04/JavaScript/pull/4) |
 | SignalForge | Autosave resilience | 2026-08-20 | Tested coalesced persistence and lifecycle flushing for pending local edits | [PR #4](https://github.com/ASKR04/JavaScript/pull/4) |
+| SignalForge | Autosave recovery | 2026-08-21 | Recoverable storage failures with explicit retry, lifecycle retry, and stale-snapshot protection | [PR #4](https://github.com/ASKR04/JavaScript/pull/4) |
 
 See the [SignalForge architecture notes](./signalforge/docs/architecture.md) for the current component and data flow diagrams.

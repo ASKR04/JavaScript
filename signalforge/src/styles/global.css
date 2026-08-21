@@ -148,6 +148,23 @@ a {
   font-weight: 700;
 }
 
+.save-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 12px;
+}
+
+.save-retry-button {
+  color: #9a3412;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.save-retry-button:hover {
+  color: #7c2d12;
+}
+
 .save-status span {
   width: 9px;
   height: 9px;

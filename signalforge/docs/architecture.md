@@ -213,10 +213,14 @@ flowchart LR
     PageHide["Page becomes hidden"] --> Flush["Cancel timer and flush now"]
     Flush --> Storage
     Storage -->|success| Saved["Saved timestamp"]
-    Storage -->|failure| Error["Visible save error"]
+    Storage -->|failure| Recovery["Retain newest failed workspace"]
+    Recovery --> Error["Visible save error and retry control"]
+    Error -->|explicit retry or later pagehide| Storage
 ```
 
-The autosave coordinator owns scheduling rather than React components. Rapid updates replace the pending timer and retain only the newest immutable workspace. A `pagehide` lifecycle listener flushes that pending value synchronously through the existing storage boundary before navigation, tab close, or mobile backgrounding can interrupt the debounce window. Scheduling, flush behavior, and storage failures are covered without browser timing mocks.
+The autosave coordinator owns scheduling rather than React components. Rapid updates replace the pending timer and retain only the newest immutable workspace. A `pagehide` lifecycle listener flushes that pending value synchronously through the existing storage boundary before navigation, tab close, or mobile backgrounding can interrupt the debounce window.
+
+If browser storage rejects a write, the coordinator keeps that workspace in memory and exposes an explicit retry through the toolbar. A later lifecycle flush also retries the retained value, while any newer queued edit supersedes it. Successful persistence clears recovery state, preventing an older failed snapshot from overwriting newer work. Scheduling, flush behavior, recovery, and stale-state replacement are covered without browser timing mocks.
 
 ## Proposed Folder Structure
 
@@ -293,3 +297,5 @@ Post-closeout maintenance on 2026-08-18 strengthened the application shell witho
 The 2026-08-19 maintenance increment improves error recovery without adding product scope. Every domain-validated composer now presents a live error count and returns focus to the first invalid control in declared reading order after React renders its linked guidance.
 
 The 2026-08-20 maintenance increment protects the local-first contract at the page lifecycle boundary. Debounced changes are coalesced through a tested coordinator, and the newest pending workspace is flushed when the page is hidden.
+
+The 2026-08-21 maintenance increment makes transient storage failures recoverable. Failed writes retain the newest workspace in memory for an explicit or lifecycle retry, and newer edits safely replace stale recovery state.

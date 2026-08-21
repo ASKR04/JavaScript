@@ -105,6 +105,7 @@ export function App() {
             setSavedAt(null);
             setWorkspace(restoredWorkspace);
           }}
+          onRetrySave={() => autosave.retry()}
           onReset={resetWorkspace}
         />
         <Dashboard

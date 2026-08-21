@@ -90,26 +90,106 @@ describe("workspace autosave", () => {
     });
   });
 
-  it("reports storage failures without leaving stale work queued", () => {
+  it("retains a failed workspace for an explicit retry", () => {
+    const storage = new MemoryStorage();
     const timers = createTimerHarness();
+    const statuses: string[] = [];
+    let storageIsAvailable = false;
+    const autosave = createWorkspaceAutosave({
+      storage: {
+        setItem: (key, value) => {
+          if (storageIsAvailable) {
+            storage.setItem(key, value);
+            return;
+          }
+          throw new Error("Storage unavailable");
+        },
+        removeItem: (key) => storage.removeItem(key),
+      },
+      schedule: (callback) => timers.schedule(callback),
+      cancel: (timerId) => timers.cancel(timerId),
+      onStatusChange: (status) => statuses.push(status),
+      getNow: () => new Date("2026-08-21T15:00:00.000Z"),
+    });
+    const workspace = updateProjectBrief(createDefaultWorkspace(), {
+      nextProofPoint: "Recover the latest local edit",
+    });
+
+    autosave.queue(workspace);
+    autosave.flush();
+    storageIsAvailable = true;
+    autosave.retry();
+
+    expect(loadWorkspace(storage)).toEqual({
+      workspace,
+      savedAt: "2026-08-21T15:00:00.000Z",
+    });
+    expect(statuses).toEqual(["saving", "error", "saving", "saved"]);
+    expect(timers.callbacks.size).toBe(0);
+  });
+
+  it("retries a failed save when a later lifecycle flush runs", () => {
+    const storage = new MemoryStorage();
+    const timers = createTimerHarness();
+    let storageIsAvailable = false;
+    const autosave = createWorkspaceAutosave({
+      storage: {
+        setItem: (key, value) => {
+          if (!storageIsAvailable) throw new Error("Storage unavailable");
+          storage.setItem(key, value);
+        },
+        removeItem: (key) => storage.removeItem(key),
+      },
+      schedule: (callback) => timers.schedule(callback),
+      cancel: (timerId) => timers.cancel(timerId),
+      onStatusChange: () => undefined,
+    });
+    const workspace = updateProjectBrief(createDefaultWorkspace(), {
+      value: "Keep local work recoverable after a transient failure.",
+    });
+
+    autosave.queue(workspace);
+    autosave.flush();
+    storageIsAvailable = true;
+    autosave.flush();
+
+    expect(loadWorkspace(storage)?.workspace).toEqual(workspace);
+  });
+
+  it("supersedes a failed workspace when a newer edit is queued", () => {
+    const storage = new MemoryStorage();
+    const timers = createTimerHarness();
+    let storageIsAvailable = false;
     const statuses: string[] = [];
     const autosave = createWorkspaceAutosave({
       storage: {
-        setItem: () => {
-          throw new Error("Storage unavailable");
+        setItem: (key, value) => {
+          if (!storageIsAvailable) throw new Error("Storage unavailable");
+          storage.setItem(key, value);
         },
-        removeItem: () => undefined,
+        removeItem: (key) => storage.removeItem(key),
       },
       schedule: (callback) => timers.schedule(callback),
       cancel: (timerId) => timers.cancel(timerId),
       onStatusChange: (status) => statuses.push(status),
     });
+    const firstEdit = updateProjectBrief(createDefaultWorkspace(), {
+      name: "Unavailable draft",
+    });
+    const latestEdit = updateProjectBrief(firstEdit, {
+      name: "Recovered latest draft",
+    });
 
-    autosave.queue(createDefaultWorkspace());
+    autosave.queue(firstEdit);
     autosave.flush();
+    storageIsAvailable = true;
+    autosave.queue(latestEdit);
     autosave.flush();
+    autosave.retry();
 
-    expect(statuses).toEqual(["saving", "error"]);
-    expect(timers.callbacks.size).toBe(0);
+    expect(loadWorkspace(storage)?.workspace.name).toBe(
+      "Recovered latest draft",
+    );
+    expect(statuses).toEqual(["saving", "error", "saving", "saved"]);
   });
 });

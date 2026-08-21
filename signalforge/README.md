@@ -118,6 +118,8 @@ Validated creation and editing forms now recover predictably from errors. A live
 
 Local persistence now protects edits that are still inside the autosave debounce window. A shared coordinator coalesces rapid changes, reports storage failures through the existing save status, and flushes the newest pending workspace when the page is hidden so a quick tab close or navigation does not discard the last input.
 
+Transient browser-storage failures are now recoverable without forcing another edit. The coordinator retains only the newest failed workspace in memory, exposes a visible retry action, and attempts the retained save again during a later page lifecycle flush. Successful newer edits clear stale recovery state so an older snapshot cannot overwrite current work.
+
 ## Retrospective
 
 SignalForge began as a static planning dashboard and finished as a private, portable workspace with explicit boundaries between typed domain logic, React interaction code, browser persistence, and export adapters. The most effective decision was keeping validation and state transitions framework-independent: this made features such as backup migration, story export, and readiness scoring straightforward to test without browser mocks.
@@ -139,3 +141,4 @@ The week also exposed a useful product lesson. Capturing evidence is not the sam
 | Accessibility maintenance | 2026-08-18 | Added a keyboard bypass path, visible navigation and control focus states, and reduced-motion behavior. | 24 Vitest tests, production build, and source-level accessibility review | [PR #4](https://github.com/ASKR04/JavaScript/pull/4) |
 | Validation recovery | 2026-08-19 | Added ordered first-error focus recovery and live error-count summaries across feature, milestone, decision, and commit forms. | 27 Vitest tests, production build, HTTP smoke check, and semantic source review | [PR #4](https://github.com/ASKR04/JavaScript/pull/4) |
 | Autosave resilience | 2026-08-20 | Added coalesced save scheduling and lifecycle flushing so pending edits survive quick tab exits. | 30 Vitest tests, production build, lifecycle unit coverage, and HTTP 200 smoke check | [PR #4](https://github.com/ASKR04/JavaScript/pull/4) |
+| Autosave recovery | 2026-08-21 | Retained the newest failed local save for explicit or lifecycle retry without allowing stale recovery data to overwrite later edits. | 32 Vitest tests, production build, recovery unit coverage, and HTTP smoke check | [PR #4](https://github.com/ASKR04/JavaScript/pull/4) |

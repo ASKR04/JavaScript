@@ -23,6 +23,7 @@ type WorkspaceAutosaveOptions<TimerId> = {
 export type WorkspaceAutosave = {
   queue: (workspace: ProjectWorkspace) => void;
   flush: () => void;
+  retry: () => void;
   cancel: () => void;
 };
 
@@ -35,12 +36,15 @@ export function createWorkspaceAutosave<TimerId>({
   getNow = () => new Date(),
 }: WorkspaceAutosaveOptions<TimerId>): WorkspaceAutosave {
   let pending: { timerId: TimerId; workspace: ProjectWorkspace } | null = null;
+  let failedWorkspace: ProjectWorkspace | null = null;
 
   function persist(workspace: ProjectWorkspace) {
     try {
       const snapshot = saveWorkspace(storage, workspace, getNow());
+      failedWorkspace = null;
       onStatusChange("saved", snapshot);
     } catch {
+      failedWorkspace = workspace;
       onStatusChange("error");
     }
   }
@@ -52,9 +56,18 @@ export function createWorkspaceAutosave<TimerId>({
     pending = null;
   }
 
+  function retryFailedSave() {
+    if (!failedWorkspace) return;
+
+    const workspace = failedWorkspace;
+    onStatusChange("saving");
+    persist(workspace);
+  }
+
   return {
     queue(workspace) {
       cancelPending();
+      failedWorkspace = null;
       onStatusChange("saving");
       pending = {
         workspace,
@@ -65,12 +78,19 @@ export function createWorkspaceAutosave<TimerId>({
       };
     },
     flush() {
-      if (!pending) return;
+      if (!pending) {
+        retryFailedSave();
+        return;
+      }
 
       const { workspace } = pending;
       cancelPending();
       persist(workspace);
     },
-    cancel: cancelPending,
+    retry: retryFailedSave,
+    cancel() {
+      cancelPending();
+      failedWorkspace = null;
+    },
   };
 }
