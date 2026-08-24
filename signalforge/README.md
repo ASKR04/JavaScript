@@ -17,7 +17,7 @@ SignalForge treats documentation and execution as part of the same workflow. A p
 - Feature board for tracking planned, active, blocked, and completed work.
 - Validated feature and milestone creation with safe, confirmed removal.
 - Versioned local persistence with autosave feedback and safe sample reset.
-- Multi-tab conflict protection with validated newer-save detection and explicit resolution.
+- Multi-tab conflict protection with silent identical-save reconciliation, structural change previews, and explicit resolution.
 - Portable JSON workspace backups with schema validation and version-one migration on restore.
 - Commit narrative planner for shaping daily implementation notes into conventional commit messages and durable verification evidence.
 - Editable architecture decision records for capturing technical choices and tradeoffs.
@@ -121,7 +121,7 @@ Local persistence now protects edits that are still inside the autosave debounce
 
 Transient browser-storage failures are now recoverable without forcing another edit. The coordinator retains only the newest failed workspace in memory, exposes a visible retry action, and attempts the retained save again during a later page lifecycle flush. Successful newer edits clear stale recovery state so an older snapshot cannot overwrite current work.
 
-Multiple open SignalForge tabs no longer overwrite one another silently. A newer validated save from another tab pauses the current tab's pending autosave and presents an accessible choice to load the external workspace or keep and re-save the current one. Stale, duplicate, malformed, and unsupported snapshots never reach the interface.
+Multiple open SignalForge tabs no longer overwrite one another silently. A newer validated save from another tab pauses the current tab's pending autosave and presents an accessible choice to load the external workspace or keep and re-save the current one. Identical workspace content is reconciled without an unnecessary prompt, while genuine conflicts summarize changed brief fields and added, removed, or updated records without exposing their contents. Stale, duplicate, malformed, and unsupported snapshots never reach the interface.
 
 ## Retrospective
 
@@ -146,3 +146,4 @@ The week also exposed a useful product lesson. Capturing evidence is not the sam
 | Autosave resilience | 2026-08-20 | Added coalesced save scheduling and lifecycle flushing so pending edits survive quick tab exits. | 30 Vitest tests, production build, lifecycle unit coverage, and HTTP 200 smoke check | [PR #4](https://github.com/ASKR04/JavaScript/pull/4) |
 | Autosave recovery | 2026-08-21 | Retained the newest failed local save for explicit or lifecycle retry without allowing stale recovery data to overwrite later edits. | 32 Vitest tests, production build, recovery unit coverage, and HTTP smoke check | [PR #4](https://github.com/ASKR04/JavaScript/pull/4) |
 | Multi-tab conflict protection | 2026-08-24 | Paused pending local writes when a newer validated external save arrives and added explicit load-or-keep recovery actions. | 35 Vitest tests, production build, two-tab browser interaction check, desktop visual review, and mobile CSS review | [PR #4](https://github.com/ASKR04/JavaScript/pull/4) |
+| Tab conflict review | 2026-08-24 | Reconciled identical external saves without interruption, summarized genuine conflicts, and contained the alert at the mobile breakpoint. | 38 Vitest tests, production build, live identical/conflicting two-tab checks, and 390x844 responsive measurement | [PR #4](https://github.com/ASKR04/JavaScript/pull/4) |

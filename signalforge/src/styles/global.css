@@ -201,6 +201,20 @@ a {
   line-height: 1.5;
 }
 
+.external-change-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 10px 0 0;
+  padding-left: 20px;
+  color: #78350f;
+  line-height: 1.45;
+}
+
+.external-change-summary li::marker {
+  color: #b45309;
+}
+
 .external-change-actions {
   display: flex;
   flex-wrap: wrap;
@@ -1038,6 +1052,7 @@ textarea {
   .workspace-toolbar {
     align-items: flex-start;
     flex-direction: column;
+    flex-wrap: nowrap;
   }
 
   .workspace-transfer {
@@ -1050,6 +1065,8 @@ textarea {
   }
 
   .external-change-notice {
+    width: 100%;
+    flex-basis: auto;
     grid-template-columns: 1fr;
   }
 

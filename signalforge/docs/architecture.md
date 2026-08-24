@@ -229,15 +229,20 @@ flowchart LR
     OtherTab["Another SignalForge tab saves"] --> Event["Browser storage event"]
     Event --> Parse["Parse and validate snapshot"]
     Parse -->|invalid, duplicate, or older| Ignore["Ignore safely"]
-    Parse -->|newer| Pause["Pause pending local autosave"]
-    Pause --> Alert["Announce conflict and show choices"]
+    Parse -->|newer| Compare["Compare typed workspace sections"]
+    Compare -->|identical content| Reconcile["Accept timestamp without a prompt"]
+    Compare -->|changed content| Pause["Pause pending local autosave"]
+    Pause --> Summary["Summarize changed sections and counts"]
+    Summary --> Alert["Announce conflict and show choices"]
     Alert -->|load other tab| Replace["Replace current workspace"]
     Alert -->|keep this tab| Requeue["Queue current workspace"]
     Replace --> Autosave["Resume versioned autosave"]
     Requeue --> Autosave
 ```
 
-The storage-event boundary never applies an external value directly. It first uses the same version, timestamp, migration, and domain guards as startup persistence, then compares the candidate with the current saved timestamp. A valid newer save pauses this tab's pending write so the developer can make an explicit choice instead of losing work through last-writer-wins behavior. Loading that already-persisted snapshot skips one autosave cycle, preventing an unnecessary conflict from bouncing back to the original tab. The alert uses non-color text, keyboard-accessible actions, and responsive stacking rules.
+The storage-event boundary never applies an external value directly. It first uses the same version, timestamp, migration, and domain guards as startup persistence, then compares the candidate with the current saved timestamp and typed workspace. A newer snapshot with identical content advances the local timestamp and cancels the redundant pending write without interrupting the user. A genuinely different save pauses this tab's pending write so the developer can make an explicit choice instead of losing work through last-writer-wins behavior.
+
+Conflict previews disclose structure rather than sensitive content. A pure comparison reports changed brief-field counts and added, removed, or updated records across features, roadmap milestones, architecture decisions, and commit narratives. Loading an already-persisted snapshot skips one autosave cycle, preventing a conflict from bouncing back to the original tab. The alert uses semantic list markup, non-color text, keyboard-accessible actions, and responsive wrapping rules.
 
 ## Proposed Folder Structure
 
@@ -300,8 +305,8 @@ src/
   lib/focus-validation.test.ts        # focus scheduling and fallback coverage
   lib/workspace-autosave.ts           # coalesced saves and page lifecycle flush boundary
   lib/workspace-autosave.test.ts      # scheduling, flush, and storage-error coverage
-  lib/workspace-sync.ts               # validated newer-snapshot selection for external tabs
-  lib/workspace-sync.test.ts          # newer, stale, duplicate, and malformed snapshot coverage
+  lib/workspace-sync.ts               # validated external-save classification and structural summaries
+  lib/workspace-sync.test.ts          # reconciliation, conflict-summary, and invalid snapshot coverage
   lib/persistence.ts                  # versioned storage adapter and guards
   lib/workspace-state.test.ts         # transition and persistence tests
   styles/global.css                   # responsive layout, focus visibility, and reduced-motion rules
@@ -320,3 +325,5 @@ The 2026-08-20 maintenance increment protects the local-first contract at the pa
 The 2026-08-21 maintenance increment makes transient storage failures recoverable. Failed writes retain the newest workspace in memory for an explicit or lifecycle retry, and newer edits safely replace stale recovery state.
 
 The 2026-08-24 maintenance increment prevents silent multi-tab overwrites. Valid newer external snapshots pause local autosave and present explicit load-or-keep actions; stale, duplicate, malformed, and unsupported snapshots are ignored.
+
+The follow-up 2026-08-24 maintenance increment removes false conflict prompts for identical newer saves and gives genuine conflicts a privacy-preserving summary of the workspace sections and record counts that differ. The narrow-screen toolbar disables column wrapping and gives the alert an explicit contained width so its semantic summary and 44 px actions remain inside a 390 px viewport.

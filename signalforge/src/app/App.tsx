@@ -13,7 +13,7 @@ import {
   type WorkspaceSnapshot,
 } from "../lib/persistence";
 import { createWorkspaceAutosave } from "../lib/workspace-autosave";
-import { selectNewerWorkspaceSnapshot } from "../lib/workspace-sync";
+import { classifyExternalWorkspaceUpdate } from "../lib/workspace-sync";
 import {
   addArchitectureDecision,
   addCommitNarrative,
@@ -74,19 +74,34 @@ export function App() {
     function detectExternalSave(event: StorageEvent) {
       if (event.key !== WORKSPACE_STORAGE_KEY || !event.newValue) return;
 
-      const snapshot = selectNewerWorkspaceSnapshot(event.newValue, savedAt);
-      if (!snapshot) return;
+      const update = classifyExternalWorkspaceUpdate(
+        event.newValue,
+        workspace,
+        savedAt,
+      );
+      if (!update) return;
+
+      if (update.kind === "identical") {
+        autosave.cancel();
+        lastAutosaveWorkspace.current = workspace;
+        setSavedAt(update.snapshot.savedAt);
+        setSaveStatus("saved");
+        setExternalSnapshot(null);
+        return;
+      }
 
       autosave.cancel();
       setSaveStatus("conflict");
       setExternalSnapshot((current) =>
-        !current || snapshot.savedAt > current.savedAt ? snapshot : current,
+        !current || update.snapshot.savedAt > current.savedAt
+          ? update.snapshot
+          : current,
       );
     }
 
     window.addEventListener("storage", detectExternalSave);
     return () => window.removeEventListener("storage", detectExternalSave);
-  }, [autosave, savedAt]);
+  }, [autosave, savedAt, workspace]);
 
   function resetWorkspace() {
     const shouldReset = window.confirm(
@@ -128,7 +143,7 @@ export function App() {
           status={saveStatus}
           savedAt={savedAt}
           workspace={workspace}
-          externalSavedAt={externalSnapshot?.savedAt ?? null}
+          externalSnapshot={externalSnapshot}
           onLoadExternalChange={() => {
             if (!externalSnapshot) return;
 

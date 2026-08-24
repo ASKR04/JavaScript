@@ -1,10 +1,12 @@
 import { useRef, useState, type ChangeEvent } from "react";
 import type { ProjectWorkspace } from "../lib/project-state";
+import type { WorkspaceSnapshot } from "../lib/persistence";
 import {
   createWorkspaceBackup,
   createWorkspaceBackupFilename,
   parseWorkspaceBackup,
 } from "../lib/workspace-backup";
+import { summarizeWorkspaceChanges } from "../lib/workspace-sync";
 
 type SaveStatus = "saving" | "saved" | "error" | "conflict";
 
@@ -19,7 +21,7 @@ type WorkspaceToolbarProps = {
   status: SaveStatus;
   savedAt: string | null;
   workspace: ProjectWorkspace;
-  externalSavedAt: string | null;
+  externalSnapshot: WorkspaceSnapshot | null;
   onLoadExternalChange: () => void;
   onKeepCurrent: () => void;
   onRestore: (workspace: ProjectWorkspace) => void;
@@ -44,7 +46,7 @@ export function WorkspaceToolbar({
   status,
   savedAt,
   workspace,
-  externalSavedAt,
+  externalSnapshot,
   onLoadExternalChange,
   onKeepCurrent,
   onRestore,
@@ -54,6 +56,9 @@ export function WorkspaceToolbar({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [transferFeedback, setTransferFeedback] =
     useState<TransferFeedback | null>(null);
+  const externalChanges = externalSnapshot
+    ? summarizeWorkspaceChanges(workspace, externalSnapshot.workspace)
+    : [];
   const statusText =
     status === "saving"
       ? "Saving locally…"
@@ -183,14 +188,28 @@ export function WorkspaceToolbar({
           </p>
         ) : null}
       </div>
-      {externalSavedAt ? (
+      {externalSnapshot ? (
         <div className="external-change-notice" role="alert">
           <div>
             <strong>Newer changes were saved in another tab.</strong>
             <p>
-              The other tab saved at {formatSaveTime(externalSavedAt)}. Choose
-              which workspace to keep.
+              The other tab saved at {formatSaveTime(externalSnapshot.savedAt)}.
+              Choose which workspace to keep.
             </p>
+            {externalChanges.length > 0 ? (
+              <ul
+                className="external-change-summary"
+                aria-label="Changed workspace sections"
+              >
+                {externalChanges.map((change) => (
+                  <li key={change.key}>
+                    <strong>{change.label}:</strong> {change.detail}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>The workspaces now have the same content.</p>
+            )}
           </div>
           <div className="external-change-actions">
             <button
