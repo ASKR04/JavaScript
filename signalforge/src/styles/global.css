@@ -131,6 +131,7 @@ a {
 
 .workspace-toolbar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 24px;
@@ -172,12 +173,38 @@ a {
   background: #0f766e;
 }
 
-.save-status-saving span {
+.save-status-saving span,
+.save-status-conflict span {
   background: #d97706;
 }
 
 .save-status-error span {
   background: #b42318;
+}
+
+.external-change-notice {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 20px;
+  flex-basis: 100%;
+  padding: 16px 18px;
+  border: 1px solid #d97706;
+  border-radius: 8px;
+  color: #78350f;
+  background: #fffbeb;
+}
+
+.external-change-notice p {
+  margin: 4px 0 0;
+  color: #78350f;
+  line-height: 1.5;
+}
+
+.external-change-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .secondary-button {
@@ -1020,5 +1047,18 @@ textarea {
 
   .workspace-toolbar-actions {
     justify-content: flex-start;
+  }
+
+  .external-change-notice {
+    grid-template-columns: 1fr;
+  }
+
+  .external-change-actions {
+    width: 100%;
+  }
+
+  .external-change-actions button {
+    flex: 1 1 150px;
+    min-height: 44px;
   }
 }

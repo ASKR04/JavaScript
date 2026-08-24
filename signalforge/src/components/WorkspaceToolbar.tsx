@@ -6,7 +6,7 @@ import {
   parseWorkspaceBackup,
 } from "../lib/workspace-backup";
 
-type SaveStatus = "saving" | "saved" | "error";
+type SaveStatus = "saving" | "saved" | "error" | "conflict";
 
 type TransferFeedback = {
   tone: "success" | "error";
@@ -19,24 +19,34 @@ type WorkspaceToolbarProps = {
   status: SaveStatus;
   savedAt: string | null;
   workspace: ProjectWorkspace;
+  externalSavedAt: string | null;
+  onLoadExternalChange: () => void;
+  onKeepCurrent: () => void;
   onRestore: (workspace: ProjectWorkspace) => void;
   onRetrySave: () => void;
   onReset: () => void;
 };
 
-function formatSavedAt(savedAt: string | null): string {
-  if (!savedAt) return "Waiting for your first change";
-
-  return `Saved ${new Intl.DateTimeFormat(undefined, {
+function formatSaveTime(savedAt: string): string {
+  return new Intl.DateTimeFormat(undefined, {
     hour: "numeric",
     minute: "2-digit",
-  }).format(new Date(savedAt))}`;
+  }).format(new Date(savedAt));
+}
+
+function formatSavedAt(savedAt: string | null): string {
+  return savedAt
+    ? `Saved ${formatSaveTime(savedAt)}`
+    : "Waiting for your first change";
 }
 
 export function WorkspaceToolbar({
   status,
   savedAt,
   workspace,
+  externalSavedAt,
+  onLoadExternalChange,
+  onKeepCurrent,
   onRestore,
   onRetrySave,
   onReset,
@@ -49,7 +59,9 @@ export function WorkspaceToolbar({
       ? "Saving locally…"
       : status === "error"
         ? "Local save failed; retry before closing"
-        : formatSavedAt(savedAt);
+        : status === "conflict"
+          ? "Local save paused for a tab conflict"
+          : formatSavedAt(savedAt);
 
   function downloadBackup() {
     const contents = createWorkspaceBackup(workspace);
@@ -171,6 +183,33 @@ export function WorkspaceToolbar({
           </p>
         ) : null}
       </div>
+      {externalSavedAt ? (
+        <div className="external-change-notice" role="alert">
+          <div>
+            <strong>Newer changes were saved in another tab.</strong>
+            <p>
+              The other tab saved at {formatSaveTime(externalSavedAt)}. Choose
+              which workspace to keep.
+            </p>
+          </div>
+          <div className="external-change-actions">
+            <button
+              className="primary-button"
+              type="button"
+              onClick={onLoadExternalChange}
+            >
+              Load other tab
+            </button>
+            <button
+              className="secondary-button"
+              type="button"
+              onClick={onKeepCurrent}
+            >
+              Keep this tab
+            </button>
+          </div>
+        </div>
+      ) : null}
     </header>
   );
 }

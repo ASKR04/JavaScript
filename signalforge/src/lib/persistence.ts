@@ -5,7 +5,7 @@ import {
   type WorkStatus,
 } from "./project-state";
 
-const STORAGE_KEY = "signalforge.workspace.v1";
+export const WORKSPACE_STORAGE_KEY = "signalforge.workspace.v1";
 export const WORKSPACE_SCHEMA_VERSION = 2;
 
 type StorageReader = Pick<Storage, "getItem">;
@@ -29,6 +29,13 @@ const validStatuses: WorkStatus[] = [
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
+}
+
+function isIsoTimestamp(value: unknown): value is string {
+  if (typeof value !== "string") return false;
+
+  const parsed = new Date(value);
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString() === value;
 }
 
 function hasStringFields(
@@ -127,15 +134,12 @@ export function isProjectWorkspace(value: unknown): value is ProjectWorkspace {
   return commitNarrativesAreValid;
 }
 
-export function loadWorkspace(
-  storage: StorageReader,
+export function parseWorkspaceSnapshot(
+  serialized: string,
 ): WorkspaceSnapshot | null {
   try {
-    const serialized = storage.getItem(STORAGE_KEY);
-    if (!serialized) return null;
-
     const snapshot: unknown = JSON.parse(serialized);
-    if (!isRecord(snapshot) || typeof snapshot.savedAt !== "string") {
+    if (!isRecord(snapshot) || !isIsoTimestamp(snapshot.savedAt)) {
       return null;
     }
 
@@ -154,6 +158,17 @@ export function loadWorkspace(
   }
 }
 
+export function loadWorkspace(
+  storage: StorageReader,
+): WorkspaceSnapshot | null {
+  try {
+    const serialized = storage.getItem(WORKSPACE_STORAGE_KEY);
+    return serialized ? parseWorkspaceSnapshot(serialized) : null;
+  } catch {
+    return null;
+  }
+}
+
 export function saveWorkspace(
   storage: StorageWriter,
   workspace: ProjectWorkspace,
@@ -165,10 +180,10 @@ export function saveWorkspace(
     savedAt: now.toISOString(),
   };
 
-  storage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
+  storage.setItem(WORKSPACE_STORAGE_KEY, JSON.stringify(snapshot));
   return snapshot;
 }
 
 export function clearWorkspace(storage: StorageWriter): void {
-  storage.removeItem(STORAGE_KEY);
+  storage.removeItem(WORKSPACE_STORAGE_KEY);
 }

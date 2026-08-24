@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { WorkspaceToolbar } from "../components/WorkspaceToolbar";
 import { CommitPlanner } from "../features/commits/CommitPlanner";
 import { Dashboard } from "../features/dashboard/Dashboard";
@@ -9,8 +9,11 @@ import { createDefaultWorkspace } from "../lib/project-state";
 import {
   clearWorkspace,
   loadWorkspace,
+  WORKSPACE_STORAGE_KEY,
+  type WorkspaceSnapshot,
 } from "../lib/persistence";
 import { createWorkspaceAutosave } from "../lib/workspace-autosave";
+import { selectNewerWorkspaceSnapshot } from "../lib/workspace-sync";
 import {
   addArchitectureDecision,
   addCommitNarrative,
@@ -32,9 +35,12 @@ export function App() {
     () => restoredSnapshot?.workspace ?? createDefaultWorkspace(),
   );
   const [savedAt, setSavedAt] = useState(restoredSnapshot?.savedAt ?? null);
-  const [saveStatus, setSaveStatus] = useState<"saving" | "saved" | "error">(
-    "saved",
-  );
+  const [externalSnapshot, setExternalSnapshot] =
+    useState<WorkspaceSnapshot | null>(null);
+  const [saveStatus, setSaveStatus] = useState<
+    "saving" | "saved" | "error" | "conflict"
+  >("saved");
+  const lastAutosaveWorkspace = useRef(workspace);
   const [autosave] = useState(() =>
     createWorkspaceAutosave({
       storage: window.localStorage,
@@ -48,6 +54,9 @@ export function App() {
   );
 
   useEffect(() => {
+    if (lastAutosaveWorkspace.current === workspace) return;
+
+    lastAutosaveWorkspace.current = workspace;
     autosave.queue(workspace);
   }, [autosave, workspace]);
 
@@ -60,6 +69,24 @@ export function App() {
       autosave.cancel();
     };
   }, [autosave]);
+
+  useEffect(() => {
+    function detectExternalSave(event: StorageEvent) {
+      if (event.key !== WORKSPACE_STORAGE_KEY || !event.newValue) return;
+
+      const snapshot = selectNewerWorkspaceSnapshot(event.newValue, savedAt);
+      if (!snapshot) return;
+
+      autosave.cancel();
+      setSaveStatus("conflict");
+      setExternalSnapshot((current) =>
+        !current || snapshot.savedAt > current.savedAt ? snapshot : current,
+      );
+    }
+
+    window.addEventListener("storage", detectExternalSave);
+    return () => window.removeEventListener("storage", detectExternalSave);
+  }, [autosave, savedAt]);
 
   function resetWorkspace() {
     const shouldReset = window.confirm(
@@ -101,6 +128,21 @@ export function App() {
           status={saveStatus}
           savedAt={savedAt}
           workspace={workspace}
+          externalSavedAt={externalSnapshot?.savedAt ?? null}
+          onLoadExternalChange={() => {
+            if (!externalSnapshot) return;
+
+            autosave.cancel();
+            lastAutosaveWorkspace.current = externalSnapshot.workspace;
+            setSaveStatus("saved");
+            setSavedAt(externalSnapshot.savedAt);
+            setWorkspace(externalSnapshot.workspace);
+            setExternalSnapshot(null);
+          }}
+          onKeepCurrent={() => {
+            setExternalSnapshot(null);
+            autosave.queue(workspace);
+          }}
           onRestore={(restoredWorkspace) => {
             setSavedAt(null);
             setWorkspace(restoredWorkspace);

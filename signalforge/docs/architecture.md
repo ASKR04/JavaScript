@@ -222,6 +222,23 @@ The autosave coordinator owns scheduling rather than React components. Rapid upd
 
 If browser storage rejects a write, the coordinator keeps that workspace in memory and exposes an explicit retry through the toolbar. A later lifecycle flush also retries the retained value, while any newer queued edit supersedes it. Successful persistence clears recovery state, preventing an older failed snapshot from overwriting newer work. Scheduling, flush behavior, recovery, and stale-state replacement are covered without browser timing mocks.
 
+## Multi-Tab Conflict Flow
+
+```mermaid
+flowchart LR
+    OtherTab["Another SignalForge tab saves"] --> Event["Browser storage event"]
+    Event --> Parse["Parse and validate snapshot"]
+    Parse -->|invalid, duplicate, or older| Ignore["Ignore safely"]
+    Parse -->|newer| Pause["Pause pending local autosave"]
+    Pause --> Alert["Announce conflict and show choices"]
+    Alert -->|load other tab| Replace["Replace current workspace"]
+    Alert -->|keep this tab| Requeue["Queue current workspace"]
+    Replace --> Autosave["Resume versioned autosave"]
+    Requeue --> Autosave
+```
+
+The storage-event boundary never applies an external value directly. It first uses the same version, timestamp, migration, and domain guards as startup persistence, then compares the candidate with the current saved timestamp. A valid newer save pauses this tab's pending write so the developer can make an explicit choice instead of losing work through last-writer-wins behavior. Loading that already-persisted snapshot skips one autosave cycle, preventing an unnecessary conflict from bouncing back to the original tab. The alert uses non-color text, keyboard-accessible actions, and responsive stacking rules.
+
 ## Proposed Folder Structure
 
 ```text
@@ -262,9 +279,9 @@ signalforge/
 
 ```text
 src/
-  app/App.tsx                         # workspace ownership and autosave lifecycle
+  app/App.tsx                         # workspace ownership, autosave and storage-event lifecycle,
                                       # and keyboard bypass destination
-  components/WorkspaceToolbar.tsx    # save feedback, portable transfer, and reset controls
+  components/WorkspaceToolbar.tsx    # save, transfer, conflict-resolution, and reset controls
   components/WorkItemComposer.tsx    # reusable accessible creation form
   components/ValidationSummary.tsx   # shared live error-count feedback
   features/dashboard/                # brief editor and feature workflow controls
@@ -283,6 +300,8 @@ src/
   lib/focus-validation.test.ts        # focus scheduling and fallback coverage
   lib/workspace-autosave.ts           # coalesced saves and page lifecycle flush boundary
   lib/workspace-autosave.test.ts      # scheduling, flush, and storage-error coverage
+  lib/workspace-sync.ts               # validated newer-snapshot selection for external tabs
+  lib/workspace-sync.test.ts          # newer, stale, duplicate, and malformed snapshot coverage
   lib/persistence.ts                  # versioned storage adapter and guards
   lib/workspace-state.test.ts         # transition and persistence tests
   styles/global.css                   # responsive layout, focus visibility, and reduced-motion rules
@@ -299,3 +318,5 @@ The 2026-08-19 maintenance increment improves error recovery without adding prod
 The 2026-08-20 maintenance increment protects the local-first contract at the page lifecycle boundary. Debounced changes are coalesced through a tested coordinator, and the newest pending workspace is flushed when the page is hidden.
 
 The 2026-08-21 maintenance increment makes transient storage failures recoverable. Failed writes retain the newest workspace in memory for an explicit or lifecycle retry, and newer edits safely replace stale recovery state.
+
+The 2026-08-24 maintenance increment prevents silent multi-tab overwrites. Valid newer external snapshots pause local autosave and present explicit load-or-keep actions; stale, duplicate, malformed, and unsupported snapshots are ignored.
