@@ -19,6 +19,7 @@ SignalForge treats documentation and execution as part of the same workflow. A p
 - Versioned local persistence with autosave feedback and safe sample reset.
 - Multi-tab conflict protection with silent identical-save reconciliation, structural change previews, and explicit resolution.
 - Portable JSON workspace backups with schema validation and version-one migration on restore.
+- Reversible backup restore and sample reset with conflict-safe undo and redo.
 - Commit narrative planner for shaping daily implementation notes into conventional commit messages and durable verification evidence.
 - Editable architecture decision records for capturing technical choices and tradeoffs.
 - Portfolio summary for collecting highlights, proof points, and final documentation notes.
@@ -123,6 +124,8 @@ Transient browser-storage failures are now recoverable without forcing another e
 
 Multiple open SignalForge tabs no longer overwrite one another silently. A newer validated save from another tab pauses the current tab's pending autosave and presents an accessible choice to load the external workspace or keep and re-save the current one. Identical workspace content is reconciled without an unnecessary prompt, while genuine conflicts summarize changed brief fields and added, removed, or updated records without exposing their contents. Stale, duplicate, malformed, and unsupported snapshots never reach the interface.
 
+Backup restore and sample reset are now reversible workspace replacements. Each operation dismisses an obsolete multi-tab prompt, saves through the same retryable autosave boundary as ordinary edits, and retains both workspace versions for undo or redo until another replacement or page refresh. This removes the gap where a stale conflict choice could overwrite a newly restored workspace.
+
 ## Retrospective
 
 SignalForge began as a static planning dashboard and finished as a private, portable workspace with explicit boundaries between typed domain logic, React interaction code, browser persistence, and export adapters. The most effective decision was keeping validation and state transitions framework-independent: this made features such as backup migration, story export, and readiness scoring straightforward to test without browser mocks.
@@ -147,3 +150,4 @@ The week also exposed a useful product lesson. Capturing evidence is not the sam
 | Autosave recovery | 2026-08-21 | Retained the newest failed local save for explicit or lifecycle retry without allowing stale recovery data to overwrite later edits. | 32 Vitest tests, production build, recovery unit coverage, and HTTP smoke check | [PR #4](https://github.com/ASKR04/JavaScript/pull/4) |
 | Multi-tab conflict protection | 2026-08-24 | Paused pending local writes when a newer validated external save arrives and added explicit load-or-keep recovery actions. | 35 Vitest tests, production build, two-tab browser interaction check, desktop visual review, and mobile CSS review | [PR #4](https://github.com/ASKR04/JavaScript/pull/4) |
 | Tab conflict review | 2026-08-24 | Reconciled identical external saves without interruption, summarized genuine conflicts, and contained the alert at the mobile breakpoint. | 38 Vitest tests, production build, live identical/conflicting two-tab checks, and 390x844 responsive measurement | [PR #4](https://github.com/ASKR04/JavaScript/pull/4) |
+| Reversible workspace replacement | 2026-08-25 | Routed restore/reset through recoverable autosave, dismissed stale conflicts, and added persistent undo/redo recovery. | 41 Vitest tests, production build, 390x844 workspace measurement, responsive notice source review, and browser console review | [PR #4](https://github.com/ASKR04/JavaScript/pull/4) |

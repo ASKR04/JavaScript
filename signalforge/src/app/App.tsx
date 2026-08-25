@@ -7,12 +7,17 @@ import { Roadmap } from "../features/roadmap/Roadmap";
 import { Summary } from "../features/summary/Summary";
 import { createDefaultWorkspace } from "../lib/project-state";
 import {
-  clearWorkspace,
   loadWorkspace,
   WORKSPACE_STORAGE_KEY,
   type WorkspaceSnapshot,
 } from "../lib/persistence";
 import { createWorkspaceAutosave } from "../lib/workspace-autosave";
+import {
+  beginWorkspaceReplacement,
+  swapWorkspaceReplacement,
+  type WorkspaceReplacementOperation,
+  type WorkspaceReplacementRecovery,
+} from "../lib/workspace-replacement";
 import { classifyExternalWorkspaceUpdate } from "../lib/workspace-sync";
 import {
   addArchitectureDecision,
@@ -37,6 +42,8 @@ export function App() {
   const [savedAt, setSavedAt] = useState(restoredSnapshot?.savedAt ?? null);
   const [externalSnapshot, setExternalSnapshot] =
     useState<WorkspaceSnapshot | null>(null);
+  const [replacementRecovery, setReplacementRecovery] =
+    useState<WorkspaceReplacementRecovery | null>(null);
   const [saveStatus, setSaveStatus] = useState<
     "saving" | "saved" | "error" | "conflict"
   >("saved");
@@ -103,15 +110,35 @@ export function App() {
     return () => window.removeEventListener("storage", detectExternalSave);
   }, [autosave, savedAt, workspace]);
 
+  function replaceWorkspace(
+    replacement: typeof workspace,
+    operation: WorkspaceReplacementOperation,
+  ) {
+    autosave.cancel();
+    setExternalSnapshot(null);
+    setReplacementRecovery(beginWorkspaceReplacement(workspace, operation));
+    setSavedAt(null);
+    setWorkspace(replacement);
+  }
+
   function resetWorkspace() {
     const shouldReset = window.confirm(
       "Reset your local changes and restore the SignalForge sample workspace?",
     );
     if (!shouldReset) return;
 
-    clearWorkspace(window.localStorage);
+    replaceWorkspace(createDefaultWorkspace(), "sample reset");
+  }
+
+  function toggleWorkspaceReplacement() {
+    if (!replacementRecovery) return;
+
+    const result = swapWorkspaceReplacement(workspace, replacementRecovery);
+    autosave.cancel();
+    setExternalSnapshot(null);
     setSavedAt(null);
-    setWorkspace(createDefaultWorkspace());
+    setWorkspace(result.workspace);
+    setReplacementRecovery(result.recovery);
   }
 
   return (
@@ -144,6 +171,7 @@ export function App() {
           savedAt={savedAt}
           workspace={workspace}
           externalSnapshot={externalSnapshot}
+          replacementRecovery={replacementRecovery}
           onLoadExternalChange={() => {
             if (!externalSnapshot) return;
 
@@ -158,12 +186,12 @@ export function App() {
             setExternalSnapshot(null);
             autosave.queue(workspace);
           }}
-          onRestore={(restoredWorkspace) => {
-            setSavedAt(null);
-            setWorkspace(restoredWorkspace);
-          }}
+          onRestore={(restoredWorkspace) =>
+            replaceWorkspace(restoredWorkspace, "backup restore")
+          }
           onRetrySave={() => autosave.retry()}
           onReset={resetWorkspace}
+          onToggleReplacement={toggleWorkspaceReplacement}
         />
         <Dashboard
           workspace={workspace}

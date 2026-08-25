@@ -1,6 +1,7 @@
 import { useRef, useState, type ChangeEvent } from "react";
 import type { ProjectWorkspace } from "../lib/project-state";
 import type { WorkspaceSnapshot } from "../lib/persistence";
+import type { WorkspaceReplacementRecovery } from "../lib/workspace-replacement";
 import {
   createWorkspaceBackup,
   createWorkspaceBackupFilename,
@@ -22,11 +23,13 @@ type WorkspaceToolbarProps = {
   savedAt: string | null;
   workspace: ProjectWorkspace;
   externalSnapshot: WorkspaceSnapshot | null;
+  replacementRecovery: WorkspaceReplacementRecovery | null;
   onLoadExternalChange: () => void;
   onKeepCurrent: () => void;
   onRestore: (workspace: ProjectWorkspace) => void;
   onRetrySave: () => void;
   onReset: () => void;
+  onToggleReplacement: () => void;
 };
 
 function formatSaveTime(savedAt: string): string {
@@ -47,11 +50,13 @@ export function WorkspaceToolbar({
   savedAt,
   workspace,
   externalSnapshot,
+  replacementRecovery,
   onLoadExternalChange,
   onKeepCurrent,
   onRestore,
   onRetrySave,
   onReset,
+  onToggleReplacement,
 }: WorkspaceToolbarProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [transferFeedback, setTransferFeedback] =
@@ -67,6 +72,9 @@ export function WorkspaceToolbar({
         : status === "conflict"
           ? "Local save paused for a tab conflict"
           : formatSavedAt(savedAt);
+  const replacementAction = replacementRecovery
+    ? `${replacementRecovery.direction === "undo" ? "Undo" : "Redo"} ${replacementRecovery.operation}`
+    : null;
 
   function downloadBackup() {
     const contents = createWorkspaceBackup(workspace);
@@ -227,6 +235,31 @@ export function WorkspaceToolbar({
               Keep this tab
             </button>
           </div>
+        </div>
+      ) : null}
+      {replacementRecovery && replacementAction ? (
+        <div className="workspace-recovery-notice">
+          <div role="status">
+            <strong>
+              {replacementRecovery.operation === "sample reset"
+                ? "Sample workspace replacement"
+                : "Backup workspace replacement"}{" "}
+              {replacementRecovery.direction === "undo"
+                ? "completed."
+                : "undone."}
+            </strong>
+            <p>
+              This reversible history stays available until another replacement
+              or page refresh.
+            </p>
+          </div>
+          <button
+            className="secondary-button"
+            type="button"
+            onClick={onToggleReplacement}
+          >
+            {replacementAction}
+          </button>
         </div>
       ) : null}
     </header>

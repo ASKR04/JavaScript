@@ -244,6 +244,22 @@ The storage-event boundary never applies an external value directly. It first us
 
 Conflict previews disclose structure rather than sensitive content. A pure comparison reports changed brief-field counts and added, removed, or updated records across features, roadmap milestones, architecture decisions, and commit narratives. Loading an already-persisted snapshot skips one autosave cycle, preventing a conflict from bouncing back to the original tab. The alert uses semantic list markup, non-color text, keyboard-accessible actions, and responsive wrapping rules.
 
+## Reversible Workspace Replacement Flow
+
+```mermaid
+flowchart LR
+    Choice["Confirmed backup restore or sample reset"] --> Capture["Retain current workspace in memory"]
+    Capture --> Clear["Dismiss stale tab conflict"]
+    Clear --> Replace["Apply replacement workspace"]
+    Replace --> Autosave["Queue through recoverable autosave"]
+    Replace --> Notice["Announce reversible replacement"]
+    Notice -->|undo| Swap["Swap current and retained workspaces"]
+    Swap --> Autosave
+    Swap -->|redo remains available| Notice
+```
+
+Whole-workspace replacement uses the same recoverable autosave path as normal edits instead of removing the stored snapshot first. Starting a restore or reset cancels pending writes and dismisses any older multi-tab prompt so a stale external choice cannot replace the newly selected workspace. A pure swap model retains both sides of the operation for repeatable undo and redo until another replacement or page refresh; its persistent button keeps keyboard focus stable while the live description reports the current state.
+
 ## Proposed Folder Structure
 
 ```text
@@ -305,6 +321,8 @@ src/
   lib/focus-validation.test.ts        # focus scheduling and fallback coverage
   lib/workspace-autosave.ts           # coalesced saves and page lifecycle flush boundary
   lib/workspace-autosave.test.ts      # scheduling, flush, and storage-error coverage
+  lib/workspace-replacement.ts        # reversible restore/reset swap model
+  lib/workspace-replacement.test.ts   # undo, redo, and repeat-toggle coverage
   lib/workspace-sync.ts               # validated external-save classification and structural summaries
   lib/workspace-sync.test.ts          # reconciliation, conflict-summary, and invalid snapshot coverage
   lib/persistence.ts                  # versioned storage adapter and guards
@@ -327,3 +345,5 @@ The 2026-08-21 maintenance increment makes transient storage failures recoverabl
 The 2026-08-24 maintenance increment prevents silent multi-tab overwrites. Valid newer external snapshots pause local autosave and present explicit load-or-keep actions; stale, duplicate, malformed, and unsupported snapshots are ignored.
 
 The follow-up 2026-08-24 maintenance increment removes false conflict prompts for identical newer saves and gives genuine conflicts a privacy-preserving summary of the workspace sections and record counts that differ. The narrow-screen toolbar disables column wrapping and gives the alert an explicit contained width so its semantic summary and 44 px actions remain inside a 390 px viewport.
+
+The 2026-08-25 maintenance increment makes destructive whole-workspace replacement reversible. Backup restore and sample reset now dismiss stale tab conflicts, persist through the recoverable autosave coordinator, and retain an in-memory undo/redo workspace until another replacement or page refresh.
