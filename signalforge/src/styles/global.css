@@ -174,7 +174,8 @@ a {
 }
 
 .save-status-saving span,
-.save-status-conflict span {
+.save-status-conflict span,
+.save-status-recovery span {
   background: #d97706;
 }
 
@@ -216,6 +217,32 @@ a {
 }
 
 .external-change-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.startup-recovery-notice {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 20px;
+  flex-basis: 100%;
+  padding: 16px 18px;
+  border: 1px solid #c2410c;
+  border-radius: 8px;
+  color: #7c2d12;
+  background: #fff7ed;
+}
+
+.startup-recovery-notice p {
+  max-width: 72ch;
+  margin: 4px 0 0;
+  color: #7c2d12;
+  line-height: 1.5;
+}
+
+.startup-recovery-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
@@ -1093,11 +1120,19 @@ textarea {
     grid-template-columns: 1fr;
   }
 
-  .external-change-actions {
+  .startup-recovery-notice {
+    width: 100%;
+    flex-basis: auto;
+    grid-template-columns: 1fr;
+  }
+
+  .external-change-actions,
+  .startup-recovery-actions {
     width: 100%;
   }
 
-  .external-change-actions button {
+  .external-change-actions button,
+  .startup-recovery-actions button {
     flex: 1 1 150px;
     min-height: 44px;
   }

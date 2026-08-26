@@ -35,5 +35,6 @@ Each project in this repository is designed to be useful, documented, and struct
 | SignalForge | Multi-tab conflict protection | 2026-08-24 | Validated external-save detection, paused local writes, and accessible load-or-keep recovery | [PR #4](https://github.com/ASKR04/JavaScript/pull/4) |
 | SignalForge | Tab conflict review | 2026-08-24 | Silent identical-save reconciliation, privacy-preserving conflict summaries, and measured mobile alert containment | [PR #4](https://github.com/ASKR04/JavaScript/pull/4) |
 | SignalForge | Reversible workspace replacement | 2026-08-25 | Conflict-safe backup restore and sample reset with autosaved undo/redo recovery | [PR #4](https://github.com/ASKR04/JavaScript/pull/4) |
+| SignalForge | Unreadable startup recovery | 2026-08-26 | Typed storage outcomes, paused autosave, raw rescue download, and explicit replacement confirmation | [PR #4](https://github.com/ASKR04/JavaScript/pull/4) |
 
 See the [SignalForge architecture notes](./signalforge/docs/architecture.md) for the current component and data flow diagrams.

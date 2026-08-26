@@ -16,6 +16,12 @@ export type WorkspaceSnapshot = {
   savedAt: string;
 };
 
+export type WorkspaceLoadResult =
+  | { status: "empty" }
+  | { status: "ready"; snapshot: WorkspaceSnapshot }
+  | { status: "invalid"; serialized: string }
+  | { status: "unavailable" };
+
 type StoredSnapshot = WorkspaceSnapshot & {
   version: number;
 };
@@ -161,11 +167,21 @@ export function parseWorkspaceSnapshot(
 export function loadWorkspace(
   storage: StorageReader,
 ): WorkspaceSnapshot | null {
+  const result = readWorkspace(storage);
+  return result.status === "ready" ? result.snapshot : null;
+}
+
+export function readWorkspace(storage: StorageReader): WorkspaceLoadResult {
   try {
     const serialized = storage.getItem(WORKSPACE_STORAGE_KEY);
-    return serialized ? parseWorkspaceSnapshot(serialized) : null;
+    if (serialized === null) return { status: "empty" };
+
+    const snapshot = parseWorkspaceSnapshot(serialized);
+    return snapshot
+      ? { status: "ready", snapshot }
+      : { status: "invalid", serialized };
   } catch {
-    return null;
+    return { status: "unavailable" };
   }
 }
 

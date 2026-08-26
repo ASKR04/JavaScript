@@ -9,7 +9,7 @@ import {
 } from "../lib/workspace-backup";
 import { summarizeWorkspaceChanges } from "../lib/workspace-sync";
 
-type SaveStatus = "saving" | "saved" | "error" | "conflict";
+type SaveStatus = "saving" | "saved" | "error" | "conflict" | "recovery";
 
 type TransferFeedback = {
   tone: "success" | "error";
@@ -23,11 +23,13 @@ type WorkspaceToolbarProps = {
   savedAt: string | null;
   workspace: ProjectWorkspace;
   externalSnapshot: WorkspaceSnapshot | null;
+  unreadableWorkspace: string | null;
   replacementRecovery: WorkspaceReplacementRecovery | null;
   onLoadExternalChange: () => void;
   onKeepCurrent: () => void;
   onRestore: (workspace: ProjectWorkspace) => void;
   onRetrySave: () => void;
+  onReplaceUnreadableWorkspace: () => void;
   onReset: () => void;
   onToggleReplacement: () => void;
 };
@@ -50,11 +52,13 @@ export function WorkspaceToolbar({
   savedAt,
   workspace,
   externalSnapshot,
+  unreadableWorkspace,
   replacementRecovery,
   onLoadExternalChange,
   onKeepCurrent,
   onRestore,
   onRetrySave,
+  onReplaceUnreadableWorkspace,
   onReset,
   onToggleReplacement,
 }: WorkspaceToolbarProps) {
@@ -71,6 +75,8 @@ export function WorkspaceToolbar({
         ? "Local save failed; retry before closing"
         : status === "conflict"
           ? "Local save paused for a tab conflict"
+          : status === "recovery"
+            ? "Autosave paused to protect unreadable saved data"
           : formatSavedAt(savedAt);
   const replacementAction = replacementRecovery
     ? `${replacementRecovery.direction === "undo" ? "Undo" : "Redo"} ${replacementRecovery.operation}`
@@ -90,6 +96,30 @@ export function WorkspaceToolbar({
       tone: "success",
       message: "Workspace backup downloaded.",
     });
+  }
+
+  function downloadUnreadableWorkspace() {
+    if (unreadableWorkspace === null) return;
+
+    const url = URL.createObjectURL(
+      new Blob([unreadableWorkspace], { type: "text/plain" }),
+    );
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "signalforge-unreadable-workspace.txt";
+    anchor.click();
+    URL.revokeObjectURL(url);
+    setTransferFeedback({
+      tone: "success",
+      message: "Unreadable local data downloaded for recovery.",
+    });
+  }
+
+  function replaceUnreadableWorkspace() {
+    const shouldReplace = window.confirm(
+      "Replace the unreadable saved data with the workspace currently shown? Download the raw data first if you may need it.",
+    );
+    if (shouldReplace) onReplaceUnreadableWorkspace();
   }
 
   async function restoreBackup(event: ChangeEvent<HTMLInputElement>) {
@@ -233,6 +263,34 @@ export function WorkspaceToolbar({
               onClick={onKeepCurrent}
             >
               Keep this tab
+            </button>
+          </div>
+        </div>
+      ) : null}
+      {unreadableWorkspace !== null ? (
+        <div className="startup-recovery-notice" role="alert">
+          <div>
+            <strong>Your saved workspace could not be opened.</strong>
+            <p>
+              SignalForge left the original browser data untouched and paused
+              autosave. Download it for recovery, restore a valid backup, or
+              explicitly replace it with the workspace currently shown.
+            </p>
+          </div>
+          <div className="startup-recovery-actions">
+            <button
+              className="secondary-button"
+              type="button"
+              onClick={downloadUnreadableWorkspace}
+            >
+              Download raw data
+            </button>
+            <button
+              className="primary-button"
+              type="button"
+              onClick={replaceUnreadableWorkspace}
+            >
+              Replace saved data
             </button>
           </div>
         </div>

@@ -63,13 +63,33 @@ flowchart LR
     Snapshot --> LocalStorage["Browser localStorage"]
     LocalStorage --> Guard["Runtime schema guard"]
     Guard -->|valid| React
-    Guard -->|invalid or outdated| Defaults["Typed sample workspace"]
+    Guard -->|empty| Defaults["Typed sample workspace"]
     Defaults --> React
+    Guard -->|invalid or future version| Recovery["Paused startup recovery"]
+    Recovery --> Raw["Raw local rescue download"]
+    Recovery -->|explicit replacement| Debounce
 ```
 
-The persistence adapter is deliberately small and browser-native. Each snapshot includes a schema version and timestamp. Loading is defensive: invalid JSON, outdated versions, or malformed project records are ignored rather than allowed to break application startup. The adapter accepts narrow storage interfaces so its behavior can be tested without a browser environment.
+The persistence adapter is deliberately small and browser-native. Each snapshot includes a schema version and timestamp. Loading is defensive: valid data, empty storage, unreadable data, and unavailable storage are separate typed outcomes. Invalid JSON, future versions, or malformed project records cannot break application startup, but they are no longer treated like an empty workspace and silently overwritten. The adapter accepts narrow storage interfaces so its behavior can be tested without a browser environment.
 
 State changes are implemented as pure functions keyed by stable feature and roadmap IDs. This prevents accidental mutation, makes status changes predictable, and keeps the UI independent from future storage adapters.
+
+## Unreadable Startup Recovery Flow
+
+```mermaid
+flowchart LR
+    Read["Read stored snapshot"] --> Classify{"Typed load result"}
+    Classify -->|ready| Restore["Restore validated workspace"]
+    Classify -->|empty| Sample["Open sample workspace"]
+    Classify -->|unavailable| SaveError["Report on attempted save"]
+    Classify -->|invalid| Preserve["Keep original storage untouched"]
+    Preserve --> Pause["Pause autosave and warn before exit"]
+    Pause --> Download["Download raw recovery text"]
+    Pause -->|restore valid backup| Replace["Replace through recoverable autosave"]
+    Pause -->|explicit confirmation| Replace
+```
+
+Startup recovery favors reversibility over guessing. The app renders a usable in-memory sample while preserving the unreadable browser value, clearly announces that autosave is paused, and warns before navigation. The developer can download the exact raw value for manual repair, restore a validated backup through the existing migration boundary, or explicitly replace storage with the workspace currently shown. Normal empty and valid startup paths do not display recovery controls.
 
 ## Plan Composition Flow
 
@@ -302,7 +322,7 @@ signalforge/
 src/
   app/App.tsx                         # workspace ownership, autosave and storage-event lifecycle,
                                       # and keyboard bypass destination
-  components/WorkspaceToolbar.tsx    # save, transfer, conflict-resolution, and reset controls
+  components/WorkspaceToolbar.tsx    # save, transfer, startup recovery, conflict, and reset controls
   components/WorkItemComposer.tsx    # reusable accessible creation form
   components/ValidationSummary.tsx   # shared live error-count feedback
   features/dashboard/                # brief editor and feature workflow controls
@@ -325,8 +345,8 @@ src/
   lib/workspace-replacement.test.ts   # undo, redo, and repeat-toggle coverage
   lib/workspace-sync.ts               # validated external-save classification and structural summaries
   lib/workspace-sync.test.ts          # reconciliation, conflict-summary, and invalid snapshot coverage
-  lib/persistence.ts                  # versioned storage adapter and guards
-  lib/workspace-state.test.ts         # transition and persistence tests
+  lib/persistence.ts                  # typed startup outcomes, versioned storage adapter, and guards
+  lib/workspace-state.test.ts         # transition, migration, and startup recovery tests
   styles/global.css                   # responsive layout, focus visibility, and reduced-motion rules
 ```
 
@@ -347,3 +367,5 @@ The 2026-08-24 maintenance increment prevents silent multi-tab overwrites. Valid
 The follow-up 2026-08-24 maintenance increment removes false conflict prompts for identical newer saves and gives genuine conflicts a privacy-preserving summary of the workspace sections and record counts that differ. The narrow-screen toolbar disables column wrapping and gives the alert an explicit contained width so its semantic summary and 44 px actions remain inside a 390 px viewport.
 
 The 2026-08-25 maintenance increment makes destructive whole-workspace replacement reversible. Backup restore and sample reset now dismiss stale tab conflicts, persist through the recoverable autosave coordinator, and retain an in-memory undo/redo workspace until another replacement or page refresh.
+
+The 2026-08-26 maintenance increment protects unreadable startup data from silent replacement. Malformed, incomplete, and future-version snapshots pause autosave, remain available as an exact raw rescue download, and require a validated restore or explicit confirmation before browser storage is replaced.

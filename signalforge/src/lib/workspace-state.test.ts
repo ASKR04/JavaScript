@@ -3,6 +3,7 @@ import { createDefaultWorkspace } from "./project-state";
 import {
   clearWorkspace,
   loadWorkspace,
+  readWorkspace,
   saveWorkspace,
 } from "./persistence";
 import {
@@ -263,10 +264,40 @@ describe("workspace persistence", () => {
     storage.setItem("signalforge.workspace.v1", "{broken-json");
 
     expect(loadWorkspace(storage)).toBeNull();
+    expect(readWorkspace(storage)).toEqual({
+      status: "invalid",
+      serialized: "{broken-json",
+    });
 
     saveWorkspace(storage, createDefaultWorkspace());
     clearWorkspace(storage);
     expect(loadWorkspace(storage)).toBeNull();
+    expect(readWorkspace(storage)).toEqual({ status: "empty" });
+  });
+
+  it("preserves a future-version snapshot for explicit recovery", () => {
+    const storage = new MemoryStorage();
+    const serialized = JSON.stringify({
+      version: 99,
+      workspace: createDefaultWorkspace(),
+      savedAt: "2026-08-26T15:00:00.000Z",
+    });
+    storage.setItem("signalforge.workspace.v1", serialized);
+
+    expect(readWorkspace(storage)).toEqual({
+      status: "invalid",
+      serialized,
+    });
+  });
+
+  it("distinguishes unavailable storage from an empty workspace", () => {
+    expect(
+      readWorkspace({
+        getItem: () => {
+          throw new Error("Storage access denied");
+        },
+      }),
+    ).toEqual({ status: "unavailable" });
   });
 
   it("migrates version one snapshots without losing saved planning work", () => {

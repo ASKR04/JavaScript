@@ -7,7 +7,7 @@ import { Roadmap } from "../features/roadmap/Roadmap";
 import { Summary } from "../features/summary/Summary";
 import { createDefaultWorkspace } from "../lib/project-state";
 import {
-  loadWorkspace,
+  readWorkspace,
   WORKSPACE_STORAGE_KEY,
   type WorkspaceSnapshot,
 } from "../lib/persistence";
@@ -35,18 +35,23 @@ import {
 } from "../lib/workspace-state";
 
 export function App() {
-  const [restoredSnapshot] = useState(() => loadWorkspace(window.localStorage));
+  const [initialLoad] = useState(() => readWorkspace(window.localStorage));
+  const restoredSnapshot =
+    initialLoad.status === "ready" ? initialLoad.snapshot : null;
   const [workspace, setWorkspace] = useState(
     () => restoredSnapshot?.workspace ?? createDefaultWorkspace(),
   );
   const [savedAt, setSavedAt] = useState(restoredSnapshot?.savedAt ?? null);
+  const [unreadableWorkspace, setUnreadableWorkspace] = useState<string | null>(
+    initialLoad.status === "invalid" ? initialLoad.serialized : null,
+  );
   const [externalSnapshot, setExternalSnapshot] =
     useState<WorkspaceSnapshot | null>(null);
   const [replacementRecovery, setReplacementRecovery] =
     useState<WorkspaceReplacementRecovery | null>(null);
   const [saveStatus, setSaveStatus] = useState<
-    "saving" | "saved" | "error" | "conflict"
-  >("saved");
+    "saving" | "saved" | "error" | "conflict" | "recovery"
+  >(initialLoad.status === "invalid" ? "recovery" : "saved");
   const lastAutosaveWorkspace = useRef(workspace);
   const [autosave] = useState(() =>
     createWorkspaceAutosave({
@@ -64,8 +69,13 @@ export function App() {
     if (lastAutosaveWorkspace.current === workspace) return;
 
     lastAutosaveWorkspace.current = workspace;
+    if (unreadableWorkspace !== null) {
+      setSaveStatus("recovery");
+      return;
+    }
+
     autosave.queue(workspace);
-  }, [autosave, workspace]);
+  }, [autosave, unreadableWorkspace, workspace]);
 
   useEffect(() => {
     const flushPendingSave = () => autosave.flush();
@@ -76,6 +86,17 @@ export function App() {
       autosave.cancel();
     };
   }, [autosave]);
+
+  useEffect(() => {
+    if (unreadableWorkspace === null) return;
+
+    const protectRecovery = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = true;
+    };
+    window.addEventListener("beforeunload", protectRecovery);
+    return () => window.removeEventListener("beforeunload", protectRecovery);
+  }, [unreadableWorkspace]);
 
   useEffect(() => {
     function detectExternalSave(event: StorageEvent) {
@@ -93,6 +114,7 @@ export function App() {
         lastAutosaveWorkspace.current = workspace;
         setSavedAt(update.snapshot.savedAt);
         setSaveStatus("saved");
+        setUnreadableWorkspace(null);
         setExternalSnapshot(null);
         return;
       }
@@ -116,6 +138,7 @@ export function App() {
   ) {
     autosave.cancel();
     setExternalSnapshot(null);
+    setUnreadableWorkspace(null);
     setReplacementRecovery(beginWorkspaceReplacement(workspace, operation));
     setSavedAt(null);
     setWorkspace(replacement);
@@ -171,6 +194,7 @@ export function App() {
           savedAt={savedAt}
           workspace={workspace}
           externalSnapshot={externalSnapshot}
+          unreadableWorkspace={unreadableWorkspace}
           replacementRecovery={replacementRecovery}
           onLoadExternalChange={() => {
             if (!externalSnapshot) return;
@@ -179,17 +203,23 @@ export function App() {
             lastAutosaveWorkspace.current = externalSnapshot.workspace;
             setSaveStatus("saved");
             setSavedAt(externalSnapshot.savedAt);
+            setUnreadableWorkspace(null);
             setWorkspace(externalSnapshot.workspace);
             setExternalSnapshot(null);
           }}
           onKeepCurrent={() => {
             setExternalSnapshot(null);
+            setUnreadableWorkspace(null);
             autosave.queue(workspace);
           }}
           onRestore={(restoredWorkspace) =>
             replaceWorkspace(restoredWorkspace, "backup restore")
           }
           onRetrySave={() => autosave.retry()}
+          onReplaceUnreadableWorkspace={() => {
+            setUnreadableWorkspace(null);
+            autosave.queue(workspace);
+          }}
           onReset={resetWorkspace}
           onToggleReplacement={toggleWorkspaceReplacement}
         />
