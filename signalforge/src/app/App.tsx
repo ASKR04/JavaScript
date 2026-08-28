@@ -13,6 +13,10 @@ import {
 } from "../lib/persistence";
 import { createWorkspaceAutosave } from "../lib/workspace-autosave";
 import {
+  shouldProtectWorkspaceExit,
+  type WorkspacePersistenceStatus,
+} from "../lib/workspace-exit-protection";
+import {
   beginWorkspaceReplacement,
   swapWorkspaceReplacement,
   type WorkspaceReplacementOperation,
@@ -49,9 +53,13 @@ export function App() {
     useState<WorkspaceSnapshot | null>(null);
   const [replacementRecovery, setReplacementRecovery] =
     useState<WorkspaceReplacementRecovery | null>(null);
-  const [saveStatus, setSaveStatus] = useState<
-    "saving" | "saved" | "error" | "conflict" | "recovery"
-  >(initialLoad.status === "invalid" ? "recovery" : "saved");
+  const [saveStatus, setSaveStatus] = useState<WorkspacePersistenceStatus>(
+    initialLoad.status === "invalid"
+      ? "recovery"
+      : initialLoad.status === "unavailable"
+        ? "unavailable"
+        : "saved",
+  );
   const lastAutosaveWorkspace = useRef(workspace);
   const [autosave] = useState(() =>
     createWorkspaceAutosave({
@@ -88,15 +96,16 @@ export function App() {
   }, [autosave]);
 
   useEffect(() => {
-    if (unreadableWorkspace === null) return;
+    if (!shouldProtectWorkspaceExit(saveStatus)) return;
 
-    const protectRecovery = (event: BeforeUnloadEvent) => {
+    const protectUnsavedWorkspace = (event: BeforeUnloadEvent) => {
       event.preventDefault();
       event.returnValue = true;
     };
-    window.addEventListener("beforeunload", protectRecovery);
-    return () => window.removeEventListener("beforeunload", protectRecovery);
-  }, [unreadableWorkspace]);
+    window.addEventListener("beforeunload", protectUnsavedWorkspace);
+    return () =>
+      window.removeEventListener("beforeunload", protectUnsavedWorkspace);
+  }, [saveStatus]);
 
   useEffect(() => {
     function detectExternalSave(event: StorageEvent) {
@@ -215,7 +224,10 @@ export function App() {
           onRestore={(restoredWorkspace) =>
             replaceWorkspace(restoredWorkspace, "backup restore")
           }
-          onRetrySave={() => autosave.retry()}
+          onRetrySave={() => {
+            autosave.queue(workspace);
+            autosave.flush();
+          }}
           onReplaceUnreadableWorkspace={() => {
             setUnreadableWorkspace(null);
             autosave.queue(workspace);

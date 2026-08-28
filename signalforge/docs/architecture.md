@@ -81,7 +81,9 @@ flowchart LR
     Read["Read stored snapshot"] --> Classify{"Typed load result"}
     Classify -->|ready| Restore["Restore validated workspace"]
     Classify -->|empty| Sample["Open sample workspace"]
-    Classify -->|unavailable| SaveError["Report on attempted save"]
+    Classify -->|unavailable| Temporary["Announce temporary workspace"]
+    Temporary --> Probe["Try local save immediately"]
+    Temporary --> Backup["Download current workspace"]
     Classify -->|invalid| Preserve["Keep original storage untouched"]
     Preserve --> Pause["Pause autosave and warn before exit"]
     Pause --> Download["Download raw recovery text"]
@@ -89,7 +91,23 @@ flowchart LR
     Pause -->|explicit confirmation| Replace
 ```
 
-Startup recovery favors reversibility over guessing. The app renders a usable in-memory sample while preserving the unreadable browser value, clearly announces that autosave is paused, and warns before navigation. The developer can download the exact raw value for manual repair, restore a validated backup through the existing migration boundary, or explicitly replace storage with the workspace currently shown. Normal empty and valid startup paths do not display recovery controls.
+Startup recovery favors reversibility over guessing. The app renders a usable in-memory sample while preserving the unreadable browser value, clearly announces that autosave is paused, and warns before navigation. The developer can download the exact raw value for manual repair, restore a validated backup through the existing migration boundary, or explicitly replace storage with the workspace currently shown. Unavailable storage instead produces a temporary-workspace warning with an immediate persistence probe and a portable backup path. Normal empty and valid startup paths do not display recovery controls.
+
+## Workspace Exit Protection
+
+```mermaid
+flowchart LR
+    Status["Persistence status"] --> Policy{"Unsaved or unresolved?"}
+    Policy -->|saved| Exit["Allow normal exit"]
+    Policy -->|unavailable but untouched| Exit
+    Policy -->|saving or failed| Warn["Request browser exit confirmation"]
+    Policy -->|tab conflict| Warn
+    Policy -->|unreadable recovery| Warn
+    Warn --> Stay["Keep in-memory workspace"]
+    Warn -->|confirmed exit| Flush["Page lifecycle save attempt"]
+```
+
+The exit decision is derived from the same persistence status shown in the toolbar. An untouched temporary sample can close normally, while the first workspace mutation moves through `saving` and activates protection before the debounce finishes. Save failures, unresolved cross-tab choices, and unreadable-data recovery remain protected until the user reaches a durable `saved` state or explicitly accepts navigation.
 
 ## Plan Composition Flow
 
@@ -341,6 +359,8 @@ src/
   lib/focus-validation.test.ts        # focus scheduling and fallback coverage
   lib/workspace-autosave.ts           # coalesced saves and page lifecycle flush boundary
   lib/workspace-autosave.test.ts      # scheduling, flush, and storage-error coverage
+  lib/workspace-exit-protection.ts    # pure unsaved-state exit warning policy
+  lib/workspace-exit-protection.test.ts # pending, failed, conflict, and recovery coverage
   lib/workspace-replacement.ts        # reversible restore/reset swap model
   lib/workspace-replacement.test.ts   # undo, redo, and repeat-toggle coverage
   lib/workspace-sync.ts               # validated external-save classification and structural summaries
@@ -369,3 +389,5 @@ The follow-up 2026-08-24 maintenance increment removes false conflict prompts fo
 The 2026-08-25 maintenance increment makes destructive whole-workspace replacement reversible. Backup restore and sample reset now dismiss stale tab conflicts, persist through the recoverable autosave coordinator, and retain an in-memory undo/redo workspace until another replacement or page refresh.
 
 The 2026-08-26 maintenance increment protects unreadable startup data from silent replacement. Malformed, incomplete, and future-version snapshots pause autosave, remain available as an exact raw rescue download, and require a validated restore or explicit confirmation before browser storage is replaced.
+
+The 2026-08-27 maintenance increment makes temporary work visible when browser storage cannot be read. An immediate save probe can recover access without requiring an edit, and a shared exit policy protects pending, failed, conflicted, and recovery-paused workspace state from an unacknowledged close.

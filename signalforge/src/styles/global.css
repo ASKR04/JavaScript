@@ -175,7 +175,8 @@ a {
 
 .save-status-saving span,
 .save-status-conflict span,
-.save-status-recovery span {
+.save-status-recovery span,
+.save-status-unavailable span {
   background: #d97706;
 }
 
@@ -233,6 +234,22 @@ a {
   border-radius: 8px;
   color: #7c2d12;
   background: #fff7ed;
+}
+
+.storage-unavailable-notice {
+  flex-basis: 100%;
+  padding: 16px 18px;
+  border: 1px solid #d97706;
+  border-radius: 8px;
+  color: #78350f;
+  background: #fffbeb;
+}
+
+.storage-unavailable-notice p {
+  max-width: 72ch;
+  margin: 4px 0 0;
+  color: #78350f;
+  line-height: 1.5;
 }
 
 .startup-recovery-notice p {
@@ -1124,6 +1141,11 @@ textarea {
     width: 100%;
     flex-basis: auto;
     grid-template-columns: 1fr;
+  }
+
+  .storage-unavailable-notice {
+    width: 100%;
+    flex-basis: auto;
   }
 
   .external-change-actions,

@@ -2,14 +2,15 @@ import { useRef, useState, type ChangeEvent } from "react";
 import type { ProjectWorkspace } from "../lib/project-state";
 import type { WorkspaceSnapshot } from "../lib/persistence";
 import type { WorkspaceReplacementRecovery } from "../lib/workspace-replacement";
+import type {
+  WorkspacePersistenceStatus,
+} from "../lib/workspace-exit-protection";
 import {
   createWorkspaceBackup,
   createWorkspaceBackupFilename,
   parseWorkspaceBackup,
 } from "../lib/workspace-backup";
 import { summarizeWorkspaceChanges } from "../lib/workspace-sync";
-
-type SaveStatus = "saving" | "saved" | "error" | "conflict" | "recovery";
 
 type TransferFeedback = {
   tone: "success" | "error";
@@ -19,7 +20,7 @@ type TransferFeedback = {
 const MAX_BACKUP_SIZE_BYTES = 2_000_000;
 
 type WorkspaceToolbarProps = {
-  status: SaveStatus;
+  status: WorkspacePersistenceStatus;
   savedAt: string | null;
   workspace: ProjectWorkspace;
   externalSnapshot: WorkspaceSnapshot | null;
@@ -73,11 +74,13 @@ export function WorkspaceToolbar({
       ? "Saving locally…"
       : status === "error"
         ? "Local save failed; retry before closing"
-        : status === "conflict"
-          ? "Local save paused for a tab conflict"
-          : status === "recovery"
-            ? "Autosave paused to protect unreadable saved data"
-          : formatSavedAt(savedAt);
+        : status === "unavailable"
+          ? "Browser storage unavailable; work is temporary"
+          : status === "conflict"
+            ? "Local save paused for a tab conflict"
+            : status === "recovery"
+              ? "Autosave paused to protect unreadable saved data"
+              : formatSavedAt(savedAt);
   const replacementAction = replacementRecovery
     ? `${replacementRecovery.direction === "undo" ? "Undo" : "Redo"} ${replacementRecovery.operation}`
     : null;
@@ -174,13 +177,13 @@ export function WorkspaceToolbar({
             <span aria-hidden="true" />
             {statusText}
           </p>
-          {status === "error" ? (
+          {status === "error" || status === "unavailable" ? (
             <button
               className="text-button save-retry-button"
               type="button"
               onClick={onRetrySave}
             >
-              Retry save
+              {status === "unavailable" ? "Try local save" : "Retry save"}
             </button>
           ) : null}
         </div>
@@ -226,6 +229,18 @@ export function WorkspaceToolbar({
           </p>
         ) : null}
       </div>
+      {status === "unavailable" ? (
+        <div className="storage-unavailable-notice" role="alert">
+          <div>
+            <strong>This workspace is open only in this tab.</strong>
+            <p>
+              SignalForge could not access browser storage. Try local save to
+              check again, or download a backup before closing if storage stays
+              unavailable.
+            </p>
+          </div>
+        </div>
+      ) : null}
       {externalSnapshot ? (
         <div className="external-change-notice" role="alert">
           <div>
