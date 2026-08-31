@@ -7,6 +7,7 @@ import { Roadmap } from "../features/roadmap/Roadmap";
 import { Summary } from "../features/summary/Summary";
 import { createDefaultWorkspace } from "../lib/project-state";
 import {
+  createWorkspaceStorage,
   readWorkspace,
   WORKSPACE_STORAGE_KEY,
   type WorkspaceSnapshot,
@@ -39,7 +40,10 @@ import {
 } from "../lib/workspace-state";
 
 export function App() {
-  const [initialLoad] = useState(() => readWorkspace(window.localStorage));
+  const [storage] = useState(() =>
+    createWorkspaceStorage(() => window.localStorage),
+  );
+  const [initialLoad] = useState(() => readWorkspace(storage));
   const restoredSnapshot =
     initialLoad.status === "ready" ? initialLoad.snapshot : null;
   const [workspace, setWorkspace] = useState(
@@ -63,7 +67,7 @@ export function App() {
   const lastAutosaveWorkspace = useRef(workspace);
   const [autosave] = useState(() =>
     createWorkspaceAutosave({
-      storage: window.localStorage,
+      storage,
       schedule: (callback, delay) => window.setTimeout(callback, delay),
       cancel: (timerId) => window.clearTimeout(timerId),
       onStatusChange: (status, snapshot) => {

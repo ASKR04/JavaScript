@@ -244,21 +244,28 @@ The reusable focus coordinator accepts an explicit field order, validation error
 
 ```mermaid
 flowchart LR
+    Start["Application startup"] --> Adapter["Lazy storage adapter"]
+    Adapter -->|access allowed| Read["Read and validate snapshot"]
+    Adapter -->|getter or method denied| Temporary["Recoverable temporary workspace"]
+    Temporary -->|explicit probe| Adapter
     Edit["Workspace edit"] --> Queue["Queue 300 ms save"]
     Queue --> Replace["Cancel older pending timer"]
     Replace --> Latest["Retain newest workspace"]
-    Latest -->|timer completes| Storage["Versioned browser snapshot"]
+    Latest -->|timer completes| Adapter
     PageHide["Page becomes hidden"] --> Flush["Cancel timer and flush now"]
-    Flush --> Storage
-    Storage -->|success| Saved["Saved timestamp"]
-    Storage -->|failure| Recovery["Retain newest failed workspace"]
+    Flush --> Adapter
+    Adapter -->|write succeeds| Storage["Versioned browser snapshot"]
+    Storage --> Saved["Saved timestamp"]
+    Adapter -->|write fails| Recovery["Retain newest failed workspace"]
     Recovery --> Error["Visible save error and retry control"]
-    Error -->|explicit retry or later pagehide| Storage
+    Error -->|explicit retry or later pagehide| Adapter
 ```
 
 The autosave coordinator owns scheduling rather than React components. Rapid updates replace the pending timer and retain only the newest immutable workspace. A `pagehide` lifecycle listener flushes that pending value synchronously through the existing storage boundary before navigation, tab close, or mobile backgrounding can interrupt the debounce window.
 
 If browser storage rejects a write, the coordinator keeps that workspace in memory and exposes an explicit retry through the toolbar. A later lifecycle flush also retries the retained value, while any newer queued edit supersedes it. Successful persistence clears recovery state, preventing an older failed snapshot from overwriting newer work. Scheduling, flush behavior, recovery, and stale-state replacement are covered without browser timing mocks.
+
+Browser storage is resolved lazily at each read or write instead of being accessed while React initializes. This contains security errors raised by the `localStorage` property getter itself, not only errors from `getItem` or `setItem`, and lets an explicit retry probe re-resolve the complete browser boundary if access later becomes available.
 
 ## Multi-Tab Conflict Flow
 
@@ -391,3 +398,5 @@ The 2026-08-25 maintenance increment makes destructive whole-workspace replaceme
 The 2026-08-26 maintenance increment protects unreadable startup data from silent replacement. Malformed, incomplete, and future-version snapshots pause autosave, remain available as an exact raw rescue download, and require a validated restore or explicit confirmation before browser storage is replaced.
 
 The 2026-08-27 maintenance increment makes temporary work visible when browser storage cannot be read. An immediate save probe can recover access without requiring an edit, and a shared exit policy protects pending, failed, conflicted, and recovery-paused workspace state from an unacknowledged close.
+
+The 2026-08-30 maintenance increment contains storage access at the property boundary. SignalForge now converts both getter-level and method-level denial into its recoverable temporary-workspace state, while every explicit retry re-resolves access instead of retaining a permanently failed handle.

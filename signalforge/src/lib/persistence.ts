@@ -10,6 +10,7 @@ export const WORKSPACE_SCHEMA_VERSION = 2;
 
 type StorageReader = Pick<Storage, "getItem">;
 type StorageWriter = Pick<Storage, "setItem" | "removeItem">;
+export type WorkspaceStorage = StorageReader & StorageWriter;
 
 export type WorkspaceSnapshot = {
   workspace: ProjectWorkspace;
@@ -25,6 +26,22 @@ export type WorkspaceLoadResult =
 type StoredSnapshot = WorkspaceSnapshot & {
   version: number;
 };
+
+export function createWorkspaceStorage(
+  resolveStorage: () => WorkspaceStorage,
+): WorkspaceStorage {
+  return {
+    getItem(key) {
+      return resolveStorage().getItem(key);
+    },
+    setItem(key, value) {
+      resolveStorage().setItem(key, value);
+    },
+    removeItem(key) {
+      resolveStorage().removeItem(key);
+    },
+  };
+}
 
 const validStatuses: WorkStatus[] = [
   "planned",

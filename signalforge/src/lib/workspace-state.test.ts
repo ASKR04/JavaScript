@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createDefaultWorkspace } from "./project-state";
 import {
   clearWorkspace,
+  createWorkspaceStorage,
   loadWorkspace,
   readWorkspace,
   saveWorkspace,
@@ -298,6 +299,37 @@ describe("workspace persistence", () => {
         },
       }),
     ).toEqual({ status: "unavailable" });
+  });
+
+  it("contains errors thrown while resolving browser storage", () => {
+    const storage = createWorkspaceStorage(() => {
+      throw new Error("The browser denied access to localStorage");
+    });
+
+    expect(readWorkspace(storage)).toEqual({ status: "unavailable" });
+    expect(() => saveWorkspace(storage, createDefaultWorkspace())).toThrow(
+      "The browser denied access to localStorage",
+    );
+  });
+
+  it("re-resolves browser storage so a later access attempt can recover", () => {
+    const memoryStorage = new MemoryStorage();
+    let storageIsAvailable = false;
+    const storage = createWorkspaceStorage(() => {
+      if (!storageIsAvailable) throw new Error("Storage access denied");
+      return memoryStorage;
+    });
+
+    expect(readWorkspace(storage)).toEqual({ status: "unavailable" });
+
+    storageIsAvailable = true;
+    saveWorkspace(
+      storage,
+      createDefaultWorkspace(),
+      new Date("2026-08-30T15:00:00.000Z"),
+    );
+
+    expect(readWorkspace(storage).status).toBe("ready");
   });
 
   it("migrates version one snapshots without losing saved planning work", () => {
