@@ -38,5 +38,6 @@ Each project in this repository is designed to be useful, documented, and struct
 | SignalForge | Unreadable startup recovery | 2026-08-26 | Typed storage outcomes, paused autosave, raw rescue download, and explicit replacement confirmation | [PR #4](https://github.com/ASKR04/JavaScript/pull/4) |
 | SignalForge | Temporary workspace protection | 2026-08-27 | Explicit unavailable-storage state, immediate persistence probe, and tested exit protection for non-durable work | [PR #4](https://github.com/ASKR04/JavaScript/pull/4) |
 | SignalForge | Storage access containment | 2026-08-30 | Lazy, retryable browser-storage resolution that contains getter-level privacy and sandbox access failures | [PR #4](https://github.com/ASKR04/JavaScript/pull/4) |
+| SignalForge | Conflict-safe continued editing | 2026-08-31 | Tested autosave pause policy that prevents in-tab edits from overwriting an unresolved newer external snapshot | [PR #4](https://github.com/ASKR04/JavaScript/pull/4) |
 
 See the [SignalForge architecture notes](./signalforge/docs/architecture.md) for the current component and data flow diagrams.

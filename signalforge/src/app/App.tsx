@@ -12,7 +12,10 @@ import {
   WORKSPACE_STORAGE_KEY,
   type WorkspaceSnapshot,
 } from "../lib/persistence";
-import { createWorkspaceAutosave } from "../lib/workspace-autosave";
+import {
+  createWorkspaceAutosave,
+  getWorkspaceAutosavePauseStatus,
+} from "../lib/workspace-autosave";
 import {
   shouldProtectWorkspaceExit,
   type WorkspacePersistenceStatus,
@@ -81,13 +84,17 @@ export function App() {
     if (lastAutosaveWorkspace.current === workspace) return;
 
     lastAutosaveWorkspace.current = workspace;
-    if (unreadableWorkspace !== null) {
-      setSaveStatus("recovery");
+    const pauseStatus = getWorkspaceAutosavePauseStatus({
+      hasExternalSnapshot: externalSnapshot !== null,
+      hasUnreadableWorkspace: unreadableWorkspace !== null,
+    });
+    if (pauseStatus) {
+      setSaveStatus(pauseStatus);
       return;
     }
 
     autosave.queue(workspace);
-  }, [autosave, unreadableWorkspace, workspace]);
+  }, [autosave, externalSnapshot, unreadableWorkspace, workspace]);
 
   useEffect(() => {
     const flushPendingSave = () => autosave.flush();

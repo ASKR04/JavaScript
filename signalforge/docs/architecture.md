@@ -248,7 +248,10 @@ flowchart LR
     Adapter -->|access allowed| Read["Read and validate snapshot"]
     Adapter -->|getter or method denied| Temporary["Recoverable temporary workspace"]
     Temporary -->|explicit probe| Adapter
-    Edit["Workspace edit"] --> Queue["Queue 300 ms save"]
+    Edit["Workspace edit"] --> Guard{"Persistence paused?"}
+    Guard -->|no| Queue["Queue 300 ms save"]
+    Guard -->|tab conflict| Conflict["Retain edit in memory"]
+    Guard -->|unreadable startup data| Preserve["Keep original storage untouched"]
     Queue --> Replace["Cancel older pending timer"]
     Replace --> Latest["Retain newest workspace"]
     Latest -->|timer completes| Adapter
@@ -261,7 +264,7 @@ flowchart LR
     Error -->|explicit retry or later pagehide| Adapter
 ```
 
-The autosave coordinator owns scheduling rather than React components. Rapid updates replace the pending timer and retain only the newest immutable workspace. A `pagehide` lifecycle listener flushes that pending value synchronously through the existing storage boundary before navigation, tab close, or mobile backgrounding can interrupt the debounce window.
+The autosave coordinator owns scheduling rather than React components. Rapid updates replace the pending timer and retain only the newest immutable workspace. A pure pause policy prevents new timers from being scheduled while unreadable startup data or an unresolved external-save conflict must remain untouched. The current tab can continue accepting edits during a conflict, but those edits stay in memory until the developer explicitly keeps the tab or loads the other snapshot. A `pagehide` lifecycle listener flushes pending values synchronously through the existing storage boundary before navigation, tab close, or mobile backgrounding can interrupt the debounce window.
 
 If browser storage rejects a write, the coordinator keeps that workspace in memory and exposes an explicit retry through the toolbar. A later lifecycle flush also retries the retained value, while any newer queued edit supersedes it. Successful persistence clears recovery state, preventing an older failed snapshot from overwriting newer work. Scheduling, flush behavior, recovery, and stale-state replacement are covered without browser timing mocks.
 
@@ -276,7 +279,8 @@ flowchart LR
     Parse -->|invalid, duplicate, or older| Ignore["Ignore safely"]
     Parse -->|newer| Compare["Compare typed workspace sections"]
     Compare -->|identical content| Reconcile["Accept timestamp without a prompt"]
-    Compare -->|changed content| Pause["Pause pending local autosave"]
+    Compare -->|changed content| Pause["Pause current and future local autosaves"]
+    Edit["Further edits in this tab"] --> Pause
     Pause --> Summary["Summarize changed sections and counts"]
     Summary --> Alert["Announce conflict and show choices"]
     Alert -->|load other tab| Replace["Replace current workspace"]
@@ -285,7 +289,7 @@ flowchart LR
     Requeue --> Autosave
 ```
 
-The storage-event boundary never applies an external value directly. It first uses the same version, timestamp, migration, and domain guards as startup persistence, then compares the candidate with the current saved timestamp and typed workspace. A newer snapshot with identical content advances the local timestamp and cancels the redundant pending write without interrupting the user. A genuinely different save pauses this tab's pending write so the developer can make an explicit choice instead of losing work through last-writer-wins behavior.
+The storage-event boundary never applies an external value directly. It first uses the same version, timestamp, migration, and domain guards as startup persistence, then compares the candidate with the current saved timestamp and typed workspace. A newer snapshot with identical content advances the local timestamp and cancels the redundant pending write without interrupting the user. A genuinely different save pauses this tab's pending write and every later edit until the developer makes an explicit choice, preventing a subsequent keystroke from silently reactivating last-writer-wins behavior.
 
 Conflict previews disclose structure rather than sensitive content. A pure comparison reports changed brief-field counts and added, removed, or updated records across features, roadmap milestones, architecture decisions, and commit narratives. Loading an already-persisted snapshot skips one autosave cycle, preventing a conflict from bouncing back to the original tab. The alert uses semantic list markup, non-color text, keyboard-accessible actions, and responsive wrapping rules.
 
@@ -364,8 +368,8 @@ src/
   lib/workspace-state.ts              # immutable state transitions
   lib/focus-validation.ts             # ordered post-render invalid-field focus
   lib/focus-validation.test.ts        # focus scheduling and fallback coverage
-  lib/workspace-autosave.ts           # coalesced saves and page lifecycle flush boundary
-  lib/workspace-autosave.test.ts      # scheduling, flush, and storage-error coverage
+  lib/workspace-autosave.ts           # pause policy, coalesced saves, and lifecycle flush boundary
+  lib/workspace-autosave.test.ts      # pause, scheduling, flush, and storage-error coverage
   lib/workspace-exit-protection.ts    # pure unsaved-state exit warning policy
   lib/workspace-exit-protection.test.ts # pending, failed, conflict, and recovery coverage
   lib/workspace-replacement.ts        # reversible restore/reset swap model
@@ -400,3 +404,5 @@ The 2026-08-26 maintenance increment protects unreadable startup data from silen
 The 2026-08-27 maintenance increment makes temporary work visible when browser storage cannot be read. An immediate save probe can recover access without requiring an edit, and a shared exit policy protects pending, failed, conflicted, and recovery-paused workspace state from an unacknowledged close.
 
 The 2026-08-30 maintenance increment contains storage access at the property boundary. SignalForge now converts both getter-level and method-level denial into its recoverable temporary-workspace state, while every explicit retry re-resolves access instead of retaining a permanently failed handle.
+
+The 2026-08-31 maintenance increment closes a multi-tab overwrite race. Once a newer external snapshot creates a conflict, later edits remain usable in memory but cannot restart autosave until the developer explicitly chooses which tab to keep.

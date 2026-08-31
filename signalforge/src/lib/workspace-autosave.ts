@@ -6,6 +6,13 @@ import {
 
 export type WorkspaceSaveStatus = "saving" | "saved" | "error";
 
+export type WorkspaceAutosavePauseStatus = "conflict" | "recovery";
+
+type WorkspaceAutosavePauseState = {
+  hasExternalSnapshot: boolean;
+  hasUnreadableWorkspace: boolean;
+};
+
 type StorageWriter = Pick<Storage, "setItem" | "removeItem">;
 
 type WorkspaceAutosaveOptions<TimerId> = {
@@ -26,6 +33,15 @@ export type WorkspaceAutosave = {
   retry: () => void;
   cancel: () => void;
 };
+
+export function getWorkspaceAutosavePauseStatus({
+  hasExternalSnapshot,
+  hasUnreadableWorkspace,
+}: WorkspaceAutosavePauseState): WorkspaceAutosavePauseStatus | null {
+  if (hasExternalSnapshot) return "conflict";
+  if (hasUnreadableWorkspace) return "recovery";
+  return null;
+}
 
 export function createWorkspaceAutosave<TimerId>({
   storage,

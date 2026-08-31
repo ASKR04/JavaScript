@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { createDefaultWorkspace } from "./project-state";
 import { loadWorkspace } from "./persistence";
-import { createWorkspaceAutosave } from "./workspace-autosave";
+import {
+  createWorkspaceAutosave,
+  getWorkspaceAutosavePauseStatus,
+} from "./workspace-autosave";
 import { updateProjectBrief } from "./workspace-state";
 
 class MemoryStorage {
@@ -38,6 +41,36 @@ function createTimerHarness() {
 }
 
 describe("workspace autosave", () => {
+  it("keeps autosave paused while a tab conflict remains unresolved", () => {
+    expect(
+      getWorkspaceAutosavePauseStatus({
+        hasExternalSnapshot: true,
+        hasUnreadableWorkspace: false,
+      }),
+    ).toBe("conflict");
+    expect(
+      getWorkspaceAutosavePauseStatus({
+        hasExternalSnapshot: true,
+        hasUnreadableWorkspace: true,
+      }),
+    ).toBe("conflict");
+  });
+
+  it("distinguishes unreadable-data recovery from normal autosave", () => {
+    expect(
+      getWorkspaceAutosavePauseStatus({
+        hasExternalSnapshot: false,
+        hasUnreadableWorkspace: true,
+      }),
+    ).toBe("recovery");
+    expect(
+      getWorkspaceAutosavePauseStatus({
+        hasExternalSnapshot: false,
+        hasUnreadableWorkspace: false,
+      }),
+    ).toBeNull();
+  });
+
   it("coalesces rapid edits and saves only the newest workspace", () => {
     const storage = new MemoryStorage();
     const timers = createTimerHarness();
