@@ -125,7 +125,6 @@ export function App() {
       const update = classifyExternalWorkspaceUpdate(
         event.newValue,
         workspace,
-        savedAt,
       );
       if (!update) return;
 
@@ -141,16 +140,12 @@ export function App() {
 
       autosave.cancel();
       setSaveStatus("conflict");
-      setExternalSnapshot((current) =>
-        !current || update.snapshot.savedAt > current.savedAt
-          ? update.snapshot
-          : current,
-      );
+      setExternalSnapshot(update.snapshot);
     }
 
     window.addEventListener("storage", detectExternalSave);
     return () => window.removeEventListener("storage", detectExternalSave);
-  }, [autosave, savedAt, workspace]);
+  }, [autosave, workspace]);
 
   function replaceWorkspace(
     replacement: typeof workspace,

@@ -244,11 +244,12 @@ export function WorkspaceToolbar({
       {externalSnapshot ? (
         <div className="external-change-notice" role="alert">
           <div>
-            <strong>Newer changes were saved in another tab.</strong>
+            <strong>Different changes were saved in another tab.</strong>
             <p>
-              The other tab saved at {formatSaveTime(externalSnapshot.savedAt)}.
-              Choose which workspace to keep. Edits made while this notice is
-              open stay in this tab and remain paused until you choose.
+              The other tab recorded a save at{" "}
+              {formatSaveTime(externalSnapshot.savedAt)}. Choose which
+              workspace to keep. Edits made while this notice is open stay in
+              this tab and remain paused until you choose.
             </p>
             {externalChanges.length > 0 ? (
               <ul

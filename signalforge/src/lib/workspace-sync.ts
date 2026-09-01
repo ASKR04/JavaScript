@@ -117,26 +117,11 @@ export function summarizeWorkspaceChanges(
   return summary;
 }
 
-export function selectNewerWorkspaceSnapshot(
-  serialized: string,
-  currentSavedAt: string | null,
-): WorkspaceSnapshot | null {
-  const candidate = parseWorkspaceSnapshot(serialized);
-  if (!candidate) return null;
-  if (!currentSavedAt) return candidate;
-
-  const currentTime = Date.parse(currentSavedAt);
-  if (Number.isNaN(currentTime)) return candidate;
-
-  return Date.parse(candidate.savedAt) > currentTime ? candidate : null;
-}
-
 export function classifyExternalWorkspaceUpdate(
   serialized: string,
   currentWorkspace: ProjectWorkspace,
-  currentSavedAt: string | null,
 ): ExternalWorkspaceUpdate | null {
-  const snapshot = selectNewerWorkspaceSnapshot(serialized, currentSavedAt);
+  const snapshot = parseWorkspaceSnapshot(serialized);
   if (!snapshot) return null;
 
   return {

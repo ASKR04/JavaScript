@@ -9,7 +9,6 @@ import {
 } from "./persistence";
 import {
   classifyExternalWorkspaceUpdate,
-  selectNewerWorkspaceSnapshot,
   summarizeWorkspaceChanges,
 } from "./workspace-sync";
 
@@ -39,44 +38,33 @@ function createSerializedSnapshot(
 }
 
 describe("workspace tab synchronization", () => {
-  it("selects a valid external snapshot when it is newer", () => {
-    const selected = selectNewerWorkspaceSnapshot(
-      createSerializedSnapshot("2026-08-24T15:05:00.000Z"),
-      "2026-08-24T15:00:00.000Z",
-    );
-
-    expect(selected?.savedAt).toBe("2026-08-24T15:05:00.000Z");
-  });
-
-  it("ignores stale and duplicate external snapshots", () => {
-    const serialized = createSerializedSnapshot("2026-08-24T15:00:00.000Z");
-
+  it("rejects malformed JSON before it reaches the interface", () => {
     expect(
-      selectNewerWorkspaceSnapshot(serialized, "2026-08-24T15:01:00.000Z"),
-    ).toBeNull();
-    expect(
-      selectNewerWorkspaceSnapshot(serialized, "2026-08-24T15:00:00.000Z"),
-    ).toBeNull();
-  });
-
-  it("rejects malformed snapshots before they reach the interface", () => {
-    expect(
-      selectNewerWorkspaceSnapshot("{not-json", null),
-    ).toBeNull();
-    expect(
-      selectNewerWorkspaceSnapshot(
-        JSON.stringify({ version: 99, savedAt: "not-a-date", workspace: {} }),
-        null,
+      classifyExternalWorkspaceUpdate(
+        "{not-json",
+        createDefaultWorkspace(),
       ),
     ).toBeNull();
+  });
+
+  it("rejects unsupported snapshots before they reach the interface", () => {
     expect(
-      selectNewerWorkspaceSnapshot(
+      classifyExternalWorkspaceUpdate(
+        JSON.stringify({ version: 99, savedAt: "not-a-date", workspace: {} }),
+        createDefaultWorkspace(),
+      ),
+    ).toBeNull();
+  });
+
+  it("rejects invalid save timestamps before they reach the interface", () => {
+    expect(
+      classifyExternalWorkspaceUpdate(
         JSON.stringify({
           version: 2,
           savedAt: "not-a-date",
           workspace: createDefaultWorkspace(),
         }),
-        null,
+        createDefaultWorkspace(),
       ),
     ).toBeNull();
   });
@@ -102,7 +90,6 @@ describe("workspace tab synchronization", () => {
         reorderedWorkspace,
       ),
       current,
-      "2026-08-24T15:00:00.000Z",
     );
 
     expect(update).toMatchObject({
@@ -120,12 +107,31 @@ describe("workspace tab synchronization", () => {
     const update = classifyExternalWorkspaceUpdate(
       createSerializedSnapshot("2026-08-24T15:05:00.000Z", incoming),
       current,
-      "2026-08-24T15:00:00.000Z",
     );
 
     expect(update).toMatchObject({
       kind: "conflict",
       snapshot: { workspace: incoming },
+    });
+  });
+
+  it("surfaces a changed external write even when its clock is behind", () => {
+    const current = createDefaultWorkspace();
+    const incoming = {
+      ...current,
+      nextProofPoint: "Review a real write without trusting wall-clock order.",
+    };
+    const update = classifyExternalWorkspaceUpdate(
+      createSerializedSnapshot("2026-08-24T14:55:00.000Z", incoming),
+      current,
+    );
+
+    expect(update).toMatchObject({
+      kind: "conflict",
+      snapshot: {
+        savedAt: "2026-08-24T14:55:00.000Z",
+        workspace: incoming,
+      },
     });
   });
 

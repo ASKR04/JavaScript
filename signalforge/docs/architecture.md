@@ -276,9 +276,9 @@ Browser storage is resolved lazily at each read or write instead of being access
 flowchart LR
     OtherTab["Another SignalForge tab saves"] --> Event["Browser storage event"]
     Event --> Parse["Parse and validate snapshot"]
-    Parse -->|invalid, duplicate, or older| Ignore["Ignore safely"]
-    Parse -->|newer| Compare["Compare typed workspace sections"]
-    Compare -->|identical content| Reconcile["Accept timestamp without a prompt"]
+    Parse -->|invalid or unsupported| Ignore["Ignore safely"]
+    Parse -->|valid observed write| Compare["Compare typed workspace sections"]
+    Compare -->|identical content| Reconcile["Accept observed save without a prompt"]
     Compare -->|changed content| Pause["Pause current and future local autosaves"]
     Edit["Further edits in this tab"] --> Pause
     Pause --> Summary["Summarize changed sections and counts"]
@@ -289,7 +289,7 @@ flowchart LR
     Requeue --> Autosave
 ```
 
-The storage-event boundary never applies an external value directly. It first uses the same version, timestamp, migration, and domain guards as startup persistence, then compares the candidate with the current saved timestamp and typed workspace. A newer snapshot with identical content advances the local timestamp and cancels the redundant pending write without interrupting the user. A genuinely different save pauses this tab's pending write and every later edit until the developer makes an explicit choice, preventing a subsequent keystroke from silently reactivating last-writer-wins behavior.
+The storage-event boundary never applies an external value directly. It first uses the same version, timestamp, migration, and domain guards as startup persistence, then compares the typed workspace with the current tab. Browser storage events describe actual write order, so SignalForge does not discard an observed write merely because its embedded wall-clock timestamp is older or equal. This keeps clock skew from hiding a replacement that is already durable in browser storage. An observed snapshot with identical content updates the local timestamp and cancels the redundant pending write without interrupting the user. A genuinely different save pauses this tab's pending write and every later edit until the developer makes an explicit choice, preventing a subsequent keystroke from silently reactivating last-writer-wins behavior. If more external writes arrive while the notice is open, the most recently observed value replaces the earlier candidate.
 
 Conflict previews disclose structure rather than sensitive content. A pure comparison reports changed brief-field counts and added, removed, or updated records across features, roadmap milestones, architecture decisions, and commit narratives. Loading an already-persisted snapshot skips one autosave cycle, preventing a conflict from bouncing back to the original tab. The alert uses semantic list markup, non-color text, keyboard-accessible actions, and responsive wrapping rules.
 
@@ -393,7 +393,7 @@ The 2026-08-20 maintenance increment protects the local-first contract at the pa
 
 The 2026-08-21 maintenance increment makes transient storage failures recoverable. Failed writes retain the newest workspace in memory for an explicit or lifecycle retry, and newer edits safely replace stale recovery state.
 
-The 2026-08-24 maintenance increment prevents silent multi-tab overwrites. Valid newer external snapshots pause local autosave and present explicit load-or-keep actions; stale, duplicate, malformed, and unsupported snapshots are ignored.
+The 2026-08-24 maintenance increment prevents silent multi-tab overwrites. Valid external snapshots pause local autosave and present explicit load-or-keep actions; identical content is reconciled silently, while malformed and unsupported snapshots are ignored.
 
 The follow-up 2026-08-24 maintenance increment removes false conflict prompts for identical newer saves and gives genuine conflicts a privacy-preserving summary of the workspace sections and record counts that differ. The narrow-screen toolbar disables column wrapping and gives the alert an explicit contained width so its semantic summary and 44 px actions remain inside a 390 px viewport.
 
@@ -406,3 +406,5 @@ The 2026-08-27 maintenance increment makes temporary work visible when browser s
 The 2026-08-30 maintenance increment contains storage access at the property boundary. SignalForge now converts both getter-level and method-level denial into its recoverable temporary-workspace state, while every explicit retry re-resolves access instead of retaining a permanently failed handle.
 
 The 2026-08-31 maintenance increment closes a multi-tab overwrite race. Once a newer external snapshot creates a conflict, later edits remain usable in memory but cannot restart autosave until the developer explicitly chooses which tab to keep.
+
+The 2026-09-01 maintenance increment makes multi-tab reconciliation independent of wall-clock order. Every valid storage event is treated as an observed write, so a tab with a slow or corrected clock cannot replace durable browser data without surfacing a conflict; repeated external writes retain the last event rather than the largest timestamp.
