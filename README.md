@@ -40,5 +40,6 @@ Each project in this repository is designed to be useful, documented, and struct
 | SignalForge | Storage access containment | 2026-08-30 | Lazy, retryable browser-storage resolution that contains getter-level privacy and sandbox access failures | [PR #4](https://github.com/ASKR04/JavaScript/pull/4) |
 | SignalForge | Conflict-safe continued editing | 2026-08-31 | Tested autosave pause policy that prevents in-tab edits from overwriting an unresolved newer external snapshot | [PR #4](https://github.com/ASKR04/JavaScript/pull/4) |
 | SignalForge | Clock-safe tab synchronization | 2026-09-01 | Storage-event ordering, clock-skew conflict coverage, and last-observed external-write retention | [PR #4](https://github.com/ASKR04/JavaScript/pull/4) |
+| SignalForge | Stable identity validation | 2026-09-02 | Shared snapshot, backup, and cross-tab guards for blank, padded, and duplicate collection IDs | [PR #4](https://github.com/ASKR04/JavaScript/pull/4) |
 
 See the [SignalForge architecture notes](./signalforge/docs/architecture.md) for the current component and data flow diagrams.

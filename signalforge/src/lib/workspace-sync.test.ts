@@ -69,6 +69,24 @@ describe("workspace tab synchronization", () => {
     ).toBeNull();
   });
 
+  it("rejects duplicate record IDs before they reach conflict handling", () => {
+    const workspace = createDefaultWorkspace();
+    const duplicateIdWorkspace = {
+      ...workspace,
+      roadmap: [workspace.roadmap[0], workspace.roadmap[0]],
+    };
+
+    expect(
+      classifyExternalWorkspaceUpdate(
+        createSerializedSnapshot(
+          "2026-09-02T15:00:00.000Z",
+          duplicateIdWorkspace,
+        ),
+        workspace,
+      ),
+    ).toBeNull();
+  });
+
   it("silently reconciles newer snapshots with identical content", () => {
     const current = createDefaultWorkspace();
     const firstFeature = current.features[0];

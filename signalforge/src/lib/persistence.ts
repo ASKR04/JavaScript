@@ -76,6 +76,22 @@ function hasValidCommitKind(value: Record<string, unknown>): boolean {
   return commitKinds.includes(value.kind as CommitKind);
 }
 
+function hasUniqueStableIds(values: unknown[]): boolean {
+  const ids = new Set<string>();
+
+  return values.every((value) => {
+    if (!isRecord(value) || typeof value.id !== "string") return false;
+
+    const normalizedId = value.id.trim();
+    if (!normalizedId || normalizedId !== value.id || ids.has(normalizedId)) {
+      return false;
+    }
+
+    ids.add(normalizedId);
+    return true;
+  });
+}
+
 type LegacyProjectWorkspace = Omit<ProjectWorkspace, "commitNarratives">;
 
 function isLegacyProjectWorkspace(
@@ -92,6 +108,7 @@ function isLegacyProjectWorkspace(
   ]);
   const featuresAreValid =
     Array.isArray(value.features) &&
+    hasUniqueStableIds(value.features) &&
     value.features.every(
       (feature) =>
         isRecord(feature) &&
@@ -100,6 +117,7 @@ function isLegacyProjectWorkspace(
     );
   const roadmapIsValid =
     Array.isArray(value.roadmap) &&
+    hasUniqueStableIds(value.roadmap) &&
     value.roadmap.every(
       (item) =>
         isRecord(item) &&
@@ -108,6 +126,7 @@ function isLegacyProjectWorkspace(
     );
   const decisionsAreValid =
     Array.isArray(value.decisions) &&
+    hasUniqueStableIds(value.decisions) &&
     value.decisions.every(
       (decision) =>
         isRecord(decision) &&
@@ -140,6 +159,7 @@ export function isProjectWorkspace(value: unknown): value is ProjectWorkspace {
 
   const commitNarrativesAreValid =
     Array.isArray(commitNarratives) &&
+    hasUniqueStableIds(commitNarratives) &&
     commitNarratives.every(
       (narrative: unknown) =>
         isRecord(narrative) &&

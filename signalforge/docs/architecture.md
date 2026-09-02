@@ -276,7 +276,7 @@ Browser storage is resolved lazily at each read or write instead of being access
 flowchart LR
     OtherTab["Another SignalForge tab saves"] --> Event["Browser storage event"]
     Event --> Parse["Parse and validate snapshot"]
-    Parse -->|invalid or unsupported| Ignore["Ignore safely"]
+    Parse -->|invalid version, timestamp, shape, or stable IDs| Ignore["Ignore safely"]
     Parse -->|valid observed write| Compare["Compare typed workspace sections"]
     Compare -->|identical content| Reconcile["Accept observed save without a prompt"]
     Compare -->|changed content| Pause["Pause current and future local autosaves"]
@@ -289,7 +289,7 @@ flowchart LR
     Requeue --> Autosave
 ```
 
-The storage-event boundary never applies an external value directly. It first uses the same version, timestamp, migration, and domain guards as startup persistence, then compares the typed workspace with the current tab. Browser storage events describe actual write order, so SignalForge does not discard an observed write merely because its embedded wall-clock timestamp is older or equal. This keeps clock skew from hiding a replacement that is already durable in browser storage. An observed snapshot with identical content updates the local timestamp and cancels the redundant pending write without interrupting the user. A genuinely different save pauses this tab's pending write and every later edit until the developer makes an explicit choice, preventing a subsequent keystroke from silently reactivating last-writer-wins behavior. If more external writes arrive while the notice is open, the most recently observed value replaces the earlier candidate.
+The storage-event boundary never applies an external value directly. It first uses the same version, timestamp, migration, domain, and stable-identity guards as startup persistence, then compares the typed workspace with the current tab. Each collection requires nonblank, unpadded, unique record IDs, preventing ambiguous updates and duplicate interface keys regardless of whether data arrives from browser storage, backup restore, or another tab. Browser storage events describe actual write order, so SignalForge does not discard an observed write merely because its embedded wall-clock timestamp is older or equal. This keeps clock skew from hiding a replacement that is already durable in browser storage. An observed snapshot with identical content updates the local timestamp and cancels the redundant pending write without interrupting the user. A genuinely different save pauses this tab's pending write and every later edit until the developer makes an explicit choice, preventing a subsequent keystroke from silently reactivating last-writer-wins behavior. If more external writes arrive while the notice is open, the most recently observed value replaces the earlier candidate.
 
 Conflict previews disclose structure rather than sensitive content. A pure comparison reports changed brief-field counts and added, removed, or updated records across features, roadmap milestones, architecture decisions, and commit narratives. Loading an already-persisted snapshot skips one autosave cycle, preventing a conflict from bouncing back to the original tab. The alert uses semantic list markup, non-color text, keyboard-accessible actions, and responsive wrapping rules.
 
@@ -408,3 +408,5 @@ The 2026-08-30 maintenance increment contains storage access at the property bou
 The 2026-08-31 maintenance increment closes a multi-tab overwrite race. Once a newer external snapshot creates a conflict, later edits remain usable in memory but cannot restart autosave until the developer explicitly chooses which tab to keep.
 
 The 2026-09-01 maintenance increment makes multi-tab reconciliation independent of wall-clock order. Every valid storage event is treated as an observed write, so a tab with a slow or corrected clock cannot replace durable browser data without surfacing a conflict; repeated external writes retain the last event rather than the largest timestamp.
+
+The 2026-09-02 maintenance increment hardens record identity at the shared parsing boundary. Stored snapshots, backup restores, and cross-tab writes now reject blank, padded, or duplicate IDs within each collection before ambiguous records can reach state transitions or rendering.

@@ -75,6 +75,16 @@ describe("workspace backups", () => {
     });
   });
 
+  it("rejects blank stable IDs before replacing the current workspace", () => {
+    const backup = JSON.parse(createWorkspaceBackup(createDefaultWorkspace()));
+    backup.workspace.commitNarratives[0].id = "   ";
+
+    expect(parseWorkspaceBackup(JSON.stringify(backup))).toEqual({
+      ok: false,
+      error: "This backup is incomplete or contains invalid workspace data.",
+    });
+  });
+
   it("rejects backups with normalized or missing export timestamps", () => {
     const backup = JSON.parse(createWorkspaceBackup(createDefaultWorkspace()));
     backup.exportedAt = "2026-02-30T15:00:00.000Z";

@@ -291,6 +291,25 @@ describe("workspace persistence", () => {
     });
   });
 
+  it("preserves snapshots with duplicate stable IDs for explicit recovery", () => {
+    const storage = new MemoryStorage();
+    const workspace = createDefaultWorkspace();
+    const serialized = JSON.stringify({
+      version: 2,
+      workspace: {
+        ...workspace,
+        features: [workspace.features[0], workspace.features[0]],
+      },
+      savedAt: "2026-09-02T15:00:00.000Z",
+    });
+    storage.setItem("signalforge.workspace.v1", serialized);
+
+    expect(readWorkspace(storage)).toEqual({
+      status: "invalid",
+      serialized,
+    });
+  });
+
   it("distinguishes unavailable storage from an empty workspace", () => {
     expect(
       readWorkspace({
