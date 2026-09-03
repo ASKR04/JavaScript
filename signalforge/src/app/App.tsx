@@ -26,6 +26,7 @@ import {
   type WorkspaceReplacementOperation,
   type WorkspaceReplacementRecovery,
 } from "../lib/workspace-replacement";
+import { planWorkspaceStorageRecovery } from "../lib/workspace-storage-recovery";
 import { classifyExternalWorkspaceUpdate } from "../lib/workspace-sync";
 import {
   addArchitectureDecision,
@@ -58,6 +59,9 @@ export function App() {
   );
   const [externalSnapshot, setExternalSnapshot] =
     useState<WorkspaceSnapshot | null>(null);
+  const [requiresStorageProbe, setRequiresStorageProbe] = useState(
+    initialLoad.status === "unavailable",
+  );
   const [replacementRecovery, setReplacementRecovery] =
     useState<WorkspaceReplacementRecovery | null>(null);
   const [saveStatus, setSaveStatus] = useState<WorkspacePersistenceStatus>(
@@ -84,6 +88,10 @@ export function App() {
     if (lastAutosaveWorkspace.current === workspace) return;
 
     lastAutosaveWorkspace.current = workspace;
+    if (requiresStorageProbe) {
+      setSaveStatus("saving");
+      return;
+    }
     const pauseStatus = getWorkspaceAutosavePauseStatus({
       hasExternalSnapshot: externalSnapshot !== null,
       hasUnreadableWorkspace: unreadableWorkspace !== null,
@@ -94,7 +102,13 @@ export function App() {
     }
 
     autosave.queue(workspace);
-  }, [autosave, externalSnapshot, unreadableWorkspace, workspace]);
+  }, [
+    autosave,
+    externalSnapshot,
+    requiresStorageProbe,
+    unreadableWorkspace,
+    workspace,
+  ]);
 
   useEffect(() => {
     const flushPendingSave = () => autosave.flush();
@@ -131,6 +145,7 @@ export function App() {
       if (update.kind === "identical") {
         autosave.cancel();
         lastAutosaveWorkspace.current = workspace;
+        setRequiresStorageProbe(false);
         setSavedAt(update.snapshot.savedAt);
         setSaveStatus("saved");
         setUnreadableWorkspace(null);
@@ -139,6 +154,7 @@ export function App() {
       }
 
       autosave.cancel();
+      setRequiresStorageProbe(false);
       setSaveStatus("conflict");
       setExternalSnapshot(update.snapshot);
     }
@@ -179,6 +195,44 @@ export function App() {
     setReplacementRecovery(result.recovery);
   }
 
+  function retryLocalPersistence() {
+    if (!requiresStorageProbe) {
+      autosave.retry();
+      return;
+    }
+
+    const recoveryPlan = planWorkspaceStorageRecovery(
+      readWorkspace(storage),
+      workspace,
+    );
+
+    if (recoveryPlan.kind === "still-unavailable") return;
+    if (recoveryPlan.kind === "protect-unreadable") {
+      setRequiresStorageProbe(false);
+      setUnreadableWorkspace(recoveryPlan.serialized);
+      setSaveStatus("recovery");
+      return;
+    }
+    if (recoveryPlan.kind === "save-current") {
+      setRequiresStorageProbe(false);
+      autosave.queue(workspace);
+      autosave.flush();
+      return;
+    }
+
+    autosave.cancel();
+    setRequiresStorageProbe(false);
+    if (recoveryPlan.kind === "reconcile") {
+      lastAutosaveWorkspace.current = workspace;
+      setSavedAt(recoveryPlan.snapshot.savedAt);
+      setSaveStatus("saved");
+      return;
+    }
+
+    setSaveStatus("conflict");
+    setExternalSnapshot(recoveryPlan.snapshot);
+  }
+
   return (
     <main className="app-shell">
       <a className="skip-link" href="#workspace">
@@ -206,6 +260,7 @@ export function App() {
       >
         <WorkspaceToolbar
           status={saveStatus}
+          requiresStorageProbe={requiresStorageProbe}
           savedAt={savedAt}
           workspace={workspace}
           externalSnapshot={externalSnapshot}
@@ -230,10 +285,7 @@ export function App() {
           onRestore={(restoredWorkspace) =>
             replaceWorkspace(restoredWorkspace, "backup restore")
           }
-          onRetrySave={() => {
-            autosave.queue(workspace);
-            autosave.flush();
-          }}
+          onRetrySave={retryLocalPersistence}
           onReplaceUnreadableWorkspace={() => {
             setUnreadableWorkspace(null);
             autosave.queue(workspace);

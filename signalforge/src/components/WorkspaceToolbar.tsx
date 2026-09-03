@@ -21,6 +21,7 @@ const MAX_BACKUP_SIZE_BYTES = 2_000_000;
 
 type WorkspaceToolbarProps = {
   status: WorkspacePersistenceStatus;
+  requiresStorageProbe: boolean;
   savedAt: string | null;
   workspace: ProjectWorkspace;
   externalSnapshot: WorkspaceSnapshot | null;
@@ -50,6 +51,7 @@ function formatSavedAt(savedAt: string | null): string {
 
 export function WorkspaceToolbar({
   status,
+  requiresStorageProbe,
   savedAt,
   workspace,
   externalSnapshot,
@@ -70,7 +72,9 @@ export function WorkspaceToolbar({
     ? summarizeWorkspaceChanges(workspace, externalSnapshot.workspace)
     : [];
   const statusText =
-    status === "saving"
+    requiresStorageProbe
+      ? "Browser storage unavailable; work is temporary"
+      : status === "saving"
       ? "Saving locally…"
       : status === "error"
         ? "Local save failed; retry before closing"
@@ -177,13 +181,15 @@ export function WorkspaceToolbar({
             <span aria-hidden="true" />
             {statusText}
           </p>
-          {status === "error" || status === "unavailable" ? (
+          {requiresStorageProbe || status === "error" ? (
             <button
               className="text-button save-retry-button"
               type="button"
               onClick={onRetrySave}
             >
-              {status === "unavailable" ? "Try local save" : "Retry save"}
+              {requiresStorageProbe
+                ? "Check local storage"
+                : "Retry save"}
             </button>
           ) : null}
         </div>
@@ -229,14 +235,15 @@ export function WorkspaceToolbar({
           </p>
         ) : null}
       </div>
-      {status === "unavailable" ? (
+      {requiresStorageProbe ? (
         <div className="storage-unavailable-notice" role="alert">
           <div>
             <strong>This workspace is open only in this tab.</strong>
             <p>
-              SignalForge could not access browser storage. Try local save to
-              check again, or download a backup before closing if storage stays
-              unavailable.
+              SignalForge could not access browser storage. Check again before
+              writing: existing data will be loaded or presented for review,
+              and this workspace is saved only when storage is empty. Download
+              a backup before closing if access stays unavailable.
             </p>
           </div>
         </div>

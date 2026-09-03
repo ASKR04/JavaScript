@@ -82,7 +82,7 @@ flowchart LR
     Classify -->|ready| Restore["Restore validated workspace"]
     Classify -->|empty| Sample["Open sample workspace"]
     Classify -->|unavailable| Temporary["Announce temporary workspace"]
-    Temporary --> Probe["Try local save immediately"]
+    Temporary --> Probe["Check storage before writing"]
     Temporary --> Backup["Download current workspace"]
     Classify -->|invalid| Preserve["Keep original storage untouched"]
     Preserve --> Pause["Pause autosave and warn before exit"]
@@ -247,9 +247,15 @@ flowchart LR
     Start["Application startup"] --> Adapter["Lazy storage adapter"]
     Adapter -->|access allowed| Read["Read and validate snapshot"]
     Adapter -->|getter or method denied| Temporary["Recoverable temporary workspace"]
-    Temporary -->|explicit probe| Adapter
+    Temporary -->|explicit probe| Probe["Read before writing"]
+    Probe -->|still denied| Temporary
+    Probe -->|empty| Queue
+    Probe -->|identical workspace| Saved
+    Probe -->|different workspace| Conflict
+    Probe -->|unreadable data| Preserve
     Edit["Workspace edit"] --> Guard{"Persistence paused?"}
     Guard -->|no| Queue["Queue 300 ms save"]
+    Guard -->|storage access unverified| Temporary
     Guard -->|tab conflict| Conflict["Retain edit in memory"]
     Guard -->|unreadable startup data| Preserve["Keep original storage untouched"]
     Queue --> Replace["Cancel older pending timer"]
@@ -268,7 +274,7 @@ The autosave coordinator owns scheduling rather than React components. Rapid upd
 
 If browser storage rejects a write, the coordinator keeps that workspace in memory and exposes an explicit retry through the toolbar. A later lifecycle flush also retries the retained value, while any newer queued edit supersedes it. Successful persistence clears recovery state, preventing an older failed snapshot from overwriting newer work. Scheduling, flush behavior, recovery, and stale-state replacement are covered without browser timing mocks.
 
-Browser storage is resolved lazily at each read or write instead of being accessed while React initializes. This contains security errors raised by the `localStorage` property getter itself, not only errors from `getItem` or `setItem`, and lets an explicit retry probe re-resolve the complete browser boundary if access later becomes available.
+Browser storage is resolved lazily at each read or write instead of being accessed while React initializes. This contains security errors raised by the `localStorage` property getter itself, not only errors from `getItem` or `setItem`. Edits made while storage remains unverified stay in memory and activate exit protection without scheduling a write. When access later returns, the explicit recovery probe reads before writing: empty storage receives the in-memory workspace, identical data reconciles silently, different valid data uses the existing conflict review, and unreadable data enters protected recovery. This prevents either background autosave or an explicit retry from turning a temporary access failure into an unreviewed overwrite.
 
 ## Multi-Tab Conflict Flow
 
@@ -376,6 +382,8 @@ src/
   lib/workspace-replacement.test.ts   # undo, redo, and repeat-toggle coverage
   lib/workspace-sync.ts               # validated external-save classification and structural summaries
   lib/workspace-sync.test.ts          # reconciliation, conflict-summary, and invalid snapshot coverage
+  lib/workspace-storage-recovery.ts   # read-before-write plan for temporary storage recovery
+  lib/workspace-storage-recovery.test.ts # empty, unavailable, invalid, identical, and conflict coverage
   lib/persistence.ts                  # typed startup outcomes, versioned storage adapter, and guards
   lib/workspace-state.test.ts         # transition, migration, and startup recovery tests
   styles/global.css                   # responsive layout, focus visibility, and reduced-motion rules
@@ -410,3 +418,5 @@ The 2026-08-31 maintenance increment closes a multi-tab overwrite race. Once a n
 The 2026-09-01 maintenance increment makes multi-tab reconciliation independent of wall-clock order. Every valid storage event is treated as an observed write, so a tab with a slow or corrected clock cannot replace durable browser data without surfacing a conflict; repeated external writes retain the last event rather than the largest timestamp.
 
 The 2026-09-02 maintenance increment hardens record identity at the shared parsing boundary. Stored snapshots, backup restores, and cross-tab writes now reject blank, padded, or duplicate IDs within each collection before ambiguous records can reach state transitions or rendering.
+
+The 2026-09-03 maintenance increment makes temporary-storage recovery read before write. When browser access returns, SignalForge now preserves unreadable data, reconciles identical data, surfaces different durable work through the existing conflict review, and writes the in-memory workspace only after confirming storage is empty.
