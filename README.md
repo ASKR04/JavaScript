@@ -7,10 +7,11 @@ This repository collects original JavaScript and front-end focused projects buil
 | Project | Description | Stack |
 | --- | --- | --- |
 | [SignalForge](./signalforge) | Local-first dashboard for planning portfolio-ready software projects, tracking architecture decisions, roadmap progress, and project storytelling. | React, TypeScript, Vite |
+| [EventWeave](./eventweave) | Privacy-first workflow trace explorer for validated local import, causal timelines, comparisons, and evidence-backed reports. | React, TypeScript, Vite, Web Workers |
 
-## Proposed Next Project
+## Active Project
 
-[EventWeave](./eventweave) is a privacy-first workflow trace explorer proposed for the next weekly build. Its proposal and architecture are ready for review; implementation will not begin until approved.
+[EventWeave](./eventweave) was approved on 2026-09-04 and is now in its one-week delivery cycle. Atlas and Lumen contribute coordinated core-systems and product-experience shifts on one shared feature branch and pull request into `aug_release`.
 
 ## Repository Goal
 
@@ -42,5 +43,6 @@ Each project in this repository is designed to be useful, documented, and struct
 | SignalForge | Clock-safe tab synchronization | 2026-09-01 | Storage-event ordering, clock-skew conflict coverage, and last-observed external-write retention | [PR #4](https://github.com/ASKR04/JavaScript/pull/4) |
 | SignalForge | Stable identity validation | 2026-09-02 | Shared snapshot, backup, and cross-tab guards for blank, padded, and duplicate collection IDs | [PR #4](https://github.com/ASKR04/JavaScript/pull/4) |
 | SignalForge | Read-before-write storage recovery | 2026-09-03 | Safe recovery planning that reconciles or reviews existing browser data before any retry write | [PR #4](https://github.com/ASKR04/JavaScript/pull/4) |
+| EventWeave | Day 1 core foundation | 2026-09-04 | Versioned trace schema, validated JSON/NDJSON parsing, deterministic normalization, worker boundary, realistic fixtures, and focused tests | EventWeave feature PR pending |
 
-See the [SignalForge architecture notes](./signalforge/docs/architecture.md) for the current component and data flow diagrams.
+See the [EventWeave architecture notes](./eventweave/docs/architecture.md) for its current component and data-flow diagrams.
