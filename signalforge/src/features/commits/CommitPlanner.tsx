@@ -1,4 +1,6 @@
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useRef, useState } from "react";
+import { ValidationSummary } from "../../components/ValidationSummary";
+import { focusFirstInvalidField } from "../../lib/focus-validation";
 import {
   commitKinds,
   type CommitNarrative,
@@ -40,6 +42,9 @@ export function CommitPlanner({
 }: CommitPlannerProps) {
   const [draft, setDraft] = useState(initialDraft);
   const [errors, setErrors] = useState<CommitNarrativeErrors>({});
+  const fieldRefs = useRef<
+    Partial<Record<keyof CommitNarrativeDraft, HTMLElement | null>>
+  >({});
   const [copyStatus, setCopyStatus] = useState<{
     id: string;
     state: "copied" | "error";
@@ -58,7 +63,14 @@ export function CommitPlanner({
         kind: current.kind,
         scope: current.scope,
       }));
+      return;
     }
+
+    focusFirstInvalidField(
+      ["date", "scope", "summary", "implementation", "evidence"],
+      nextErrors,
+      fieldRefs.current,
+    );
   }
 
   function updateDraft<Key extends keyof CommitNarrativeDraft>(
@@ -96,6 +108,9 @@ export function CommitPlanner({
           <label>
             Work date
             <input
+              ref={(element) => {
+                fieldRefs.current.date = element;
+              }}
               type="date"
               value={draft.date}
               onChange={(event) => updateDraft("date", event.target.value)}
@@ -129,6 +144,9 @@ export function CommitPlanner({
           <label>
             Scope
             <input
+              ref={(element) => {
+                fieldRefs.current.scope = element;
+              }}
               value={draft.scope}
               onChange={(event) => updateDraft("scope", event.target.value)}
               placeholder="signalforge"
@@ -148,6 +166,9 @@ export function CommitPlanner({
         <label className="commit-summary-field">
           Delivered change
           <input
+            ref={(element) => {
+              fieldRefs.current.summary = element;
+            }}
             value={draft.summary}
             onChange={(event) => updateDraft("summary", event.target.value)}
             placeholder="add review-ready commit narratives"
@@ -170,6 +191,9 @@ export function CommitPlanner({
           <label>
             Implementation note
             <textarea
+              ref={(element) => {
+                fieldRefs.current.implementation = element;
+              }}
               value={draft.implementation}
               onChange={(event) =>
                 updateDraft("implementation", event.target.value)
@@ -191,6 +215,9 @@ export function CommitPlanner({
           <label>
             Verification evidence
             <textarea
+              ref={(element) => {
+                fieldRefs.current.evidence = element;
+              }}
               value={draft.evidence}
               onChange={(event) => updateDraft("evidence", event.target.value)}
               placeholder="Record tests, builds, reviews, or measurable outcomes."
@@ -206,6 +233,8 @@ export function CommitPlanner({
             )}
           </label>
         </div>
+
+        <ValidationSummary errors={errors} />
 
         <button className="primary-button" type="submit">
           Save narrative

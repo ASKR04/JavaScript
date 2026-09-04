@@ -1,4 +1,6 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { ValidationSummary } from "../../components/ValidationSummary";
+import { focusFirstInvalidField } from "../../lib/focus-validation";
 import type { ArchitectureDecision } from "../../lib/project-state";
 import type {
   DecisionDraft,
@@ -28,6 +30,9 @@ function DecisionEditor({
   const [draft, setDraft] = useState<DecisionDraft>(decision);
   const [errors, setErrors] = useState<DecisionErrors>({});
   const [saved, setSaved] = useState(false);
+  const fieldRefs = useRef<
+    Partial<Record<keyof DecisionDraft, HTMLElement | null>>
+  >({});
 
   useEffect(() => {
     setDraft(decision);
@@ -45,6 +50,11 @@ function DecisionEditor({
     const nextErrors = onUpdate(decision.id, draft);
     setErrors(nextErrors);
     setSaved(Object.keys(nextErrors).length === 0);
+    focusFirstInvalidField(
+      ["title", "context", "impact"],
+      nextErrors,
+      fieldRefs.current,
+    );
   }
 
   const fieldId = (field: keyof DecisionDraft) =>
@@ -66,6 +76,9 @@ function DecisionEditor({
       <label htmlFor={fieldId("title")}>
         Decision title
         <input
+          ref={(element) => {
+            fieldRefs.current.title = element;
+          }}
           id={fieldId("title")}
           value={draft.title}
           onChange={(event) => updateField("title", event.target.value)}
@@ -84,6 +97,9 @@ function DecisionEditor({
       <label htmlFor={fieldId("context")}>
         Context
         <textarea
+          ref={(element) => {
+            fieldRefs.current.context = element;
+          }}
           id={fieldId("context")}
           value={draft.context}
           onChange={(event) => updateField("context", event.target.value)}
@@ -102,6 +118,9 @@ function DecisionEditor({
       <label htmlFor={fieldId("impact")}>
         Consequence
         <textarea
+          ref={(element) => {
+            fieldRefs.current.impact = element;
+          }}
           id={fieldId("impact")}
           value={draft.impact}
           onChange={(event) => updateField("impact", event.target.value)}
@@ -116,6 +135,8 @@ function DecisionEditor({
           </span>
         )}
       </label>
+
+      <ValidationSummary errors={errors} />
 
       <div className="decision-actions">
         <button className="secondary-button" type="submit">
@@ -137,6 +158,9 @@ export function Decisions({
 }: DecisionsProps) {
   const [draft, setDraft] = useState<DecisionDraft>(emptyDecision);
   const [errors, setErrors] = useState<DecisionErrors>({});
+  const fieldRefs = useRef<
+    Partial<Record<keyof DecisionDraft, HTMLElement | null>>
+  >({});
 
   function updateField(field: keyof DecisionDraft, value: string) {
     setDraft((current) => ({ ...current, [field]: value }));
@@ -147,7 +171,17 @@ export function Decisions({
     event.preventDefault();
     const nextErrors = onCreate(draft);
     setErrors(nextErrors);
-    if (Object.keys(nextErrors).length === 0) setDraft(emptyDecision);
+    if (Object.keys(nextErrors).length === 0) {
+      setDraft(emptyDecision);
+      fieldRefs.current.title?.focus();
+      return;
+    }
+
+    focusFirstInvalidField(
+      ["title", "context", "impact"],
+      nextErrors,
+      fieldRefs.current,
+    );
   }
 
   return (
@@ -211,6 +245,9 @@ export function Decisions({
                 {label}
                 {isLongField ? (
                   <textarea
+                    ref={(element) => {
+                      fieldRefs.current[field] = element;
+                    }}
                     id={inputId}
                     placeholder={placeholder}
                     value={draft[field]}
@@ -220,6 +257,9 @@ export function Decisions({
                   />
                 ) : (
                   <input
+                    ref={(element) => {
+                      fieldRefs.current[field] = element;
+                    }}
                     id={inputId}
                     placeholder={placeholder}
                     value={draft[field]}
@@ -237,6 +277,8 @@ export function Decisions({
             );
           })}
         </div>
+
+        <ValidationSummary errors={errors} />
 
         <button className="primary-button" type="submit">
           Add decision

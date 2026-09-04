@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { WorkspaceToolbar } from "../components/WorkspaceToolbar";
 import { CommitPlanner } from "../features/commits/CommitPlanner";
 import { Dashboard } from "../features/dashboard/Dashboard";
@@ -7,10 +7,27 @@ import { Roadmap } from "../features/roadmap/Roadmap";
 import { Summary } from "../features/summary/Summary";
 import { createDefaultWorkspace } from "../lib/project-state";
 import {
-  clearWorkspace,
-  loadWorkspace,
-  saveWorkspace,
+  createWorkspaceStorage,
+  readWorkspace,
+  WORKSPACE_STORAGE_KEY,
+  type WorkspaceSnapshot,
 } from "../lib/persistence";
+import {
+  createWorkspaceAutosave,
+  getWorkspaceAutosavePauseStatus,
+} from "../lib/workspace-autosave";
+import {
+  shouldProtectWorkspaceExit,
+  type WorkspacePersistenceStatus,
+} from "../lib/workspace-exit-protection";
+import {
+  beginWorkspaceReplacement,
+  swapWorkspaceReplacement,
+  type WorkspaceReplacementOperation,
+  type WorkspaceReplacementRecovery,
+} from "../lib/workspace-replacement";
+import { planWorkspaceStorageRecovery } from "../lib/workspace-storage-recovery";
+import { classifyExternalWorkspaceUpdate } from "../lib/workspace-sync";
 import {
   addArchitectureDecision,
   addCommitNarrative,
@@ -27,29 +44,136 @@ import {
 } from "../lib/workspace-state";
 
 export function App() {
-  const [restoredSnapshot] = useState(() => loadWorkspace(window.localStorage));
+  const [storage] = useState(() =>
+    createWorkspaceStorage(() => window.localStorage),
+  );
+  const [initialLoad] = useState(() => readWorkspace(storage));
+  const restoredSnapshot =
+    initialLoad.status === "ready" ? initialLoad.snapshot : null;
   const [workspace, setWorkspace] = useState(
     () => restoredSnapshot?.workspace ?? createDefaultWorkspace(),
   );
   const [savedAt, setSavedAt] = useState(restoredSnapshot?.savedAt ?? null);
-  const [saveStatus, setSaveStatus] = useState<"saving" | "saved" | "error">(
-    "saved",
+  const [unreadableWorkspace, setUnreadableWorkspace] = useState<string | null>(
+    initialLoad.status === "invalid" ? initialLoad.serialized : null,
+  );
+  const [externalSnapshot, setExternalSnapshot] =
+    useState<WorkspaceSnapshot | null>(null);
+  const [requiresStorageProbe, setRequiresStorageProbe] = useState(
+    initialLoad.status === "unavailable",
+  );
+  const [replacementRecovery, setReplacementRecovery] =
+    useState<WorkspaceReplacementRecovery | null>(null);
+  const [saveStatus, setSaveStatus] = useState<WorkspacePersistenceStatus>(
+    initialLoad.status === "invalid"
+      ? "recovery"
+      : initialLoad.status === "unavailable"
+        ? "unavailable"
+        : "saved",
+  );
+  const lastAutosaveWorkspace = useRef(workspace);
+  const [autosave] = useState(() =>
+    createWorkspaceAutosave({
+      storage,
+      schedule: (callback, delay) => window.setTimeout(callback, delay),
+      cancel: (timerId) => window.clearTimeout(timerId),
+      onStatusChange: (status, snapshot) => {
+        setSaveStatus(status);
+        if (snapshot) setSavedAt(snapshot.savedAt);
+      },
+    }),
   );
 
   useEffect(() => {
-    setSaveStatus("saving");
-    const saveTimer = window.setTimeout(() => {
-      try {
-        const snapshot = saveWorkspace(window.localStorage, workspace);
-        setSavedAt(snapshot.savedAt);
-        setSaveStatus("saved");
-      } catch {
-        setSaveStatus("error");
-      }
-    }, 300);
+    if (lastAutosaveWorkspace.current === workspace) return;
 
-    return () => window.clearTimeout(saveTimer);
-  }, [workspace]);
+    lastAutosaveWorkspace.current = workspace;
+    if (requiresStorageProbe) {
+      setSaveStatus("saving");
+      return;
+    }
+    const pauseStatus = getWorkspaceAutosavePauseStatus({
+      hasExternalSnapshot: externalSnapshot !== null,
+      hasUnreadableWorkspace: unreadableWorkspace !== null,
+    });
+    if (pauseStatus) {
+      setSaveStatus(pauseStatus);
+      return;
+    }
+
+    autosave.queue(workspace);
+  }, [
+    autosave,
+    externalSnapshot,
+    requiresStorageProbe,
+    unreadableWorkspace,
+    workspace,
+  ]);
+
+  useEffect(() => {
+    const flushPendingSave = () => autosave.flush();
+    window.addEventListener("pagehide", flushPendingSave);
+
+    return () => {
+      window.removeEventListener("pagehide", flushPendingSave);
+      autosave.cancel();
+    };
+  }, [autosave]);
+
+  useEffect(() => {
+    if (!shouldProtectWorkspaceExit(saveStatus)) return;
+
+    const protectUnsavedWorkspace = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = true;
+    };
+    window.addEventListener("beforeunload", protectUnsavedWorkspace);
+    return () =>
+      window.removeEventListener("beforeunload", protectUnsavedWorkspace);
+  }, [saveStatus]);
+
+  useEffect(() => {
+    function detectExternalSave(event: StorageEvent) {
+      if (event.key !== WORKSPACE_STORAGE_KEY || !event.newValue) return;
+
+      const update = classifyExternalWorkspaceUpdate(
+        event.newValue,
+        workspace,
+      );
+      if (!update) return;
+
+      if (update.kind === "identical") {
+        autosave.cancel();
+        lastAutosaveWorkspace.current = workspace;
+        setRequiresStorageProbe(false);
+        setSavedAt(update.snapshot.savedAt);
+        setSaveStatus("saved");
+        setUnreadableWorkspace(null);
+        setExternalSnapshot(null);
+        return;
+      }
+
+      autosave.cancel();
+      setRequiresStorageProbe(false);
+      setSaveStatus("conflict");
+      setExternalSnapshot(update.snapshot);
+    }
+
+    window.addEventListener("storage", detectExternalSave);
+    return () => window.removeEventListener("storage", detectExternalSave);
+  }, [autosave, workspace]);
+
+  function replaceWorkspace(
+    replacement: typeof workspace,
+    operation: WorkspaceReplacementOperation,
+  ) {
+    autosave.cancel();
+    setExternalSnapshot(null);
+    setUnreadableWorkspace(null);
+    setReplacementRecovery(beginWorkspaceReplacement(workspace, operation));
+    setSavedAt(null);
+    setWorkspace(replacement);
+  }
 
   function resetWorkspace() {
     const shouldReset = window.confirm(
@@ -57,13 +181,63 @@ export function App() {
     );
     if (!shouldReset) return;
 
-    clearWorkspace(window.localStorage);
+    replaceWorkspace(createDefaultWorkspace(), "sample reset");
+  }
+
+  function toggleWorkspaceReplacement() {
+    if (!replacementRecovery) return;
+
+    const result = swapWorkspaceReplacement(workspace, replacementRecovery);
+    autosave.cancel();
+    setExternalSnapshot(null);
     setSavedAt(null);
-    setWorkspace(createDefaultWorkspace());
+    setWorkspace(result.workspace);
+    setReplacementRecovery(result.recovery);
+  }
+
+  function retryLocalPersistence() {
+    if (!requiresStorageProbe) {
+      autosave.retry();
+      return;
+    }
+
+    const recoveryPlan = planWorkspaceStorageRecovery(
+      readWorkspace(storage),
+      workspace,
+    );
+
+    if (recoveryPlan.kind === "still-unavailable") return;
+    if (recoveryPlan.kind === "protect-unreadable") {
+      setRequiresStorageProbe(false);
+      setUnreadableWorkspace(recoveryPlan.serialized);
+      setSaveStatus("recovery");
+      return;
+    }
+    if (recoveryPlan.kind === "save-current") {
+      setRequiresStorageProbe(false);
+      autosave.queue(workspace);
+      autosave.flush();
+      return;
+    }
+
+    autosave.cancel();
+    setRequiresStorageProbe(false);
+    if (recoveryPlan.kind === "reconcile") {
+      lastAutosaveWorkspace.current = workspace;
+      setSavedAt(recoveryPlan.snapshot.savedAt);
+      setSaveStatus("saved");
+      return;
+    }
+
+    setSaveStatus("conflict");
+    setExternalSnapshot(recoveryPlan.snapshot);
   }
 
   return (
     <main className="app-shell">
+      <a className="skip-link" href="#workspace">
+        Skip to project workspace
+      </a>
       <aside className="sidebar" aria-label="SignalForge sections">
         <div>
           <p className="eyebrow">SignalForge</p>
@@ -78,16 +252,46 @@ export function App() {
         </nav>
       </aside>
 
-      <section className="workspace" aria-label="Project workspace">
+      <section
+        className="workspace"
+        id="workspace"
+        tabIndex={-1}
+        aria-label="Project workspace"
+      >
         <WorkspaceToolbar
           status={saveStatus}
+          requiresStorageProbe={requiresStorageProbe}
           savedAt={savedAt}
           workspace={workspace}
-          onRestore={(restoredWorkspace) => {
-            setSavedAt(null);
-            setWorkspace(restoredWorkspace);
+          externalSnapshot={externalSnapshot}
+          unreadableWorkspace={unreadableWorkspace}
+          replacementRecovery={replacementRecovery}
+          onLoadExternalChange={() => {
+            if (!externalSnapshot) return;
+
+            autosave.cancel();
+            lastAutosaveWorkspace.current = externalSnapshot.workspace;
+            setSaveStatus("saved");
+            setSavedAt(externalSnapshot.savedAt);
+            setUnreadableWorkspace(null);
+            setWorkspace(externalSnapshot.workspace);
+            setExternalSnapshot(null);
+          }}
+          onKeepCurrent={() => {
+            setExternalSnapshot(null);
+            setUnreadableWorkspace(null);
+            autosave.queue(workspace);
+          }}
+          onRestore={(restoredWorkspace) =>
+            replaceWorkspace(restoredWorkspace, "backup restore")
+          }
+          onRetrySave={retryLocalPersistence}
+          onReplaceUnreadableWorkspace={() => {
+            setUnreadableWorkspace(null);
+            autosave.queue(workspace);
           }}
           onReset={resetWorkspace}
+          onToggleReplacement={toggleWorkspaceReplacement}
         />
         <Dashboard
           workspace={workspace}

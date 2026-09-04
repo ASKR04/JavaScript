@@ -5,20 +5,43 @@ import {
   type WorkStatus,
 } from "./project-state";
 
-const STORAGE_KEY = "signalforge.workspace.v1";
+export const WORKSPACE_STORAGE_KEY = "signalforge.workspace.v1";
 export const WORKSPACE_SCHEMA_VERSION = 2;
 
 type StorageReader = Pick<Storage, "getItem">;
 type StorageWriter = Pick<Storage, "setItem" | "removeItem">;
+export type WorkspaceStorage = StorageReader & StorageWriter;
 
 export type WorkspaceSnapshot = {
   workspace: ProjectWorkspace;
   savedAt: string;
 };
 
+export type WorkspaceLoadResult =
+  | { status: "empty" }
+  | { status: "ready"; snapshot: WorkspaceSnapshot }
+  | { status: "invalid"; serialized: string }
+  | { status: "unavailable" };
+
 type StoredSnapshot = WorkspaceSnapshot & {
   version: number;
 };
+
+export function createWorkspaceStorage(
+  resolveStorage: () => WorkspaceStorage,
+): WorkspaceStorage {
+  return {
+    getItem(key) {
+      return resolveStorage().getItem(key);
+    },
+    setItem(key, value) {
+      resolveStorage().setItem(key, value);
+    },
+    removeItem(key) {
+      resolveStorage().removeItem(key);
+    },
+  };
+}
 
 const validStatuses: WorkStatus[] = [
   "planned",
@@ -29,6 +52,13 @@ const validStatuses: WorkStatus[] = [
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
+}
+
+function isIsoTimestamp(value: unknown): value is string {
+  if (typeof value !== "string") return false;
+
+  const parsed = new Date(value);
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString() === value;
 }
 
 function hasStringFields(
@@ -44,6 +74,22 @@ function hasValidStatus(value: Record<string, unknown>): boolean {
 
 function hasValidCommitKind(value: Record<string, unknown>): boolean {
   return commitKinds.includes(value.kind as CommitKind);
+}
+
+function hasUniqueStableIds(values: unknown[]): boolean {
+  const ids = new Set<string>();
+
+  return values.every((value) => {
+    if (!isRecord(value) || typeof value.id !== "string") return false;
+
+    const normalizedId = value.id.trim();
+    if (!normalizedId || normalizedId !== value.id || ids.has(normalizedId)) {
+      return false;
+    }
+
+    ids.add(normalizedId);
+    return true;
+  });
 }
 
 type LegacyProjectWorkspace = Omit<ProjectWorkspace, "commitNarratives">;
@@ -62,6 +108,7 @@ function isLegacyProjectWorkspace(
   ]);
   const featuresAreValid =
     Array.isArray(value.features) &&
+    hasUniqueStableIds(value.features) &&
     value.features.every(
       (feature) =>
         isRecord(feature) &&
@@ -70,6 +117,7 @@ function isLegacyProjectWorkspace(
     );
   const roadmapIsValid =
     Array.isArray(value.roadmap) &&
+    hasUniqueStableIds(value.roadmap) &&
     value.roadmap.every(
       (item) =>
         isRecord(item) &&
@@ -78,6 +126,7 @@ function isLegacyProjectWorkspace(
     );
   const decisionsAreValid =
     Array.isArray(value.decisions) &&
+    hasUniqueStableIds(value.decisions) &&
     value.decisions.every(
       (decision) =>
         isRecord(decision) &&
@@ -110,6 +159,7 @@ export function isProjectWorkspace(value: unknown): value is ProjectWorkspace {
 
   const commitNarrativesAreValid =
     Array.isArray(commitNarratives) &&
+    hasUniqueStableIds(commitNarratives) &&
     commitNarratives.every(
       (narrative: unknown) =>
         isRecord(narrative) &&
@@ -127,15 +177,12 @@ export function isProjectWorkspace(value: unknown): value is ProjectWorkspace {
   return commitNarrativesAreValid;
 }
 
-export function loadWorkspace(
-  storage: StorageReader,
+export function parseWorkspaceSnapshot(
+  serialized: string,
 ): WorkspaceSnapshot | null {
   try {
-    const serialized = storage.getItem(STORAGE_KEY);
-    if (!serialized) return null;
-
     const snapshot: unknown = JSON.parse(serialized);
-    if (!isRecord(snapshot) || typeof snapshot.savedAt !== "string") {
+    if (!isRecord(snapshot) || !isIsoTimestamp(snapshot.savedAt)) {
       return null;
     }
 
@@ -154,6 +201,27 @@ export function loadWorkspace(
   }
 }
 
+export function loadWorkspace(
+  storage: StorageReader,
+): WorkspaceSnapshot | null {
+  const result = readWorkspace(storage);
+  return result.status === "ready" ? result.snapshot : null;
+}
+
+export function readWorkspace(storage: StorageReader): WorkspaceLoadResult {
+  try {
+    const serialized = storage.getItem(WORKSPACE_STORAGE_KEY);
+    if (serialized === null) return { status: "empty" };
+
+    const snapshot = parseWorkspaceSnapshot(serialized);
+    return snapshot
+      ? { status: "ready", snapshot }
+      : { status: "invalid", serialized };
+  } catch {
+    return { status: "unavailable" };
+  }
+}
+
 export function saveWorkspace(
   storage: StorageWriter,
   workspace: ProjectWorkspace,
@@ -165,10 +233,10 @@ export function saveWorkspace(
     savedAt: now.toISOString(),
   };
 
-  storage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
+  storage.setItem(WORKSPACE_STORAGE_KEY, JSON.stringify(snapshot));
   return snapshot;
 }
 
 export function clearWorkspace(storage: StorageWriter): void {
-  storage.removeItem(STORAGE_KEY);
+  storage.removeItem(WORKSPACE_STORAGE_KEY);
 }

@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import { createDefaultWorkspace } from "./project-state";
 import {
   clearWorkspace,
+  createWorkspaceStorage,
   loadWorkspace,
+  readWorkspace,
   saveWorkspace,
 } from "./persistence";
 import {
@@ -263,10 +265,90 @@ describe("workspace persistence", () => {
     storage.setItem("signalforge.workspace.v1", "{broken-json");
 
     expect(loadWorkspace(storage)).toBeNull();
+    expect(readWorkspace(storage)).toEqual({
+      status: "invalid",
+      serialized: "{broken-json",
+    });
 
     saveWorkspace(storage, createDefaultWorkspace());
     clearWorkspace(storage);
     expect(loadWorkspace(storage)).toBeNull();
+    expect(readWorkspace(storage)).toEqual({ status: "empty" });
+  });
+
+  it("preserves a future-version snapshot for explicit recovery", () => {
+    const storage = new MemoryStorage();
+    const serialized = JSON.stringify({
+      version: 99,
+      workspace: createDefaultWorkspace(),
+      savedAt: "2026-08-26T15:00:00.000Z",
+    });
+    storage.setItem("signalforge.workspace.v1", serialized);
+
+    expect(readWorkspace(storage)).toEqual({
+      status: "invalid",
+      serialized,
+    });
+  });
+
+  it("preserves snapshots with duplicate stable IDs for explicit recovery", () => {
+    const storage = new MemoryStorage();
+    const workspace = createDefaultWorkspace();
+    const serialized = JSON.stringify({
+      version: 2,
+      workspace: {
+        ...workspace,
+        features: [workspace.features[0], workspace.features[0]],
+      },
+      savedAt: "2026-09-02T15:00:00.000Z",
+    });
+    storage.setItem("signalforge.workspace.v1", serialized);
+
+    expect(readWorkspace(storage)).toEqual({
+      status: "invalid",
+      serialized,
+    });
+  });
+
+  it("distinguishes unavailable storage from an empty workspace", () => {
+    expect(
+      readWorkspace({
+        getItem: () => {
+          throw new Error("Storage access denied");
+        },
+      }),
+    ).toEqual({ status: "unavailable" });
+  });
+
+  it("contains errors thrown while resolving browser storage", () => {
+    const storage = createWorkspaceStorage(() => {
+      throw new Error("The browser denied access to localStorage");
+    });
+
+    expect(readWorkspace(storage)).toEqual({ status: "unavailable" });
+    expect(() => saveWorkspace(storage, createDefaultWorkspace())).toThrow(
+      "The browser denied access to localStorage",
+    );
+  });
+
+  it("re-resolves browser storage so a later access attempt can recover", () => {
+    const memoryStorage = new MemoryStorage();
+    let storageIsAvailable = false;
+    const storage = createWorkspaceStorage(() => {
+      if (!storageIsAvailable) throw new Error("Storage access denied");
+      return memoryStorage;
+    });
+
+    expect(readWorkspace(storage)).toEqual({ status: "unavailable" });
+
+    storageIsAvailable = true;
+    saveWorkspace(
+      storage,
+      createDefaultWorkspace(),
+      new Date("2026-08-30T15:00:00.000Z"),
+    );
+
+    expect(readWorkspace(storage).status).toBe("ready");
   });
 
   it("migrates version one snapshots without losing saved planning work", () => {

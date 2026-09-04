@@ -1,9 +1,11 @@
 import { useId, useRef, useState } from "react";
 import type { FormEvent } from "react";
+import { focusFirstInvalidField } from "../lib/focus-validation";
 import type {
   WorkItemDraft,
   WorkItemErrors,
 } from "../lib/workspace-state";
+import { ValidationSummary } from "./ValidationSummary";
 
 type WorkItemComposerProps = {
   title: string;
@@ -25,6 +27,7 @@ export function WorkItemComposer({
   const [draft, setDraft] = useState<WorkItemDraft>({ title: "", details: "" });
   const [errors, setErrors] = useState<WorkItemErrors>({});
   const titleInput = useRef<HTMLInputElement>(null);
+  const detailsInput = useRef<HTMLTextAreaElement>(null);
   const formId = useId();
 
   function submit(event: FormEvent<HTMLFormElement>) {
@@ -35,7 +38,14 @@ export function WorkItemComposer({
     if (Object.keys(nextErrors).length === 0) {
       setDraft({ title: "", details: "" });
       titleInput.current?.focus();
+      return;
     }
+
+    focusFirstInvalidField(
+      ["title", "details"],
+      nextErrors,
+      { title: titleInput.current, details: detailsInput.current },
+    );
   }
 
   return (
@@ -75,6 +85,7 @@ export function WorkItemComposer({
         <label htmlFor={`${formId}-details`}>
           {detailsLabel}
           <textarea
+            ref={detailsInput}
             id={`${formId}-details`}
             rows={3}
             value={draft.details}
@@ -97,6 +108,8 @@ export function WorkItemComposer({
           )}
         </label>
       </div>
+
+      <ValidationSummary errors={errors} />
 
       <button className="primary-button" type="submit">
         {submitLabel}

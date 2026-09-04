@@ -63,13 +63,51 @@ flowchart LR
     Snapshot --> LocalStorage["Browser localStorage"]
     LocalStorage --> Guard["Runtime schema guard"]
     Guard -->|valid| React
-    Guard -->|invalid or outdated| Defaults["Typed sample workspace"]
+    Guard -->|empty| Defaults["Typed sample workspace"]
     Defaults --> React
+    Guard -->|invalid or future version| Recovery["Paused startup recovery"]
+    Recovery --> Raw["Raw local rescue download"]
+    Recovery -->|explicit replacement| Debounce
 ```
 
-The persistence adapter is deliberately small and browser-native. Each snapshot includes a schema version and timestamp. Loading is defensive: invalid JSON, outdated versions, or malformed project records are ignored rather than allowed to break application startup. The adapter accepts narrow storage interfaces so its behavior can be tested without a browser environment.
+The persistence adapter is deliberately small and browser-native. Each snapshot includes a schema version and timestamp. Loading is defensive: valid data, empty storage, unreadable data, and unavailable storage are separate typed outcomes. Invalid JSON, future versions, or malformed project records cannot break application startup, but they are no longer treated like an empty workspace and silently overwritten. The adapter accepts narrow storage interfaces so its behavior can be tested without a browser environment.
 
 State changes are implemented as pure functions keyed by stable feature and roadmap IDs. This prevents accidental mutation, makes status changes predictable, and keeps the UI independent from future storage adapters.
+
+## Unreadable Startup Recovery Flow
+
+```mermaid
+flowchart LR
+    Read["Read stored snapshot"] --> Classify{"Typed load result"}
+    Classify -->|ready| Restore["Restore validated workspace"]
+    Classify -->|empty| Sample["Open sample workspace"]
+    Classify -->|unavailable| Temporary["Announce temporary workspace"]
+    Temporary --> Probe["Check storage before writing"]
+    Temporary --> Backup["Download current workspace"]
+    Classify -->|invalid| Preserve["Keep original storage untouched"]
+    Preserve --> Pause["Pause autosave and warn before exit"]
+    Pause --> Download["Download raw recovery text"]
+    Pause -->|restore valid backup| Replace["Replace through recoverable autosave"]
+    Pause -->|explicit confirmation| Replace
+```
+
+Startup recovery favors reversibility over guessing. The app renders a usable in-memory sample while preserving the unreadable browser value, clearly announces that autosave is paused, and warns before navigation. The developer can download the exact raw value for manual repair, restore a validated backup through the existing migration boundary, or explicitly replace storage with the workspace currently shown. Unavailable storage instead produces a temporary-workspace warning with an immediate persistence probe and a portable backup path. Normal empty and valid startup paths do not display recovery controls.
+
+## Workspace Exit Protection
+
+```mermaid
+flowchart LR
+    Status["Persistence status"] --> Policy{"Unsaved or unresolved?"}
+    Policy -->|saved| Exit["Allow normal exit"]
+    Policy -->|unavailable but untouched| Exit
+    Policy -->|saving or failed| Warn["Request browser exit confirmation"]
+    Policy -->|tab conflict| Warn
+    Policy -->|unreadable recovery| Warn
+    Warn --> Stay["Keep in-memory workspace"]
+    Warn -->|confirmed exit| Flush["Page lifecycle save attempt"]
+```
+
+The exit decision is derived from the same persistence status shown in the toolbar. An untouched temporary sample can close normally, while the first workspace mutation moves through `saving` and activates protection before the debounce finishes. Save failures, unresolved cross-tab choices, and unreadable-data recovery remain protected until the user reaches a durable `saved` state or explicitly accepts navigation.
 
 ## Plan Composition Flow
 
@@ -186,6 +224,97 @@ Readiness is derived rather than persisted. The evaluator receives a workspace a
 
 The Summary view exposes the result through a labelled progressbar and a semantic checklist. Status is not communicated by color alone: every check includes an icon, explicit text, and guidance for the next action. The layout collapses from two columns to one on narrow screens without changing reading order.
 
+## Validation Recovery Flow
+
+```mermaid
+flowchart LR
+    Submit["Validated form submission"] --> Rules["Pure domain validation"]
+    Rules -->|valid| State["Workspace mutation"]
+    State --> Reset["Reset draft and focus first field"]
+    Rules -->|invalid| Inline["Render linked field errors"]
+    Inline --> Summary["Announce error count"]
+    Summary --> Order["Resolve first error in reading order"]
+    Order --> Frame["Wait for rendered guidance"]
+    Frame --> Focus["Focus first invalid control"]
+```
+
+The reusable focus coordinator accepts an explicit field order, validation errors, and focus targets. It schedules focus after React renders updated `aria-invalid` and `aria-describedby` attributes, ensuring the destination and its guidance are available together. The coordinator is independent of form markup and has focused tests for reading order, unavailable targets, and valid submissions; the shared summary keeps visible and announced feedback consistent across planning, decision, and commit workflows.
+
+## Lifecycle-Safe Autosave Flow
+
+```mermaid
+flowchart LR
+    Start["Application startup"] --> Adapter["Lazy storage adapter"]
+    Adapter -->|access allowed| Read["Read and validate snapshot"]
+    Adapter -->|getter or method denied| Temporary["Recoverable temporary workspace"]
+    Temporary -->|explicit probe| Probe["Read before writing"]
+    Probe -->|still denied| Temporary
+    Probe -->|empty| Queue
+    Probe -->|identical workspace| Saved
+    Probe -->|different workspace| Conflict
+    Probe -->|unreadable data| Preserve
+    Edit["Workspace edit"] --> Guard{"Persistence paused?"}
+    Guard -->|no| Queue["Queue 300 ms save"]
+    Guard -->|storage access unverified| Temporary
+    Guard -->|tab conflict| Conflict["Retain edit in memory"]
+    Guard -->|unreadable startup data| Preserve["Keep original storage untouched"]
+    Queue --> Replace["Cancel older pending timer"]
+    Replace --> Latest["Retain newest workspace"]
+    Latest -->|timer completes| Adapter
+    PageHide["Page becomes hidden"] --> Flush["Cancel timer and flush now"]
+    Flush --> Adapter
+    Adapter -->|write succeeds| Storage["Versioned browser snapshot"]
+    Storage --> Saved["Saved timestamp"]
+    Adapter -->|write fails| Recovery["Retain newest failed workspace"]
+    Recovery --> Error["Visible save error and retry control"]
+    Error -->|explicit retry or later pagehide| Adapter
+```
+
+The autosave coordinator owns scheduling rather than React components. Rapid updates replace the pending timer and retain only the newest immutable workspace. A pure pause policy prevents new timers from being scheduled while unreadable startup data or an unresolved external-save conflict must remain untouched. The current tab can continue accepting edits during a conflict, but those edits stay in memory until the developer explicitly keeps the tab or loads the other snapshot. A `pagehide` lifecycle listener flushes pending values synchronously through the existing storage boundary before navigation, tab close, or mobile backgrounding can interrupt the debounce window.
+
+If browser storage rejects a write, the coordinator keeps that workspace in memory and exposes an explicit retry through the toolbar. A later lifecycle flush also retries the retained value, while any newer queued edit supersedes it. Successful persistence clears recovery state, preventing an older failed snapshot from overwriting newer work. Scheduling, flush behavior, recovery, and stale-state replacement are covered without browser timing mocks.
+
+Browser storage is resolved lazily at each read or write instead of being accessed while React initializes. This contains security errors raised by the `localStorage` property getter itself, not only errors from `getItem` or `setItem`. Edits made while storage remains unverified stay in memory and activate exit protection without scheduling a write. When access later returns, the explicit recovery probe reads before writing: empty storage receives the in-memory workspace, identical data reconciles silently, different valid data uses the existing conflict review, and unreadable data enters protected recovery. This prevents either background autosave or an explicit retry from turning a temporary access failure into an unreviewed overwrite.
+
+## Multi-Tab Conflict Flow
+
+```mermaid
+flowchart LR
+    OtherTab["Another SignalForge tab saves"] --> Event["Browser storage event"]
+    Event --> Parse["Parse and validate snapshot"]
+    Parse -->|invalid version, timestamp, shape, or stable IDs| Ignore["Ignore safely"]
+    Parse -->|valid observed write| Compare["Compare typed workspace sections"]
+    Compare -->|identical content| Reconcile["Accept observed save without a prompt"]
+    Compare -->|changed content| Pause["Pause current and future local autosaves"]
+    Edit["Further edits in this tab"] --> Pause
+    Pause --> Summary["Summarize changed sections and counts"]
+    Summary --> Alert["Announce conflict and show choices"]
+    Alert -->|load other tab| Replace["Replace current workspace"]
+    Alert -->|keep this tab| Requeue["Queue current workspace"]
+    Replace --> Autosave["Resume versioned autosave"]
+    Requeue --> Autosave
+```
+
+The storage-event boundary never applies an external value directly. It first uses the same version, timestamp, migration, domain, and stable-identity guards as startup persistence, then compares the typed workspace with the current tab. Each collection requires nonblank, unpadded, unique record IDs, preventing ambiguous updates and duplicate interface keys regardless of whether data arrives from browser storage, backup restore, or another tab. Browser storage events describe actual write order, so SignalForge does not discard an observed write merely because its embedded wall-clock timestamp is older or equal. This keeps clock skew from hiding a replacement that is already durable in browser storage. An observed snapshot with identical content updates the local timestamp and cancels the redundant pending write without interrupting the user. A genuinely different save pauses this tab's pending write and every later edit until the developer makes an explicit choice, preventing a subsequent keystroke from silently reactivating last-writer-wins behavior. If more external writes arrive while the notice is open, the most recently observed value replaces the earlier candidate.
+
+Conflict previews disclose structure rather than sensitive content. A pure comparison reports changed brief-field counts and added, removed, or updated records across features, roadmap milestones, architecture decisions, and commit narratives. Loading an already-persisted snapshot skips one autosave cycle, preventing a conflict from bouncing back to the original tab. The alert uses semantic list markup, non-color text, keyboard-accessible actions, and responsive wrapping rules.
+
+## Reversible Workspace Replacement Flow
+
+```mermaid
+flowchart LR
+    Choice["Confirmed backup restore or sample reset"] --> Capture["Retain current workspace in memory"]
+    Capture --> Clear["Dismiss stale tab conflict"]
+    Clear --> Replace["Apply replacement workspace"]
+    Replace --> Autosave["Queue through recoverable autosave"]
+    Replace --> Notice["Announce reversible replacement"]
+    Notice -->|undo| Swap["Swap current and retained workspaces"]
+    Swap --> Autosave
+    Swap -->|redo remains available| Notice
+```
+
+Whole-workspace replacement uses the same recoverable autosave path as normal edits instead of removing the stored snapshot first. Starting a restore or reset cancels pending writes and dismisses any older multi-tab prompt so a stale external choice cannot replace the newly selected workspace. A pure swap model retains both sides of the operation for repeatable undo and redo until another replacement or page refresh; its persistent button keeps keyboard focus stable while the live description reports the current state.
+
 ## Proposed Folder Structure
 
 ```text
@@ -226,9 +355,11 @@ signalforge/
 
 ```text
 src/
-  app/App.tsx                         # workspace ownership and autosave lifecycle
-  components/WorkspaceToolbar.tsx    # save feedback, portable transfer, and reset controls
+  app/App.tsx                         # workspace ownership, autosave and storage-event lifecycle,
+                                      # and keyboard bypass destination
+  components/WorkspaceToolbar.tsx    # save, transfer, startup recovery, conflict, and reset controls
   components/WorkItemComposer.tsx    # reusable accessible creation form
+  components/ValidationSummary.tsx   # shared live error-count feedback
   features/dashboard/                # brief editor and feature workflow controls
   features/roadmap/Roadmap.tsx       # milestone workflow controls
   features/decisions/Decisions.tsx   # validated ADR creation and editing
@@ -241,10 +372,51 @@ src/
   lib/workspace-backup.ts             # portable encoder, parser, filename, and migration boundary
   lib/workspace-backup.test.ts        # current, legacy, invalid, and future-format coverage
   lib/workspace-state.ts              # immutable state transitions
-  lib/persistence.ts                  # versioned storage adapter and guards
-  lib/workspace-state.test.ts         # transition and persistence tests
+  lib/focus-validation.ts             # ordered post-render invalid-field focus
+  lib/focus-validation.test.ts        # focus scheduling and fallback coverage
+  lib/workspace-autosave.ts           # pause policy, coalesced saves, and lifecycle flush boundary
+  lib/workspace-autosave.test.ts      # pause, scheduling, flush, and storage-error coverage
+  lib/workspace-exit-protection.ts    # pure unsaved-state exit warning policy
+  lib/workspace-exit-protection.test.ts # pending, failed, conflict, and recovery coverage
+  lib/workspace-replacement.ts        # reversible restore/reset swap model
+  lib/workspace-replacement.test.ts   # undo, redo, and repeat-toggle coverage
+  lib/workspace-sync.ts               # validated external-save classification and structural summaries
+  lib/workspace-sync.test.ts          # reconciliation, conflict-summary, and invalid snapshot coverage
+  lib/workspace-storage-recovery.ts   # read-before-write plan for temporary storage recovery
+  lib/workspace-storage-recovery.test.ts # empty, unavailable, invalid, identical, and conflict coverage
+  lib/persistence.ts                  # typed startup outcomes, versioned storage adapter, and guards
+  lib/workspace-state.test.ts         # transition, migration, and startup recovery tests
+  styles/global.css                   # responsive layout, focus visibility, and reduced-motion rules
 ```
 
 ## Approval and Delivery State
 
 The approved SignalForge week is complete. The final increment adds derived portfolio-readiness guidance, closes the responsive and accessibility review, documents the finished workflow, and records the project retrospective. Further SignalForge work should be treated as maintenance or a separately approved enhancement rather than an extension of the original weekly scope.
+
+Post-closeout maintenance on 2026-08-18 strengthened the application shell without expanding product scope. The first keyboard stop now bypasses the persistent navigation and moves focus to the labelled workspace, interactive focus rings remain visible against both dark and light surfaces, and motion preferences control scrolling and progress transitions.
+
+The 2026-08-19 maintenance increment improves error recovery without adding product scope. Every domain-validated composer now presents a live error count and returns focus to the first invalid control in declared reading order after React renders its linked guidance.
+
+The 2026-08-20 maintenance increment protects the local-first contract at the page lifecycle boundary. Debounced changes are coalesced through a tested coordinator, and the newest pending workspace is flushed when the page is hidden.
+
+The 2026-08-21 maintenance increment makes transient storage failures recoverable. Failed writes retain the newest workspace in memory for an explicit or lifecycle retry, and newer edits safely replace stale recovery state.
+
+The 2026-08-24 maintenance increment prevents silent multi-tab overwrites. Valid external snapshots pause local autosave and present explicit load-or-keep actions; identical content is reconciled silently, while malformed and unsupported snapshots are ignored.
+
+The follow-up 2026-08-24 maintenance increment removes false conflict prompts for identical newer saves and gives genuine conflicts a privacy-preserving summary of the workspace sections and record counts that differ. The narrow-screen toolbar disables column wrapping and gives the alert an explicit contained width so its semantic summary and 44 px actions remain inside a 390 px viewport.
+
+The 2026-08-25 maintenance increment makes destructive whole-workspace replacement reversible. Backup restore and sample reset now dismiss stale tab conflicts, persist through the recoverable autosave coordinator, and retain an in-memory undo/redo workspace until another replacement or page refresh.
+
+The 2026-08-26 maintenance increment protects unreadable startup data from silent replacement. Malformed, incomplete, and future-version snapshots pause autosave, remain available as an exact raw rescue download, and require a validated restore or explicit confirmation before browser storage is replaced.
+
+The 2026-08-27 maintenance increment makes temporary work visible when browser storage cannot be read. An immediate save probe can recover access without requiring an edit, and a shared exit policy protects pending, failed, conflicted, and recovery-paused workspace state from an unacknowledged close.
+
+The 2026-08-30 maintenance increment contains storage access at the property boundary. SignalForge now converts both getter-level and method-level denial into its recoverable temporary-workspace state, while every explicit retry re-resolves access instead of retaining a permanently failed handle.
+
+The 2026-08-31 maintenance increment closes a multi-tab overwrite race. Once a newer external snapshot creates a conflict, later edits remain usable in memory but cannot restart autosave until the developer explicitly chooses which tab to keep.
+
+The 2026-09-01 maintenance increment makes multi-tab reconciliation independent of wall-clock order. Every valid storage event is treated as an observed write, so a tab with a slow or corrected clock cannot replace durable browser data without surfacing a conflict; repeated external writes retain the last event rather than the largest timestamp.
+
+The 2026-09-02 maintenance increment hardens record identity at the shared parsing boundary. Stored snapshots, backup restores, and cross-tab writes now reject blank, padded, or duplicate IDs within each collection before ambiguous records can reach state transitions or rendering.
+
+The 2026-09-03 maintenance increment makes temporary-storage recovery read before write. When browser access returns, SignalForge now preserves unreadable data, reconciles identical data, surfaces different durable work through the existing conflict review, and writes the in-memory workspace only after confirming storage is empty.
