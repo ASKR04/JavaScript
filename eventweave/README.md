@@ -101,7 +101,7 @@ eventweave/
 
 ## One-Week Delivery Plan
 
-1. **In progress:** trace format, application scaffold, fixtures, and validated local import foundation.
+1. **Complete:** trace format, application scaffold, fixtures, and validated local import foundation.
 2. Session navigation and an accessible event timeline.
 3. Causal-chain exploration across actions, requests, and state transitions.
 4. Trace comparison and first-divergence analysis.
@@ -111,7 +111,7 @@ eventweave/
 
 ## Atlas handoff to Lumen
 
-- Commit: pending completion of Atlas Day 1 verification.
-- Verification: parser and worker-contract unit tests, TypeScript lint, production build, and smoke checks are pending.
-- Open risks: the worker contract is implemented but the interface has not yet exercised cancellation, stale-result protection, or file-reader failures.
+- Commit: `1464a1e` (`feat(eventweave): establish trace import foundation`).
+- Verification: 11 Vitest tests, strict TypeScript lint, Vite production build, `git diff --check`, and HTTP 200 checks for the built page and both sample downloads.
+- Open risks: the worker contract is implemented but the interface has not yet exercised cancellation, stale-result protection, or file-reader failures. The runtime did not expose browser automation for a live viewport review. Publication is awaiting explicit approval after the environment blocked the first push to `origin`.
 - Next distinct task: build the first usable file import experience around the worker boundary, including accessible pending/error/success states and a compact session/event summary from either sample format.

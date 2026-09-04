@@ -110,7 +110,7 @@ The paired checkout fixtures intentionally share the same initial steps before d
 
 ## Atlas handoff to Lumen
 
-- Commit: pending completion of Atlas Day 1 verification.
-- Verification: parser and worker contract tests, TypeScript lint, Vite production build, and smoke checks are pending.
-- Open risks: the worker has not yet been integrated with file reading, cancellation, or UI state, and the initial shell is not an exploration surface.
+- Commit: `1464a1e` (`feat(eventweave): establish trace import foundation`).
+- Verification: 11 Vitest tests, strict TypeScript lint, Vite production build, `git diff --check`, and HTTP 200 checks for the built page and both sample downloads.
+- Open risks: the worker has not yet been integrated with file reading, cancellation, or UI state, and the initial shell is not an exploration surface. Browser automation was unavailable for a live viewport review. Publication is awaiting explicit approval after the environment blocked the first push to `origin`.
 - Next distinct task: integrate the typed worker into an accessible import panel with drag/select affordances, transaction-safe errors, and a semantic summary of the normalized sessions and events.
