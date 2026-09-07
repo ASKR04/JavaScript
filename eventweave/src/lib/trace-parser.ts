@@ -24,6 +24,9 @@ export interface TraceImportError {
     | "invalid-event"
     | "duplicate-event"
     | "missing-parent"
+    | "cross-session-parent"
+    | "parent-after-child"
+    | "cyclic-parent"
     | "too-many-events";
   message: string;
   line?: number;
@@ -333,6 +336,7 @@ export const parseTraceText = (
   });
 
   const seenIds = new Set<string>();
+  const eventsById = new Map<string, TraceEvent>();
   events.forEach((event) => {
     if (seenIds.has(event.id)) {
       errors.push({
@@ -342,17 +346,60 @@ export const parseTraceText = (
       });
     }
     seenIds.add(event.id);
+    if (!eventsById.has(event.id)) eventsById.set(event.id, event);
   });
 
   events.forEach((event) => {
-    if (event.parentId && !seenIds.has(event.parentId)) {
+    if (!event.parentId) return;
+
+    const parent = eventsById.get(event.parentId);
+    if (!parent) {
       errors.push({
         code: "missing-parent",
         message: `Event \`${event.id}\` references missing parent \`${event.parentId}\`.`,
         eventId: event.id,
       });
+      return;
+    }
+
+    if (parent.sessionId !== event.sessionId) {
+      errors.push({
+        code: "cross-session-parent",
+        message: `Event \`${event.id}\` and parent \`${parent.id}\` must belong to the same session.`,
+        eventId: event.id,
+      });
+    }
+
+    if (parent.timestampMs > event.timestampMs) {
+      errors.push({
+        code: "parent-after-child",
+        message: `Event \`${event.id}\` cannot occur before parent \`${parent.id}\`.`,
+        eventId: event.id,
+      });
     }
   });
+
+  const visitState = new Map<string, "visiting" | "visited">();
+  const visitParent = (event: TraceEvent): void => {
+    if (visitState.get(event.id) === "visited") return;
+    visitState.set(event.id, "visiting");
+
+    const parent = event.parentId ? eventsById.get(event.parentId) : undefined;
+    if (parent && parent.sessionId === event.sessionId) {
+      if (visitState.get(parent.id) === "visiting") {
+        errors.push({
+          code: "cyclic-parent",
+          message: `Event \`${event.id}\` closes a cycle through parent \`${parent.id}\`.`,
+          eventId: event.id,
+        });
+      } else {
+        visitParent(parent);
+      }
+    }
+
+    visitState.set(event.id, "visited");
+  };
+  events.forEach(visitParent);
 
   if (errors.length > 0) return { ok: false, format, errors };
 

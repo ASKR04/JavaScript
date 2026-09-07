@@ -45,7 +45,7 @@ Each non-empty line is one event object. NDJSON does not include an envelope; Ev
 | `message` | Yes | Concise human-readable event description. |
 | `durationMs` | No | Non-negative finite number. |
 | `outcome` | No | `success`, `failure`, or `unknown`; defaults to `unknown`. |
-| `parentId` | No | ID of another event in the same import. |
+| `parentId` | No | ID of an event in the same session at the same or an earlier timestamp. |
 | `attributes` | No | Flat object containing string, number, boolean, or null values. |
 
 Unknown top-level event fields are ignored in version one. Attributes remain untrusted metadata and are exposed only as primitive values.
@@ -57,7 +57,7 @@ Unknown top-level event fields are ignored in version one. Attributes remain unt
 - A session fails if any event fails; otherwise it is unknown if any event is unknown, and successful only when every event succeeds.
 - Session duration runs from the first event timestamp through the last event's optional duration.
 - Sequence relations connect adjacent events within a session.
-- Parent relations are emitted only after every referenced ID is proven to exist.
+- Parent relations are emitted only after every referenced ID is proven to exist in the same session, at the same or an earlier timestamp, without forming a cycle.
 - Any validation error rejects the whole import; EventWeave never exposes a partial trace as valid evidence.
 
 The sample files in `public/samples/` describe the same checkout journey with successful and failed outcomes, providing a stable comparison pair for upcoming timeline work.

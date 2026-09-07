@@ -105,6 +105,47 @@ describe("parseTraceText", () => {
     ]);
   });
 
+  it("rejects parent links that cross sessions or point backward in time", () => {
+    const result = parseTraceText(
+      jsonTrace([
+        event({ id: "later", timestamp: "2026-09-04T14:00:01.000Z" }),
+        event({
+          id: "cross-session",
+          sessionId: "another-session",
+          parentId: "later",
+          timestamp: "2026-09-04T14:00:02.000Z",
+        }),
+        event({
+          id: "too-early",
+          parentId: "later",
+          timestamp: "2026-09-04T14:00:00.000Z",
+        }),
+      ]),
+    );
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.errors.map(({ code }) => code)).toEqual([
+      "cross-session-parent",
+      "parent-after-child",
+    ]);
+  });
+
+  it("rejects cyclic parent links", () => {
+    const result = parseTraceText(
+      jsonTrace([
+        event({ id: "evt-1", parentId: "evt-2" }),
+        event({ id: "evt-2", parentId: "evt-1" }),
+      ]),
+    );
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.errors).toEqual([
+      expect.objectContaining({ code: "cyclic-parent", eventId: "evt-2" }),
+    ]);
+  });
+
   it("enforces byte and event limits before normalization", () => {
     const oversized = parseTraceText(jsonTrace([event()]), { maxBytes: 10 });
     const tooMany = parseTraceText(jsonTrace([event(), event({ id: "evt-2" })]), {
