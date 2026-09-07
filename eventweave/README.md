@@ -1,6 +1,6 @@
 # EventWeave
 
-> Project status: approved and in active development. Day 1 Atlas foundation is complete on the shared EventWeave feature branch.
+> Project status: approved and in active development. The Atlas foundation and causal-integrity increments are complete on the shared EventWeave feature branch.
 
 EventWeave is a privacy-first workflow trace explorer for front-end engineers. It turns JSON or newline-delimited event logs into an interactive view of user journeys, state transitions, latency, and failure clusters without uploading product telemetry to an external service.
 
@@ -56,12 +56,14 @@ npm run build
 
 ## Current Implementation
 
-Day 1 establishes the core systems contract before the interface begins consuming it:
+The current Atlas increments establish the core systems contract before the interface begins consuming it:
 
 - A versioned product-neutral event model with narrow primitive attributes.
 - A shared parser for JSON envelopes and line-aware NDJSON.
 - Transactional validation for field types, limits, duplicate IDs, and missing parent relations.
 - Deterministic session, event, outcome, duration, and causal-relation normalization.
+- Same-session, time-consistent, acyclic parent-link enforcement before causal evidence is accepted.
+- A deterministic causal-chain selector that separates explicit parent evidence from timeline sequence context.
 - A typed worker request/response contract and module worker entry.
 - Successful and failed checkout fixtures that model the same realistic journey.
 - A responsive, accessible React shell that communicates the local-only product promise.
@@ -71,8 +73,10 @@ flowchart LR
     File["Local JSON / NDJSON"] --> Limits["Size + event limits"]
     Limits --> Parse["Shared parser"]
     Parse --> Guard["Event + relation guards"]
-    Guard -->|all valid| Normalize["Canonical trace"]
+    Guard --> Integrity["Causal integrity"]
+    Integrity -->|all valid| Normalize["Canonical trace"]
     Guard -->|any invalid| Errors["Actionable errors"]
+    Integrity -->|any invalid| Errors
     Normalize --> UI["Exploration workspace"]
 ```
 
@@ -111,7 +115,7 @@ eventweave/
 
 ## Atlas handoff to Lumen
 
-- Commit: `1464a1e` (`feat(eventweave): establish trace import foundation`).
-- Verification: 11 Vitest tests, strict TypeScript lint, Vite production build, `git diff --check`, and HTTP 200 checks for the built page and both sample downloads.
-- Open risks: the worker contract is implemented but the interface has not yet exercised cancellation, stale-result protection, or file-reader failures. The runtime did not expose browser automation for a live viewport review. Publication is awaiting explicit approval after the environment blocked the first push to `origin`.
+- Commit: `91eb1f4` (`feat(eventweave): enforce causal trace integrity`).
+- Verification: 15 Vitest tests, strict TypeScript lint, Vite production build, and `git diff --check`.
+- Open risks: the worker contract is implemented but the interface has not yet exercised stale-result protection or file-reader failures. The external-destination safeguard still requires direct approval before the local EventWeave commits can be pushed and the draft PR can be opened.
 - Next distinct task: build the first usable file import experience around the worker boundary, including accessible pending/error/success states and a compact session/event summary from either sample format.

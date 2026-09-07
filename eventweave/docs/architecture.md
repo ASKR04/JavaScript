@@ -1,6 +1,6 @@
 # EventWeave Architecture
 
-> Status: approved and active. This document records the implemented Day 1 core boundary and the planned extension points for the one-week delivery cycle.
+> Status: approved and active. This document records the implemented import and causal-integrity boundaries plus the planned extension points for the one-week delivery cycle.
 
 ## Architecture Goals
 
@@ -20,7 +20,8 @@ flowchart TB
     Limits --> Syntax["JSON / line-aware NDJSON parser"]
     Syntax --> Guard["Shared event guard"]
     Guard --> Identity["ID + parent integrity"]
-    Identity --> Normalize["Canonical trace model"]
+    Identity --> Causal["Causal index + selector"]
+    Causal --> Normalize["Canonical trace model"]
     Normalize --> Store["Investigation state"]
     Store --> Timeline["Timeline + table"]
     Store --> Graph["Causal graph + relation list"]
@@ -31,7 +32,7 @@ flowchart TB
     Store --> IndexedDB["Optional local persistence"]
 ```
 
-Solid parsing and normalization nodes are implemented. The import controller and analysis consumers remain deliberate extension points for subsequent shifts.
+Parsing, normalization, causal validation, and causal-chain selection are implemented. The import controller and visual analysis consumers remain deliberate extension points for subsequent shifts.
 
 ## Implemented Domain Model
 
@@ -80,6 +81,12 @@ Validation is transactional: malformed fields, invalid timestamps, negative dura
 
 The interface will own file reading, cancellation, progress feedback, and stale-response policy. The worker owns only parsing, validation, and normalization.
 
+## Causal Integrity and Selection
+
+An explicit parent relation is accepted only when both events belong to the same session, the parent occurs no later than the child, and following parent links cannot form a cycle. These checks run transactionally with the rest of import validation, so an invalid relation cannot become causal evidence.
+
+The pure causal-chain selector indexes events by ID, walks rootward ancestors, gathers downstream branches, and returns events in normalized trace order. It includes only explicit parent relations. Within-session sequence relations remain useful timeline context but are not promoted to causal claims.
+
 ## Visualization and Accessibility
 
 Timeline and causal views will consume derived view models rather than raw events. This keeps layout calculations separate from the domain model and makes an equivalent table view straightforward. Keyboard users must be able to move between events, inspect details, change filters, and follow relations without targeting SVG paths.
@@ -110,7 +117,7 @@ The paired checkout fixtures intentionally share the same initial steps before d
 
 ## Atlas handoff to Lumen
 
-- Commit: `1464a1e` (`feat(eventweave): establish trace import foundation`).
-- Verification: 11 Vitest tests, strict TypeScript lint, Vite production build, `git diff --check`, and HTTP 200 checks for the built page and both sample downloads.
-- Open risks: the worker has not yet been integrated with file reading, cancellation, or UI state, and the initial shell is not an exploration surface. Browser automation was unavailable for a live viewport review. Publication is awaiting explicit approval after the environment blocked the first push to `origin`.
-- Next distinct task: integrate the typed worker into an accessible import panel with drag/select affordances, transaction-safe errors, and a semantic summary of the normalized sessions and events.
+- Commit: `91eb1f4` (`feat(eventweave): enforce causal trace integrity`).
+- Verification: 15 Vitest tests, strict TypeScript lint, Vite production build, and `git diff --check`.
+- Open risks: the worker has not yet been integrated with file reading or UI state, and the initial shell is not an exploration surface. Publication still requires direct approval after the external-destination safeguard rejected the push and draft-PR operation.
+- Next distinct task: integrate the typed worker into an accessible import panel with drag/select affordances, transaction-safe errors, stale-result protection, and a semantic summary of the normalized sessions and events.

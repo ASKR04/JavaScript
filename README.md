@@ -44,5 +44,6 @@ Each project in this repository is designed to be useful, documented, and struct
 | SignalForge | Stable identity validation | 2026-09-02 | Shared snapshot, backup, and cross-tab guards for blank, padded, and duplicate collection IDs | [PR #4](https://github.com/ASKR04/JavaScript/pull/4) |
 | SignalForge | Read-before-write storage recovery | 2026-09-03 | Safe recovery planning that reconciles or reviews existing browser data before any retry write | [PR #4](https://github.com/ASKR04/JavaScript/pull/4) |
 | EventWeave | Day 1 core foundation | 2026-09-04 | Versioned trace schema, validated JSON/NDJSON parsing, deterministic normalization, worker boundary, realistic fixtures, and focused tests | Local commit `1464a1e`; publication awaiting approval |
+| EventWeave | Causal integrity | 2026-09-07 | Same-session, time-consistent, acyclic parent validation plus deterministic causal-chain selection that excludes sequence-only context | Local commit `91eb1f4`; publication awaiting approval |
 
 See the [EventWeave architecture notes](./eventweave/docs/architecture.md) for its current component and data-flow diagrams.
