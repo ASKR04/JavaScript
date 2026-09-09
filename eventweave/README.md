@@ -1,6 +1,6 @@
 # EventWeave
 
-> Project status: approved and in active development. The Atlas foundation and causal-integrity increments are complete on the shared EventWeave feature branch.
+> Project status: approved and in active development. Validated local import, causal integrity, and deterministic session comparison are complete on the shared EventWeave feature branch.
 
 EventWeave is a privacy-first workflow trace explorer for front-end engineers. It turns JSON or newline-delimited event logs into an interactive view of user journeys, state transitions, latency, and failure clusters without uploading product telemetry to an external service.
 
@@ -56,7 +56,7 @@ npm run build
 
 ## Current Implementation
 
-The current Atlas increments establish the core systems contract before the interface begins consuming it:
+The current Atlas and Lumen increments establish a tested core contract and the first usable local-import workflow:
 
 - A versioned product-neutral event model with narrow primitive attributes.
 - A shared parser for JSON envelopes and line-aware NDJSON.
@@ -65,8 +65,10 @@ The current Atlas increments establish the core systems contract before the inte
 - Same-session, time-consistent, acyclic parent-link enforcement before causal evidence is accepted.
 - A deterministic causal-chain selector that separates explicit parent evidence from timeline sequence context.
 - A typed worker request/response contract and module worker entry.
+- A worker-backed select-or-drop import panel with stale-result suppression, failure recovery, and a semantic session summary.
+- A deterministic session-alignment engine that reports match basis, confidence, unmatched events, and the first meaningful divergence.
 - Successful and failed checkout fixtures that model the same realistic journey.
-- A responsive, accessible React shell that communicates the local-only product promise.
+- A responsive, accessible React workspace that communicates the local-only product promise.
 
 ```mermaid
 flowchart LR
@@ -77,7 +79,10 @@ flowchart LR
     Integrity -->|all valid| Normalize["Canonical trace"]
     Guard -->|any invalid| Errors["Actionable errors"]
     Integrity -->|any invalid| Errors
-    Normalize --> UI["Exploration workspace"]
+    Normalize --> ImportUI["Import state + summary"]
+    Normalize --> Compare["Session alignment"]
+    ImportUI --> UI["Exploration workspace"]
+    Compare --> UI
 ```
 
 ## Project Structure
@@ -105,17 +110,18 @@ eventweave/
 
 ## One-Week Delivery Plan
 
-1. **Complete:** trace format, application scaffold, fixtures, and validated local import foundation.
-2. Session navigation and an accessible event timeline.
+1. **Complete:** trace format, application scaffold, fixtures, validated local import, and first-divergence comparison foundation.
+2. **Next:** session navigation and an accessible event timeline.
 3. Causal-chain exploration across actions, requests, and state transitions.
-4. Trace comparison and first-divergence analysis.
+4. Comparison workflow UI on the implemented first-divergence engine.
 5. Transparent performance and failure heuristics with saved investigations.
 6. Markdown reporting, expanded samples, keyboard checks, and browser integration tests.
 7. Responsive polish, documentation, retrospective, and the next written proposal.
 
 ## Atlas handoff to Lumen
 
-- Commit: `91eb1f4` (`feat(eventweave): enforce causal trace integrity`).
-- Verification: 15 Vitest tests, strict TypeScript lint, Vite production build, and `git diff --check`.
-- Open risks: the worker contract is implemented but the interface has not yet exercised stale-result protection or file-reader failures. The external-destination safeguard still requires direct approval before the local EventWeave commits can be pushed and the draft PR can be opened.
-- Next distinct task: build the first usable file import experience around the worker boundary, including accessible pending/error/success states and a compact session/event summary from either sample format.
+- Reviewed Lumen commit: `c444ff7` (`Add local trace import workspace with worker validation`); the reducer retains prior valid evidence on replacement failure and suppresses stale reader or worker results.
+- Commit: `03959ad` (`feat(eventweave): compare trace session divergence`).
+- Verification: 22 Vitest tests, strict TypeScript lint, Vite production build, and `git diff --check`.
+- Open risks: comparison is a pure domain boundary and is not yet wired into UI state. The shared branch still has no remote PR until publication succeeds.
+- Next distinct task: add session navigation and an accessible event timeline/table that consumes the retained normalized trace, supports keyboard selection, and gives the existing causal selector a visible focus target.

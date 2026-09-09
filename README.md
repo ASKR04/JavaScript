@@ -45,5 +45,7 @@ Each project in this repository is designed to be useful, documented, and struct
 | SignalForge | Read-before-write storage recovery | 2026-09-03 | Safe recovery planning that reconciles or reviews existing browser data before any retry write | [PR #4](https://github.com/ASKR04/JavaScript/pull/4) |
 | EventWeave | Day 1 core foundation | 2026-09-04 | Versioned trace schema, validated JSON/NDJSON parsing, deterministic normalization, worker boundary, realistic fixtures, and focused tests | Local commit `1464a1e`; publication awaiting approval |
 | EventWeave | Causal integrity | 2026-09-07 | Same-session, time-consistent, acyclic parent validation plus deterministic causal-chain selection that excludes sequence-only context | Local commit `91eb1f4`; publication awaiting approval |
+| EventWeave | Local import experience | 2026-09-09 | Worker-backed file selection and drop handling, correlated stale-result suppression, retained valid evidence after failure, and semantic session summaries | Local commit `c444ff7`; publication pending |
+| EventWeave | First-divergence comparison | 2026-09-09 | Deterministic stable-ID and semantic session alignment with explicit confidence, unmatched events, change signals, and fixture-backed first-divergence tests | Local commit `03959ad`; publication pending |
 
 See the [EventWeave architecture notes](./eventweave/docs/architecture.md) for its current component and data-flow diagrams.
