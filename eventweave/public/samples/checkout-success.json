@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "1.0",
+  "events": [
+    {
+      "id": "success-001",
+      "sessionId": "checkout-success",
+      "timestamp": "2026-09-04T14:00:00.000Z",
+      "type": "user.action",
+      "actor": "shopper",
+      "message": "Submitted checkout",
+      "outcome": "success",
+      "attributes": { "surface": "checkout", "cartItems": 3 }
+    },
+    {
+      "id": "success-002",
+      "sessionId": "checkout-success",
+      "timestamp": "2026-09-04T14:00:00.018Z",
+      "type": "state.transition",
+      "actor": "checkout-store",
+      "message": "Checkout moved to submitting",
+      "parentId": "success-001",
+      "outcome": "success",
+      "attributes": { "from": "review", "to": "submitting" }
+    },
+    {
+      "id": "success-003",
+      "sessionId": "checkout-success",
+      "timestamp": "2026-09-04T14:00:00.041Z",
+      "type": "network.request",
+      "actor": "checkout-api",
+      "message": "Payment authorization requested",
+      "parentId": "success-001",
+      "durationMs": 184,
+      "outcome": "success",
+      "attributes": { "method": "POST", "route": "/payments/authorize" }
+    },
+    {
+      "id": "success-004",
+      "sessionId": "checkout-success",
+      "timestamp": "2026-09-04T14:00:00.225Z",
+      "type": "network.response",
+      "actor": "checkout-api",
+      "message": "Payment authorization accepted",
+      "parentId": "success-003",
+      "outcome": "success",
+      "attributes": { "status": 201, "retry": false }
+    },
+    {
+      "id": "success-005",
+      "sessionId": "checkout-success",
+      "timestamp": "2026-09-04T14:00:00.242Z",
+      "type": "state.transition",
+      "actor": "checkout-store",
+      "message": "Checkout moved to complete",
+      "parentId": "success-004",
+      "outcome": "success",
+      "attributes": { "from": "submitting", "to": "complete" }
+    },
+    {
+      "id": "success-006",
+      "sessionId": "checkout-success",
+      "timestamp": "2026-09-04T14:00:00.250Z",
+      "type": "ui.render",
+      "actor": "checkout-page",
+      "message": "Order confirmation displayed",
+      "parentId": "success-005",
+      "durationMs": 12,
+      "outcome": "success",
+      "attributes": { "surface": "confirmation" }
+    }
+  ]
+}

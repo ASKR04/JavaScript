@@ -1,6 +1,6 @@
 # EventWeave
 
-> Proposal status: awaiting approval. No implementation has started.
+> Project status: approved and in active development. Validated local import, causal integrity, deterministic session comparison, and the first accessible timeline explorer are complete on the shared EventWeave feature branch.
 
 EventWeave is a privacy-first workflow trace explorer for front-end engineers. It turns JSON or newline-delimited event logs into an interactive view of user journeys, state transitions, latency, and failure clusters without uploading product telemetry to an external service.
 
@@ -8,7 +8,7 @@ EventWeave is a privacy-first workflow trace explorer for front-end engineers. I
 
 Debugging a multi-step browser workflow often means switching between console output, network traces, screenshots, and loosely structured notes. Raw logs preserve detail but hide causality: an engineer can see that an error occurred without quickly understanding which earlier action or state transition made it likely.
 
-EventWeave would provide a focused local analysis workspace. A developer could import a sanitized trace, inspect its timeline, follow causal relationships, compare successful and failed sessions, and export a concise debugging report for an issue or pull request.
+EventWeave provides a focused local analysis workspace. A developer can import a sanitized trace, inspect its timeline, follow causal relationships, compare successful and failed sessions, and export a concise debugging report for an issue or pull request.
 
 ## Target Users
 
@@ -17,9 +17,9 @@ EventWeave would provide a focused local analysis workspace. A developer could i
 - Teams that cannot send internal telemetry to a third-party analysis service.
 - Developers who need reproducible evidence for bugs, performance work, and code reviews.
 
-## Proposed Core Features
+## Core Features
 
-- Import validated JSON and NDJSON traces with a documented sample schema.
+- Import validated JSON and NDJSON traces with a [documented sample schema](./docs/trace-format.md).
 - Normalize events into sessions, spans, actors, state transitions, and relationships.
 - Explore a zoomable timeline with latency and error emphasis.
 - Follow causal chains between user actions, requests, state changes, and failures.
@@ -29,67 +29,105 @@ EventWeave would provide a focused local analysis workspace. A developer could i
 - Save analysis state locally and export a Markdown debugging report.
 - Include accessible table alternatives for every graphical view.
 
-## Proposed Tools
+## Technology
 
 - React and TypeScript for a typed interactive analysis workspace.
-- Vite for fast local development and production builds.
-- SVG with focused utility functions for the first timeline and causal graph; a larger visualization dependency will be added only if the interaction model justifies it.
-- Web Workers for parsing larger traces without blocking the interface.
-- IndexedDB for local traces and saved investigations.
-- Vitest for parsers, normalization, comparison, and heuristic tests.
-- Playwright for import, filtering, keyboard navigation, and responsive smoke tests if the repository workflow supports it.
+- Vite for local development and production builds.
+- A dedicated Web Worker boundary for parsing without blocking future interactions.
+- IndexedDB for local traces and saved investigations later in the build.
+- Vitest for parser, normalization, worker-contract, comparison, and heuristic tests.
+- SVG with focused utility functions for the first timeline and causal graph.
 
-## Proposed Folder Structure
+## Getting Started
+
+```bash
+cd eventweave
+npm install
+npm run dev
+```
+
+Quality commands:
+
+```bash
+npm run lint
+npm test
+npm run build
+```
+
+## Current Implementation
+
+The current Atlas and Lumen increments establish a tested core contract and the first usable local-import workflow:
+
+- A versioned product-neutral event model with narrow primitive attributes.
+- A shared parser for JSON envelopes and line-aware NDJSON.
+- Transactional validation for field types, limits, duplicate IDs, and missing parent relations.
+- Deterministic session, event, outcome, duration, and causal-relation normalization.
+- Same-session, time-consistent, acyclic parent-link enforcement before causal evidence is accepted.
+- A deterministic causal-chain selector that separates explicit parent evidence from timeline sequence context.
+- A typed worker request/response contract and module worker entry.
+- A worker-backed select-or-drop import panel with stale-result suppression, failure recovery, and a semantic session summary.
+- A pure bounded timeline view model plus session navigation, roving keyboard event selection, synchronized evidence details, and a scroll-contained semantic table alternative.
+- Selected-event causal context powered by the explicit-parent selector, with branched downstream evidence presented without implying a false linear path.
+- A deterministic session-alignment engine that reports match basis, confidence, unmatched events, and the first meaningful divergence.
+- Successful and failed checkout fixtures that model the same realistic journey.
+- A responsive, accessible React workspace that communicates the local-only product promise.
+
+```mermaid
+flowchart LR
+    File["Local JSON / NDJSON"] --> Limits["Size + event limits"]
+    Limits --> Parse["Shared parser"]
+    Parse --> Guard["Event + relation guards"]
+    Guard --> Integrity["Causal integrity"]
+    Integrity -->|all valid| Normalize["Canonical trace"]
+    Guard -->|any invalid| Errors["Actionable errors"]
+    Integrity -->|any invalid| Errors
+    Normalize --> ImportUI["Import state + summary"]
+    Normalize --> TimelineVM["Timeline view model"]
+    TimelineVM --> TimelineUI["Keyboard timeline + table"]
+    TimelineUI --> CausalUI["Selected causal evidence"]
+    Normalize --> Compare["Session alignment"]
+    ImportUI --> UI["Exploration workspace"]
+    CausalUI --> UI
+    Compare --> UI
+```
+
+## Project Structure
 
 ```text
 eventweave/
   docs/
     architecture.md
     trace-format.md
-  public/
-    samples/
+  public/samples/
+    checkout-success.json
+    checkout-failure.ndjson
   src/
     app/
-    components/
-    features/
-      import/
-      timeline/
-      causality/
-      comparison/
-      report/
     lib/
-      trace-parser.ts
       trace-model.ts
-      trace-analysis.ts
-    workers/
+      trace-parser.ts
+      trace-parser.test.ts
     styles/
-  tests/
+    workers/
+      trace-import-contract.ts
+      trace-import.worker.ts
   README.md
 ```
 
-## Proposed User Flow
+## One-Week Delivery Plan
 
-```mermaid
-flowchart LR
-    Import["Import sanitized trace"] --> Validate["Validate and normalize locally"]
-    Validate --> Timeline["Explore session timeline"]
-    Timeline --> Chain["Follow a causal chain"]
-    Timeline --> Compare["Compare success and failure"]
-    Chain --> Findings["Capture evidence-backed findings"]
-    Compare --> Findings
-    Findings --> Report["Export debugging report"]
-```
+1. **Complete:** trace format, application scaffold, fixtures, validated local import, and first-divergence comparison foundation.
+2. **Complete:** session navigation, an accessible event timeline/table, and synchronized causal context.
+3. **Next:** dedicated causal-chain exploration plus transparent performance and failure findings.
+4. Comparison workflow UI on the implemented first-divergence engine.
+5. Transparent performance and failure heuristics with saved investigations.
+6. Markdown reporting, expanded samples, keyboard checks, and browser integration tests.
+7. Responsive polish, documentation, retrospective, and the next written proposal.
 
-## One-Week Implementation Plan
+## Lumen handoff to Atlas
 
-1. Document the trace format, scaffold the application, and implement validated local import.
-2. Build session navigation and an accessible event timeline.
-3. Add causal-chain exploration across actions, requests, and state transitions.
-4. Add trace comparison and first-divergence analysis.
-5. Add transparent performance and failure heuristics with saved investigations.
-6. Add Markdown reporting, realistic sample traces, tests, and keyboard/accessibility checks.
-7. Complete responsive polish, documentation, and the project retrospective.
-
-## Approval Gate
-
-Implementation should begin only after the user approves this proposal. Approval should confirm the project idea and the `eventweave/` folder as the next weekly portfolio project. Until then, this folder contains documentation only.
+- Reviewed Atlas commits: `03959ad` (`feat(eventweave): compare trace session divergence`) and `6060d7f` (`docs(eventweave): record comparison handoff`); the bounded matcher remains UI-independent and identifies the fixture-backed first meaningful divergence.
+- Commit: `e264745` (`feat(eventweave): add accessible session timeline`).
+- Verification: 26 Vitest tests, strict TypeScript lint, Vite production build, `git diff --check`, a live successful-fixture import, roving arrow-key focus/selection, synchronized causal evidence, clean browser logs, and a 390 × 844 responsive check with no page overflow. Timeline controls measured 70 px high and the session picker measured 46 px.
+- Open risks: comparison is not wired into the interface, browser persistence has not begun, and the shared branch still has no remote PR because GitHub publication requires direct user authorization.
+- Next distinct task: implement a tested transparent finding engine for slow spans, repeated failures, and missing completion events, returning stable event IDs that the existing explorer can select while leaving findings presentation to Lumen.

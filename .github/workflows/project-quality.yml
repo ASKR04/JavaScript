@@ -3,11 +3,11 @@ name: Project quality
 on:
   pull_request:
     branches:
-      - aug_release
+      - '*_release'
       - main
   push:
     branches:
-      - aug_release
+      - '*_release'
   workflow_dispatch:
 
 permissions:
