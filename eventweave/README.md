@@ -1,6 +1,6 @@
 # EventWeave
 
-> Project status: approved and in active development. Validated local import, causal integrity, and deterministic session comparison are complete on the shared EventWeave feature branch.
+> Project status: approved and in active development. Validated local import, causal integrity, deterministic session comparison, and the first accessible timeline explorer are complete on the shared EventWeave feature branch.
 
 EventWeave is a privacy-first workflow trace explorer for front-end engineers. It turns JSON or newline-delimited event logs into an interactive view of user journeys, state transitions, latency, and failure clusters without uploading product telemetry to an external service.
 
@@ -66,6 +66,8 @@ The current Atlas and Lumen increments establish a tested core contract and the 
 - A deterministic causal-chain selector that separates explicit parent evidence from timeline sequence context.
 - A typed worker request/response contract and module worker entry.
 - A worker-backed select-or-drop import panel with stale-result suppression, failure recovery, and a semantic session summary.
+- A pure bounded timeline view model plus session navigation, roving keyboard event selection, synchronized evidence details, and a scroll-contained semantic table alternative.
+- Selected-event causal context powered by the explicit-parent selector, with branched downstream evidence presented without implying a false linear path.
 - A deterministic session-alignment engine that reports match basis, confidence, unmatched events, and the first meaningful divergence.
 - Successful and failed checkout fixtures that model the same realistic journey.
 - A responsive, accessible React workspace that communicates the local-only product promise.
@@ -80,8 +82,12 @@ flowchart LR
     Guard -->|any invalid| Errors["Actionable errors"]
     Integrity -->|any invalid| Errors
     Normalize --> ImportUI["Import state + summary"]
+    Normalize --> TimelineVM["Timeline view model"]
+    TimelineVM --> TimelineUI["Keyboard timeline + table"]
+    TimelineUI --> CausalUI["Selected causal evidence"]
     Normalize --> Compare["Session alignment"]
     ImportUI --> UI["Exploration workspace"]
+    CausalUI --> UI
     Compare --> UI
 ```
 
@@ -111,17 +117,17 @@ eventweave/
 ## One-Week Delivery Plan
 
 1. **Complete:** trace format, application scaffold, fixtures, validated local import, and first-divergence comparison foundation.
-2. **Next:** session navigation and an accessible event timeline.
-3. Causal-chain exploration across actions, requests, and state transitions.
+2. **Complete:** session navigation, an accessible event timeline/table, and synchronized causal context.
+3. **Next:** dedicated causal-chain exploration plus transparent performance and failure findings.
 4. Comparison workflow UI on the implemented first-divergence engine.
 5. Transparent performance and failure heuristics with saved investigations.
 6. Markdown reporting, expanded samples, keyboard checks, and browser integration tests.
 7. Responsive polish, documentation, retrospective, and the next written proposal.
 
-## Atlas handoff to Lumen
+## Lumen handoff to Atlas
 
-- Reviewed Lumen commit: `c444ff7` (`Add local trace import workspace with worker validation`); the reducer retains prior valid evidence on replacement failure and suppresses stale reader or worker results.
-- Commit: `03959ad` (`feat(eventweave): compare trace session divergence`).
-- Verification: 22 Vitest tests, strict TypeScript lint, Vite production build, and `git diff --check`.
-- Open risks: comparison is a pure domain boundary and is not yet wired into UI state. The shared branch still has no remote PR until publication succeeds.
-- Next distinct task: add session navigation and an accessible event timeline/table that consumes the retained normalized trace, supports keyboard selection, and gives the existing causal selector a visible focus target.
+- Reviewed Atlas commits: `03959ad` (`feat(eventweave): compare trace session divergence`) and `6060d7f` (`docs(eventweave): record comparison handoff`); the bounded matcher remains UI-independent and identifies the fixture-backed first meaningful divergence.
+- Commit: `e264745` (`feat(eventweave): add accessible session timeline`).
+- Verification: 26 Vitest tests, strict TypeScript lint, Vite production build, `git diff --check`, a live successful-fixture import, roving arrow-key focus/selection, synchronized causal evidence, clean browser logs, and a 390 × 844 responsive check with no page overflow. Timeline controls measured 70 px high and the session picker measured 46 px.
+- Open risks: comparison is not wired into the interface, browser persistence has not begun, and the shared branch still has no remote PR because GitHub publication requires direct user authorization.
+- Next distinct task: implement a tested transparent finding engine for slow spans, repeated failures, and missing completion events, returning stable event IDs that the existing explorer can select while leaving findings presentation to Lumen.

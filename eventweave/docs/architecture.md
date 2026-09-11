@@ -1,6 +1,6 @@
 # EventWeave Architecture
 
-> Status: approved and active. This document records the implemented import, causal-integrity, and comparison boundaries plus the planned extension points for the one-week delivery cycle.
+> Status: approved and active. This document records the implemented import, causal-integrity, comparison, and accessible timeline boundaries plus the planned extension points for the one-week delivery cycle.
 
 ## Architecture Goals
 
@@ -32,7 +32,7 @@ flowchart TB
     Store --> IndexedDB["Optional local persistence"]
 ```
 
-Parsing, normalization, causal validation, causal-chain selection, worker-backed import state, and first-divergence comparison are implemented. Timeline, filtering, persistence, and reporting remain deliberate extension points for subsequent shifts.
+Parsing, normalization, causal validation, causal-chain selection, worker-backed import state, first-divergence comparison, and the accessible timeline explorer are implemented. Filtering, persistence, findings, and reporting remain deliberate extension points for subsequent shifts.
 
 ## Implemented Domain Model
 
@@ -90,7 +90,9 @@ The pure causal-chain selector indexes events by ID, walks rootward ancestors, g
 
 ## Visualization and Accessibility
 
-Timeline and causal views will consume derived view models rather than raw events. This keeps layout calculations separate from the domain model and makes an equivalent table view straightforward. Keyboard users must be able to move between events, inspect details, change filters, and follow relations without targeting SVG paths.
+The timeline consumes a pure derived view model rather than calculating geometry in React. It resolves canonical session event references, computes bounded offsets and duration segments, and contains unknown sessions without inventing evidence. Rendered duration segments stay inside their track even when an asynchronous event extends beyond the session's final timestamp.
+
+The interface uses one roving tab stop across timeline event buttons. Arrow keys move to adjacent events, Home and End reach boundaries, and selection synchronizes the timeline, evidence card, causal context, and equivalent semantic table. Table event controls expose their pressed state and target the same evidence region. Downstream causal branches render as a list rather than an arrow-delimited pseudo-chain, avoiding a visual claim that sibling events caused one another.
 
 Color may reinforce latency, outcome, and selection but cannot be the only status signal. Shapes, labels, icons, and accessible descriptions will carry the same meaning. The Day 1 shell already provides visible focus, responsive layout, reduced-motion behavior, and text labels for example states.
 
@@ -107,9 +109,10 @@ The paired checkout fixtures share the same initial actions. Comparison correctl
 - Implemented unit tests for JSON/NDJSON parsing, guards, deterministic normalization, size limits, identity integrity, relation integrity, and worker-message validation.
 - Planned property-focused tests for ordering, duration, and relation invariants.
 - Implemented fixture and focused tests for stable-ID priority, semantic alignment, unmatched insertions, missing sessions, confidence, and the first successful-versus-failed checkout divergence.
+- Implemented fixture-backed timeline tests for canonical order, bounded geometry, missing sessions, adjacent keyboard movement, boundary keys, and stale-selection recovery.
 - Planned rule tests that prove both findings and non-findings.
 - Planned component tests for accessible names, filters, and empty/error states.
-- Planned browser smoke tests for import, timeline navigation, comparison, report export, and responsive layouts.
+- Live browser checks cover successful sample import, roving timeline focus/selection, synchronized causal details, desktop layout, 390 × 844 containment, minimum control sizing, and clean browser logs. Comparison, report export, and expanded browser integration remain planned.
 
 ## Decisions
 
@@ -118,10 +121,10 @@ The paired checkout fixtures share the same initial actions. Comparison correctl
 3. Initial comparison will align two traces rather than infer a baseline group.
 4. Imported event extensions are ignored at the top level, while the documented `attributes` bag remains flat and runtime-validated.
 
-## Atlas handoff to Lumen
+## Lumen handoff to Atlas
 
-- Reviewed Lumen commit: `c444ff7` (`Add local trace import workspace with worker validation`); file reading, worker correlation, failure retention, and the first session summary now consume the core import contract.
-- Commit: `03959ad` (`feat(eventweave): compare trace session divergence`).
-- Verification: 22 Vitest tests, strict TypeScript lint, Vite production build, and `git diff --check`.
-- Open risks: comparison remains intentionally UI-agnostic, and browser persistence has not begun. The shared branch still has no remote PR until publication succeeds.
-- Next distinct task: build session navigation plus paired accessible timeline/table views with keyboard event selection, then connect the selected event to the existing causal-chain selector without taking on comparison UI yet.
+- Reviewed Atlas commits: `03959ad` (`feat(eventweave): compare trace session divergence`) and `6060d7f` (`docs(eventweave): record comparison handoff`); the bounded matcher remains UI-independent and identifies the fixture-backed first meaningful divergence.
+- Commit: `e264745` (`feat(eventweave): add accessible session timeline`).
+- Verification: 26 Vitest tests, strict TypeScript lint, Vite production build, `git diff --check`, a live successful-fixture import, roving arrow-key focus/selection, synchronized causal evidence, clean browser logs, and a 390 × 844 responsive check with no page overflow. Timeline controls measured 70 px high and the session picker measured 46 px.
+- Open risks: comparison is not wired into the interface, browser persistence has not begun, and the shared branch still has no remote PR because GitHub publication requires direct user authorization.
+- Next distinct task: implement a tested transparent finding engine for slow spans, repeated failures, and missing completion events, returning stable event IDs that the existing explorer can select while leaving findings presentation to Lumen.
