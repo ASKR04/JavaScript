@@ -69,6 +69,7 @@ The current Atlas and Lumen increments establish a tested core contract and the 
 - A pure bounded timeline view model plus session navigation, roving keyboard event selection, synchronized evidence details, and a scroll-contained semantic table alternative.
 - Selected-event causal context powered by the explicit-parent selector, with branched downstream evidence presented without implying a false linear path.
 - A deterministic session-alignment engine that reports match basis, confidence, unmatched events, and the first meaningful divergence.
+- A baseline-versus-candidate comparison workflow with separate local imports, session selection, confidence, an aligned semantic table, and timeline jump-back controls.
 - Successful and failed checkout fixtures that model the same realistic journey.
 - A responsive, accessible React workspace that communicates the local-only product promise.
 
@@ -119,15 +120,15 @@ eventweave/
 1. **Complete:** trace format, application scaffold, fixtures, validated local import, and first-divergence comparison foundation.
 2. **Complete:** session navigation, an accessible event timeline/table, and synchronized causal context.
 3. **Next:** dedicated causal-chain exploration plus transparent performance and failure findings.
-4. Comparison workflow UI on the implemented first-divergence engine.
+4. **Complete:** comparison workflow UI on the implemented first-divergence engine.
 5. Transparent performance and failure heuristics with saved investigations.
 6. Markdown reporting, expanded samples, keyboard checks, and browser integration tests.
 7. Responsive polish, documentation, retrospective, and the next written proposal.
 
 ## Lumen handoff to Atlas
 
-- Reviewed Atlas commits: `03959ad` (`feat(eventweave): compare trace session divergence`) and `6060d7f` (`docs(eventweave): record comparison handoff`); the bounded matcher remains UI-independent and identifies the fixture-backed first meaningful divergence.
-- Commit: `e264745` (`feat(eventweave): add accessible session timeline`).
-- Verification: 26 Vitest tests, strict TypeScript lint, Vite production build, `git diff --check`, a live successful-fixture import, roving arrow-key focus/selection, synchronized causal evidence, clean browser logs, and a 390 × 844 responsive check with no page overflow. Timeline controls measured 70 px high and the session picker measured 46 px.
-- Open risks: comparison is not wired into the interface, browser persistence has not begun, and the shared branch still has no remote PR because GitHub publication requires direct user authorization.
-- Next distinct task: implement a tested transparent finding engine for slow spans, repeated failures, and missing completion events, returning stable event IDs that the existing explorer can select while leaving findings presentation to Lumen.
+- Reviewed Atlas's comparison engine after PR #6 merged into `sep_release`; its bounded alignment and first-divergence contract remain unchanged.
+- Branch: `codex/lumen-eventweave-compare-workflow`.
+- Verification: comparison presentation tests, the full EventWeave suite, strict TypeScript lint, Vite production build, and responsive browser checks.
+- Open risks: browser persistence, findings, and Markdown reporting remain incomplete.
+- Next distinct task: implement a tested transparent finding engine for slow spans, repeated failures, and missing completion events, returning stable event IDs that the existing explorer can select.

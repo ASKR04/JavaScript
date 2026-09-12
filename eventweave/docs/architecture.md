@@ -104,6 +104,8 @@ Each alignment exposes its stable-ID, semantic, or unmatched basis and a numeric
 
 The paired checkout fixtures share the same initial actions. Comparison correctly identifies the payment request as the first divergence because the failed trace marks its outcome as failed and its duration grows from 184 ms to 428 ms; later timeout and recovery differences remain ordered evidence rather than obscuring that earlier signal.
 
+The product workflow keeps the current exploration trace as the candidate and imports a second baseline through the same worker-backed validation boundary. Users select one session from each trace, review aggregate confidence and the first divergence, then inspect every alignment in a semantic table. Candidate event controls reuse the timeline selection state so comparison evidence leads back to causal context without duplicating event-detail UI.
+
 ## Testing Strategy
 
 - Implemented unit tests for JSON/NDJSON parsing, guards, deterministic normalization, size limits, identity integrity, relation integrity, and worker-message validation.
