@@ -48,5 +48,6 @@ Each project in this repository is designed to be useful, documented, and struct
 | EventWeave | Local import experience | 2026-09-09 | Worker-backed file selection and drop handling, correlated stale-result suppression, retained valid evidence after failure, and semantic session summaries | Local commit `c444ff7`; publication pending |
 | EventWeave | First-divergence comparison | 2026-09-09 | Deterministic stable-ID and semantic session alignment with explicit confidence, unmatched events, change signals, and fixture-backed first-divergence tests | Local commit `03959ad`; publication pending |
 | EventWeave | Accessible session timeline | 2026-09-10 | Bounded timeline geometry, session navigation, roving keyboard selection, synchronized causal evidence, semantic table alternative, and responsive browser checks | Local commit `e264745`; publication awaiting direct approval |
+| EventWeave | Comparison workflow | 2026-09-12 | Separate baseline import, session pairing, confidence, first-divergence evidence, aligned semantic table, and timeline jump-back controls | Lumen branch `codex/lumen-eventweave-compare-workflow` |
 
 See the [EventWeave architecture notes](./eventweave/docs/architecture.md) for its current component and data-flow diagrams.

@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 
 import { selectCausalChain } from "../lib/trace-analysis";
+import { describeAlignment, describeFirstDivergence } from "../lib/comparison-presentation";
+import { compareTraceSessions } from "../lib/trace-comparison";
 import { DEFAULT_IMPORT_LIMITS, detectTraceFormat } from "../lib/trace-parser";
 import { buildSessionTimeline, findTimelineSelection, type TimelineNavigationKey } from "../lib/timeline-view";
 import { createTraceImportWorker } from "../workers/create-trace-import-worker";
 import type { TraceImportRequest, TraceImportResponse } from "../workers/trace-import-contract";
-import { initialTraceImportState, reduceTraceImportState } from "./trace-import-state";
+import { initialTraceImportState, reduceTraceImportState, type TraceImportAction } from "./trace-import-state";
 
 const createRequestId = (): string =>
   globalThis.crypto?.randomUUID?.() ?? `trace-${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -24,27 +26,28 @@ const timelineNavigationKeys = new Set<TimelineNavigationKey>([
 
 export const App = () => {
   const [state, dispatch] = useReducer(reduceTraceImportState, initialTraceImportState);
+  const [baselineState, baselineDispatch] = useReducer(reduceTraceImportState, initialTraceImportState);
   const [isDragging, setIsDragging] = useState(false);
   const [selectedSessionId, setSelectedSessionId] = useState<string | undefined>();
   const [selectedEventId, setSelectedEventId] = useState<string | undefined>();
+  const [baselineSessionId, setBaselineSessionId] = useState<string | undefined>();
   const workerRef = useRef<Worker | undefined>(undefined);
   const activeRequestIdRef = useRef<string | undefined>(undefined);
+  const baselineRequestIdRef = useRef<string | undefined>(undefined);
 
   useEffect(() => {
     const worker = createTraceImportWorker();
     workerRef.current = worker;
     worker.addEventListener("message", (event: MessageEvent<TraceImportResponse>) => {
       if (event.data.type !== "trace-parsed") return;
-      dispatch({ type: "parse-finished", requestId: event.data.requestId, result: event.data.result });
+      const targetDispatch = event.data.requestId === baselineRequestIdRef.current ? baselineDispatch : dispatch;
+      targetDispatch({ type: "parse-finished", requestId: event.data.requestId, result: event.data.result });
     });
     worker.addEventListener("error", () => {
       const requestId = activeRequestIdRef.current;
-      if (!requestId) return;
-      dispatch({
-        type: "read-failed",
-        requestId,
-        message: "The local parser stopped unexpectedly. Choose the file again to retry.",
-      });
+      const baselineRequestId = baselineRequestIdRef.current;
+      if (requestId) dispatch({ type: "read-failed", requestId, message: "The local parser stopped unexpectedly. Choose the file again to retry." });
+      if (baselineRequestId) baselineDispatch({ type: "read-failed", requestId: baselineRequestId, message: "The local parser stopped unexpectedly. Choose the baseline again to retry." });
     });
     return () => worker.terminate();
   }, []);
@@ -54,6 +57,10 @@ export const App = () => {
     setSelectedSessionId(firstSession?.id);
     setSelectedEventId(firstSession?.eventIds[0]);
   }, [state.trace]);
+
+  useEffect(() => {
+    setBaselineSessionId(baselineState.trace?.sessions[0]?.id);
+  }, [baselineState.trace]);
 
   const timeline = useMemo(
     () => state.trace && selectedSessionId
@@ -65,6 +72,12 @@ export const App = () => {
   const causalChain = useMemo(
     () => state.trace && selectedEventId ? selectCausalChain(state.trace, selectedEventId) : undefined,
     [selectedEventId, state.trace],
+  );
+  const comparison = useMemo(
+    () => baselineState.trace && baselineSessionId && state.trace && selectedSessionId
+      ? compareTraceSessions(baselineState.trace, baselineSessionId, state.trace, selectedSessionId)
+      : undefined,
+    [baselineSessionId, baselineState.trace, selectedSessionId, state.trace],
   );
 
   const selectSession = (sessionId: string) => {
@@ -84,15 +97,17 @@ export const App = () => {
     requestAnimationFrame(() => document.getElementById(`timeline-event-${nextIndex}`)?.focus());
   };
 
-  const importFile = (file?: File) => {
+  const importFile = (file?: File, target: "candidate" | "baseline" = "candidate") => {
     if (!file) return;
+    const targetDispatch: React.Dispatch<TraceImportAction> = target === "baseline" ? baselineDispatch : dispatch;
+    const targetRequestIdRef = target === "baseline" ? baselineRequestIdRef : activeRequestIdRef;
     const requestId = createRequestId();
-    activeRequestIdRef.current = requestId;
+    targetRequestIdRef.current = requestId;
     const format = detectTraceFormat(file.name);
-    dispatch({ type: "read-started", requestId, fileName: file.name, format });
+    targetDispatch({ type: "read-started", requestId, fileName: file.name, format });
 
     if (file.size > DEFAULT_IMPORT_LIMITS.maxBytes) {
-      dispatch({
+      targetDispatch({
         type: "read-failed",
         requestId,
         message: `This file is larger than the ${DEFAULT_IMPORT_LIMITS.maxBytes / 1024 / 1024} MiB import limit.`,
@@ -102,12 +117,12 @@ export const App = () => {
 
     const reader = new FileReader();
     reader.addEventListener("load", () => {
-      if (activeRequestIdRef.current !== requestId) return;
+      if (targetRequestIdRef.current !== requestId) return;
       if (typeof reader.result !== "string") {
-        dispatch({ type: "read-failed", requestId, message: "The selected file could not be read as text." });
+        targetDispatch({ type: "read-failed", requestId, message: "The selected file could not be read as text." });
         return;
       }
-      dispatch({ type: "parse-started", requestId });
+      targetDispatch({ type: "parse-started", requestId });
       const request: TraceImportRequest = {
         type: "parse-trace",
         requestId,
@@ -116,29 +131,31 @@ export const App = () => {
       workerRef.current?.postMessage(request);
     });
     reader.addEventListener("error", () => {
-      dispatch({
+      targetDispatch({
         type: "read-failed",
         requestId,
         message: "The browser could not read this file. Check its permissions and try again.",
       });
     });
     reader.addEventListener("abort", () => {
-      dispatch({ type: "read-failed", requestId, message: "The file read was interrupted. Choose it again to retry." });
+      targetDispatch({ type: "read-failed", requestId, message: "The file read was interrupted. Choose it again to retry." });
     });
     reader.readAsText(file);
   };
 
-  const importSample = async (path: string, fileName: string) => {
+  const importSample = async (path: string, fileName: string, target: "candidate" | "baseline" = "candidate") => {
+    const targetDispatch: React.Dispatch<TraceImportAction> = target === "baseline" ? baselineDispatch : dispatch;
+    const targetRequestIdRef = target === "baseline" ? baselineRequestIdRef : activeRequestIdRef;
     const requestId = createRequestId();
-    activeRequestIdRef.current = requestId;
+    targetRequestIdRef.current = requestId;
     const format = detectTraceFormat(fileName);
-    dispatch({ type: "read-started", requestId, fileName, format });
+    targetDispatch({ type: "read-started", requestId, fileName, format });
     try {
       const response = await fetch(path);
       if (!response.ok) throw new Error("Sample request failed");
       const text = await response.text();
-      if (activeRequestIdRef.current !== requestId) return;
-      dispatch({ type: "parse-started", requestId });
+      if (targetRequestIdRef.current !== requestId) return;
+      targetDispatch({ type: "parse-started", requestId });
       const request: TraceImportRequest = {
         type: "parse-trace",
         requestId,
@@ -146,7 +163,7 @@ export const App = () => {
       };
       workerRef.current?.postMessage(request);
     } catch {
-      dispatch({
+      targetDispatch({
         type: "read-failed",
         requestId,
         message: "The bundled sample could not be opened. Choose a downloaded trace instead.",
@@ -395,6 +412,77 @@ export const App = () => {
                 </table>
               </div>
             </div>
+
+            <section className="comparison-card" aria-labelledby="comparison-title">
+              <div className="panel-heading comparison-heading">
+                <div>
+                  <p className="eyebrow">Success versus failure</p>
+                  <h3 id="comparison-title">Find the first meaningful divergence.</h3>
+                </div>
+                {comparison && <span className={`confidence confidence--${comparison.confidence}`}>{comparison.confidence} confidence · {Math.round(comparison.confidenceScore * 100)}%</span>}
+              </div>
+
+              <div className="comparison-controls">
+                <div className="baseline-import">
+                  <label className="baseline-file">
+                    <span>Baseline trace</span>
+                    <input
+                      type="file"
+                      accept=".json,.ndjson,.jsonl,application/json,application/x-ndjson"
+                      onChange={(event) => importFile(event.currentTarget.files?.[0], "baseline")}
+                      onClick={(event) => { event.currentTarget.value = ""; }}
+                    />
+                  </label>
+                  <button type="button" className="sample-button" onClick={() => void importSample("/samples/checkout-success.json", "checkout-success.json", "baseline")}>Use successful sample</button>
+                  <p role="status" aria-live="polite">
+                    {baselineState.phase === "error"
+                      ? baselineState.errors[0]?.message
+                      : baselineState.trace
+                        ? `${baselineState.fileName} is ready as the baseline.`
+                        : "Choose a successful or expected trace to compare."}
+                  </p>
+                </div>
+                {baselineState.trace && (
+                  <label className="session-picker">
+                    <span>Baseline session</span>
+                    <select value={baselineSessionId} onChange={(event) => setBaselineSessionId(event.currentTarget.value)}>
+                      {baselineState.trace.sessions.map((session) => <option key={session.id} value={session.id}>{session.id} · {session.outcome}</option>)}
+                    </select>
+                  </label>
+                )}
+              </div>
+
+              {comparison ? (
+                <div className="comparison-results">
+                  <p className="divergence-summary" role="status">{describeFirstDivergence(comparison)}</p>
+                  <div className="table-scroll" tabIndex={0} aria-label="Scrollable comparison table">
+                    <table>
+                      <caption>Aligned events comparing {comparison.baselineSession.id} with {comparison.candidateSession.id}</caption>
+                      <thead><tr><th scope="col">Step</th><th scope="col">Baseline</th><th scope="col">Candidate</th><th scope="col">Match</th><th scope="col">Change</th></tr></thead>
+                      <tbody>
+                        {comparison.alignments.map((alignment, index) => {
+                          const isFirst = alignment === comparison.firstDivergence;
+                          const focusId = alignment.candidate?.id;
+                          return (
+                            <tr key={`${alignment.baseline?.id ?? "missing"}-${alignment.candidate?.id ?? "missing"}`} className={isFirst ? "comparison-row--first" : undefined}>
+                              <td>{isFirst ? "First divergence" : index + 1}</td>
+                              <td>{alignment.baseline?.message ?? "Missing"}</td>
+                              <th scope="row">
+                                {focusId ? <button type="button" onClick={() => setSelectedEventId(focusId)}>{alignment.candidate?.message}</button> : "Missing"}
+                              </th>
+                              <td>{alignment.matchBasis} · {Math.round(alignment.confidence * 100)}%</td>
+                              <td>{describeAlignment(alignment)}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ) : (
+                <p className="comparison-empty">Your current trace is the candidate. Add a baseline to align both sessions and reveal their first meaningful change.</p>
+              )}
+            </section>
           </section>
         )}
       </main>
