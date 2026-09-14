@@ -100,7 +100,7 @@ Color may reinforce latency, outcome, and selection but cannot be the only statu
 
 Filtering is a pure projection over the selected session's canonical timeline. Exact actor, exact type, outcome, and inclusive minimum-duration predicates compose without mutating the normalized trace or recalculating event geometry. Missing durations do not behave like zero-duration spans, and available actor/type choices are uniquely sorted from the active session.
 
-The interface uses one filter state for both the visual timeline and semantic table. When filtering hides the selected event, the first visible event becomes the synchronized selection; when no events match, the previous evidence remains visible with an explicit outside-filter note and both views show equivalent empty states. A comparison jump clears filters only when necessary to reveal its target. All controls retain minimum 44 px targets and collapse to a single mobile column.
+Presentation remains deliberately separate while the report UI PR is open. Its contract is to use one filter state for both the visual timeline and semantic table, move selection to the first visible event when needed, retain evidence with an explicit note when no events match, and clear filters only when a cross-view jump must reveal a hidden target. The live prototype verified that interaction policy and mobile control sizing before UI wiring was deferred to keep the PR conflict-free.
 
 ## Comparison Strategy
 
