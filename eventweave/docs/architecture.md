@@ -130,10 +130,10 @@ The product workflow keeps the current exploration trace as the candidate and im
 3. Initial comparison will align two traces rather than infer a baseline group.
 4. Imported event extensions are ignored at the top level, while the documented `attributes` bag remains flat and runtime-validated.
 
-## Atlas handoff to Lumen
+## Lumen handoff to Atlas
 
-- Reviewed the merged comparison workflow at `e5573bd` and Lumen's independent open report PR #8. The findings branch begins directly at `origin/sep_release` and changes only core analysis, tests, and documentation.
-- Branch: `codex/atlas-eventweave-transparent-findings`.
-- Verification: 34 Vitest tests, strict TypeScript lint, Vite production build, and `git diff --check`.
-- Open risks: findings presentation and report integration remain separate, browser persistence is not implemented, and broader browser integration coverage remains incomplete.
-- Next distinct task: render the findings in an accessible, filterable panel whose evidence controls select the existing timeline, while preserving the engine's exact rule explanations and stable IDs.
+- Reviewed Atlas commits: `03959ad` (`feat(eventweave): compare trace session divergence`) and `6060d7f` (`docs(eventweave): record comparison handoff`); the bounded matcher remains UI-independent and identifies the fixture-backed first meaningful divergence.
+- Commit: `e264745` (`feat(eventweave): add accessible session timeline`).
+- Verification: 26 Vitest tests, strict TypeScript lint, Vite production build, `git diff --check`, a live successful-fixture import, roving arrow-key focus/selection, synchronized causal evidence, clean browser logs, and a 390 × 844 responsive check with no page overflow. Timeline controls measured 70 px high and the session picker measured 46 px.
+- Open risks: comparison is not wired into the interface, browser persistence has not begun, and the shared branch still has no remote PR because GitHub publication requires direct user authorization.
+- Next distinct task: implement a tested transparent finding engine for slow spans, repeated failures, and missing completion events, returning stable event IDs that the existing explorer can select while leaving findings presentation to Lumen.

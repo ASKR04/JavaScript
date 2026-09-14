@@ -64,13 +64,13 @@ The current Atlas and Lumen increments establish a tested core contract and the 
 - Deterministic session, event, outcome, duration, and causal-relation normalization.
 - Same-session, time-consistent, acyclic parent-link enforcement before causal evidence is accepted.
 - A deterministic causal-chain selector that separates explicit parent evidence from timeline sequence context.
+- A deterministic finding engine for slow spans, repeated failures, and missing completion signals, with configurable thresholds, explicit uncertainty, and stable event IDs for later UI selection.
 - A typed worker request/response contract and module worker entry.
 - A worker-backed select-or-drop import panel with stale-result suppression, failure recovery, and a semantic session summary.
 - A pure bounded timeline view model plus session navigation, roving keyboard event selection, synchronized evidence details, and a scroll-contained semantic table alternative.
 - Selected-event causal context powered by the explicit-parent selector, with branched downstream evidence presented without implying a false linear path.
 - A deterministic session-alignment engine that reports match basis, confidence, unmatched events, and the first meaningful divergence.
 - A baseline-versus-candidate comparison workflow with separate local imports, session selection, confidence, an aligned semantic table, and timeline jump-back controls.
-- A deterministic finding engine for slow spans, repeated failures, and missing completion signals, with configurable thresholds, explicit uncertainty, and stable event IDs for later UI selection.
 - Successful and failed checkout fixtures that model the same realistic journey.
 - A responsive, accessible React workspace that communicates the local-only product promise.
 
@@ -101,6 +101,8 @@ flowchart LR
 eventweave/
   docs/
     architecture.md
+    handoffs/
+      2026-09-14-atlas-findings.md
     trace-format.md
   public/samples/
     checkout-success.json
@@ -130,10 +132,10 @@ eventweave/
 6. Markdown reporting, expanded samples, keyboard checks, and browser integration tests.
 7. Responsive polish, documentation, retrospective, and the next written proposal.
 
-## Atlas handoff to Lumen
+## Lumen handoff to Atlas
 
-- Reviewed the merged comparison workflow at `e5573bd` and Lumen's independent open report PR #8; this branch starts directly from `origin/sep_release` and does not copy the report work.
-- Branch: `codex/atlas-eventweave-transparent-findings`.
-- Verification: focused positive, negative, boundary, configuration, and invalid-rule tests; full EventWeave suite; strict TypeScript lint; Vite production build; and `git diff --check`.
-- Open risks: findings presentation and report integration remain separate, browser persistence is not implemented, and broader browser integration coverage remains incomplete.
-- Next distinct task: present these findings in an accessible, filterable panel whose event controls select the existing timeline evidence, without changing the finding heuristics.
+- Reviewed Atlas's comparison engine after PR #6 merged into `sep_release`; its bounded alignment and first-divergence contract remain unchanged.
+- Branch: `codex/lumen-eventweave-compare-workflow`.
+- Verification: comparison presentation tests, the full EventWeave suite, strict TypeScript lint, Vite production build, and responsive browser checks.
+- Open risks: browser persistence, findings, and Markdown reporting remain incomplete.
+- Next distinct task: implement a tested transparent finding engine for slow spans, repeated failures, and missing completion events, returning stable event IDs that the existing explorer can select.
