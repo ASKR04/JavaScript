@@ -126,9 +126,9 @@ eventweave/
 
 1. **Complete:** trace format, application scaffold, fixtures, validated local import, and first-divergence comparison foundation.
 2. **Complete:** session navigation, an accessible event timeline/table, and synchronized causal context.
-3. **In progress:** transparent performance and failure findings are complete at the core boundary; dedicated findings presentation remains.
+3. **Next:** dedicated causal-chain exploration plus transparent performance and failure findings.
 4. **Complete:** comparison workflow UI on the implemented first-divergence engine.
-5. **In progress:** performance and failure heuristics are complete; saved investigations remain.
+5. Transparent performance and failure heuristics with saved investigations.
 6. Markdown reporting, expanded samples, keyboard checks, and browser integration tests.
 7. Responsive polish, documentation, retrospective, and the next written proposal.
 
