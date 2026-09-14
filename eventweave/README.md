@@ -99,8 +99,6 @@ flowchart LR
 eventweave/
   docs/
     architecture.md
-    handoffs/
-      2026-09-14-lumen-filters.md
     trace-format.md
   public/samples/
     checkout-success.json
@@ -111,8 +109,6 @@ eventweave/
       trace-model.ts
       trace-parser.ts
       trace-parser.test.ts
-      event-filters.ts
-      event-filters.test.ts
     styles/
     workers/
       trace-import-contract.ts
