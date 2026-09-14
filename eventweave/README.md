@@ -65,6 +65,7 @@ The current Atlas and Lumen increments establish a tested core contract and the 
 - Same-session, time-consistent, acyclic parent-link enforcement before causal evidence is accepted.
 - A deterministic causal-chain selector that separates explicit parent evidence from timeline sequence context.
 - A typed worker request/response contract and module worker entry.
+- Composable actor, type, outcome, and minimum-duration filters that preserve canonical event order and synchronize visible timeline, table, and selected evidence.
 - A worker-backed select-or-drop import panel with stale-result suppression, failure recovery, and a semantic session summary.
 - A pure bounded timeline view model plus session navigation, roving keyboard event selection, synchronized evidence details, and a scroll-contained semantic table alternative.
 - Selected-event causal context powered by the explicit-parent selector, with branched downstream evidence presented without implying a false linear path.
@@ -98,6 +99,8 @@ flowchart LR
 eventweave/
   docs/
     architecture.md
+    handoffs/
+      2026-09-14-lumen-filters.md
     trace-format.md
   public/samples/
     checkout-success.json
@@ -108,6 +111,8 @@ eventweave/
       trace-model.ts
       trace-parser.ts
       trace-parser.test.ts
+      event-filters.ts
+      event-filters.test.ts
     styles/
     workers/
       trace-import-contract.ts

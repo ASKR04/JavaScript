@@ -3,6 +3,7 @@ import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { selectCausalChain } from "../lib/trace-analysis";
 import { describeAlignment, describeFirstDivergence } from "../lib/comparison-presentation";
 import { compareTraceSessions } from "../lib/trace-comparison";
+import { EMPTY_EVENT_FILTERS, eventFilterOptions, filterTimelineEvents, hasEventFilters, type EventFilters } from "../lib/event-filters";
 import { DEFAULT_IMPORT_LIMITS, detectTraceFormat } from "../lib/trace-parser";
 import { buildSessionTimeline, findTimelineSelection, type TimelineNavigationKey } from "../lib/timeline-view";
 import { createTraceImportWorker } from "../workers/create-trace-import-worker";
@@ -31,6 +32,7 @@ export const App = () => {
   const [selectedSessionId, setSelectedSessionId] = useState<string | undefined>();
   const [selectedEventId, setSelectedEventId] = useState<string | undefined>();
   const [baselineSessionId, setBaselineSessionId] = useState<string | undefined>();
+  const [eventFilters, setEventFilters] = useState<EventFilters>(EMPTY_EVENT_FILTERS);
   const workerRef = useRef<Worker | undefined>(undefined);
   const activeRequestIdRef = useRef<string | undefined>(undefined);
   const baselineRequestIdRef = useRef<string | undefined>(undefined);
@@ -56,6 +58,7 @@ export const App = () => {
     const firstSession = state.trace?.sessions[0];
     setSelectedSessionId(firstSession?.id);
     setSelectedEventId(firstSession?.eventIds[0]);
+    setEventFilters(EMPTY_EVENT_FILTERS);
   }, [state.trace]);
 
   useEffect(() => {
@@ -68,6 +71,18 @@ export const App = () => {
       : undefined,
     [selectedSessionId, state.trace],
   );
+  const filterOptions = useMemo(() => eventFilterOptions(timeline?.events ?? []), [timeline]);
+  const visibleTimelineEvents = useMemo(
+    () => filterTimelineEvents(timeline?.events ?? [], eventFilters),
+    [eventFilters, timeline],
+  );
+
+  useEffect(() => {
+    if (visibleTimelineEvents.length > 0 && !visibleTimelineEvents.some(({ event }) => event.id === selectedEventId)) {
+      setSelectedEventId(visibleTimelineEvents[0].event.id);
+    }
+  }, [selectedEventId, visibleTimelineEvents]);
+
   const selectedEvent = timeline?.events.find(({ event }) => event.id === selectedEventId)?.event;
   const causalChain = useMemo(
     () => state.trace && selectedEventId ? selectCausalChain(state.trace, selectedEventId) : undefined,
@@ -82,14 +97,20 @@ export const App = () => {
 
   const selectSession = (sessionId: string) => {
     setSelectedSessionId(sessionId);
+    setEventFilters(EMPTY_EVENT_FILTERS);
     const session = state.trace?.sessions.find(({ id }) => id === sessionId);
     setSelectedEventId(session?.eventIds[0]);
+  };
+
+  const selectComparedEvent = (eventId: string) => {
+    if (!visibleTimelineEvents.some(({ event }) => event.id === eventId)) setEventFilters(EMPTY_EVENT_FILTERS);
+    setSelectedEventId(eventId);
   };
 
   const handleTimelineKey = (event: React.KeyboardEvent<HTMLButtonElement>) => {
     if (!timelineNavigationKeys.has(event.key as TimelineNavigationKey) || !timeline) return;
     event.preventDefault();
-    const eventIds = timeline.events.map(({ event: timelineEvent }) => timelineEvent.id);
+    const eventIds = visibleTimelineEvents.map(({ event: timelineEvent }) => timelineEvent.id);
     const nextId = findTimelineSelection(eventIds, selectedEventId ?? "", event.key as TimelineNavigationKey);
     if (!nextId) return;
     setSelectedEventId(nextId);
@@ -303,6 +324,43 @@ export const App = () => {
               </label>
             </div>
 
+            <section className="filter-card" aria-labelledby="event-filters-title">
+              <div className="panel-heading">
+                <div><p className="eyebrow">Refine evidence</p><h3 id="event-filters-title">Event filters</h3></div>
+                <button type="button" className="clear-filters" disabled={!hasEventFilters(eventFilters)} onClick={() => setEventFilters(EMPTY_EVENT_FILTERS)}>Clear filters</button>
+              </div>
+              <div className="filter-controls">
+                <label><span>Actor</span><select value={eventFilters.actor} onChange={(event) => {
+                  const actor = event.currentTarget.value;
+                  setEventFilters((current) => ({ ...current, actor }));
+                }}>
+                  <option value="">All actors</option>
+                  {filterOptions.actors.map((actor) => <option key={actor} value={actor}>{actor}</option>)}
+                </select></label>
+                <label><span>Event type</span><select value={eventFilters.type} onChange={(event) => {
+                  const type = event.currentTarget.value;
+                  setEventFilters((current) => ({ ...current, type }));
+                }}>
+                  <option value="">All types</option>
+                  {filterOptions.types.map((type) => <option key={type} value={type}>{type}</option>)}
+                </select></label>
+                <label><span>Outcome</span><select value={eventFilters.outcome} onChange={(event) => {
+                  const outcome = event.currentTarget.value as EventFilters["outcome"];
+                  setEventFilters((current) => ({ ...current, outcome }));
+                }}>
+                  <option value="all">All outcomes</option>
+                  <option value="success">Success</option>
+                  <option value="failure">Failure</option>
+                  <option value="unknown">Unknown</option>
+                </select></label>
+                <label><span>Minimum duration (ms)</span><input type="number" min="0" step="1" inputMode="numeric" value={eventFilters.minimumDurationMs ?? ""} onChange={(event) => {
+                  const value = event.currentTarget.value;
+                  setEventFilters((current) => ({ ...current, minimumDurationMs: value === "" ? undefined : Math.max(0, Number(value)) }));
+                }} /></label>
+              </div>
+              <p className="filter-count" role="status" aria-live="polite">Showing {visibleTimelineEvents.length} of {timeline.events.length} events in this session.{visibleTimelineEvents.length === 0 ? " No events match; the previous selection remains in the evidence card." : ""}</p>
+            </section>
+
             <div className="explorer-grid">
               <div className="timeline-card" aria-labelledby="timeline-title">
                 <div className="panel-heading">
@@ -313,7 +371,7 @@ export const App = () => {
                   Use arrow keys, Home, or End to move between events.
                 </p>
                 <ol className="timeline" aria-describedby="timeline-instructions">
-                  {timeline.events.map((item, index) => {
+                  {visibleTimelineEvents.map((item, index) => {
                     const isSelected = item.event.id === selectedEvent.id;
                     return (
                       <li key={item.event.id}>
@@ -345,6 +403,7 @@ export const App = () => {
                     );
                   })}
                 </ol>
+                {visibleTimelineEvents.length === 0 && <p className="filter-empty">No events match these filters. Adjust or clear them to restore the timeline.</p>}
               </div>
 
               <aside id="selected-event-evidence" className="evidence-card" aria-labelledby="evidence-title">
@@ -352,6 +411,7 @@ export const App = () => {
                   <div><p className="eyebrow">Selected evidence</p><h3 id="evidence-title">{selectedEvent.message}</h3></div>
                   <span className={`outcome outcome--${selectedEvent.outcome}`}>{selectedEvent.outcome}</span>
                 </div>
+                {visibleTimelineEvents.length === 0 && <p className="filter-outside-note">This selection is outside the current filters.</p>}
                 <dl className="event-details">
                   <div><dt>Actor</dt><dd>{selectedEvent.actor}</dd></div>
                   <div><dt>Type</dt><dd>{selectedEvent.type}</dd></div>
@@ -389,7 +449,7 @@ export const App = () => {
                   <caption>Events in {timeline.session.id}, ordered by occurrence</caption>
                   <thead><tr><th scope="col">Time</th><th scope="col">Event</th><th scope="col">Actor</th><th scope="col">Type</th><th scope="col">Duration</th><th scope="col">Outcome</th></tr></thead>
                   <tbody>
-                    {timeline.events.map((item) => (
+                    {visibleTimelineEvents.map((item) => (
                       <tr key={item.event.id} className={item.event.id === selectedEvent.id ? "table-row--selected" : undefined}>
                         <td>+{formatDuration(item.offsetMs)}</td>
                         <th scope="row">
@@ -408,6 +468,7 @@ export const App = () => {
                         <td><span className={`outcome outcome--${item.event.outcome}`}>{item.event.outcome}</span></td>
                       </tr>
                     ))}
+                    {visibleTimelineEvents.length === 0 && <tr><td colSpan={6}>No events match these filters.</td></tr>}
                   </tbody>
                 </table>
               </div>
@@ -468,7 +529,7 @@ export const App = () => {
                               <td>{isFirst ? "First divergence" : index + 1}</td>
                               <td>{alignment.baseline?.message ?? "Missing"}</td>
                               <th scope="row">
-                                {focusId ? <button type="button" onClick={() => setSelectedEventId(focusId)}>{alignment.candidate?.message}</button> : "Missing"}
+                                {focusId ? <button type="button" onClick={() => selectComparedEvent(focusId)}>{alignment.candidate?.message}</button> : "Missing"}
                               </th>
                               <td>{alignment.matchBasis} · {Math.round(alignment.confidence * 100)}%</td>
                               <td>{describeAlignment(alignment)}</td>
