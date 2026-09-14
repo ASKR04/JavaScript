@@ -49,5 +49,6 @@ Each project in this repository is designed to be useful, documented, and struct
 | EventWeave | First-divergence comparison | 2026-09-09 | Deterministic stable-ID and semantic session alignment with explicit confidence, unmatched events, change signals, and fixture-backed first-divergence tests | Local commit `03959ad`; publication pending |
 | EventWeave | Accessible session timeline | 2026-09-10 | Bounded timeline geometry, session navigation, roving keyboard selection, synchronized causal evidence, semantic table alternative, and responsive browser checks | Local commit `e264745`; publication awaiting direct approval |
 | EventWeave | Comparison workflow | 2026-09-12 | Separate baseline import, session pairing, confidence, first-divergence evidence, aligned semantic table, and timeline jump-back controls | Lumen branch `codex/lumen-eventweave-compare-workflow` |
+| EventWeave | Transparent trace findings | 2026-09-14 | Deterministic slow-span, repeated-failure, and missing-completion rules with configurable thresholds, honest explanations, stable evidence IDs, and focused positive/negative tests | Atlas branch `codex/atlas-eventweave-transparent-findings` |
 
 See the [EventWeave architecture notes](./eventweave/docs/architecture.md) for its current component and data-flow diagrams.
