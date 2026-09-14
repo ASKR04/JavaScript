@@ -130,6 +130,8 @@ eventweave/
 
 - Reviewed merged comparison PR #7 and preserved its interface and alignment behavior.
 - Branch: `codex/lumen-eventweave-markdown-report`.
+- Feature commit: `412b228` (`feat(eventweave): add Markdown debugging reports`).
+- Review: [PR #8](https://github.com/ASKR04/JavaScript/pull/8) targets `sep_release`; `main` remains untouched.
 - Verification: report unit tests, full EventWeave suite, strict TypeScript lint, Vite production build, download walkthrough, and responsive browser checks.
 - Open risks: browser persistence, findings, and broader integration coverage remain incomplete.
 - Next distinct task: implement the separate tested finding engine for slow spans, repeated failures, and missing completion events, returning stable event IDs for later UI integration.
