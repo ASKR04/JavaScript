@@ -70,6 +70,7 @@ The current Atlas and Lumen increments establish a tested core contract and the 
 - Selected-event causal context powered by the explicit-parent selector, with branched downstream evidence presented without implying a false linear path.
 - A deterministic session-alignment engine that reports match basis, confidence, unmatched events, and the first meaningful divergence.
 - A baseline-versus-candidate comparison workflow with separate local imports, session selection, confidence, an aligned semantic table, and timeline jump-back controls.
+- A safe local Markdown debugging report covering the selected event, explicit causal context, full session timeline, and active comparison evidence.
 - Successful and failed checkout fixtures that model the same realistic journey.
 - A responsive, accessible React workspace that communicates the local-only product promise.
 
@@ -122,13 +123,13 @@ eventweave/
 3. **Next:** dedicated causal-chain exploration plus transparent performance and failure findings.
 4. **Complete:** comparison workflow UI on the implemented first-divergence engine.
 5. Transparent performance and failure heuristics with saved investigations.
-6. Markdown reporting, expanded samples, keyboard checks, and browser integration tests.
+6. **In progress:** Markdown reporting is complete; expanded samples, keyboard checks, and browser integration tests remain.
 7. Responsive polish, documentation, retrospective, and the next written proposal.
 
 ## Lumen handoff to Atlas
 
-- Reviewed Atlas's comparison engine after PR #6 merged into `sep_release`; its bounded alignment and first-divergence contract remain unchanged.
-- Branch: `codex/lumen-eventweave-compare-workflow`.
-- Verification: comparison presentation tests, the full EventWeave suite, strict TypeScript lint, Vite production build, and responsive browser checks.
-- Open risks: browser persistence, findings, and Markdown reporting remain incomplete.
-- Next distinct task: implement a tested transparent finding engine for slow spans, repeated failures, and missing completion events, returning stable event IDs that the existing explorer can select.
+- Reviewed merged comparison PR #7 and preserved its interface and alignment behavior.
+- Branch: `codex/lumen-eventweave-markdown-report`.
+- Verification: report unit tests, full EventWeave suite, strict TypeScript lint, Vite production build, download walkthrough, and responsive browser checks.
+- Open risks: browser persistence, findings, and broader integration coverage remain incomplete.
+- Next distinct task: implement the separate tested finding engine for slow spans, repeated failures, and missing completion events, returning stable event IDs for later UI integration.
