@@ -1,0 +1,21 @@
+# Investigation Persistence Boundary
+
+EventWeave investigation snapshots are small, versioned JSON values. They record a human label, save time, active session and event IDs, and product-neutral filter state. They deliberately do not embed imported trace contents.
+
+Every snapshot stores a deterministic trace fingerprint derived from schema version plus canonical session/event identity and timestamps. Restore requires the caller to provide the currently loaded normalized trace. A changed trace, missing session-event pair, unsupported snapshot version, malformed value, or payload above 64 KiB is rejected before any state becomes visible.
+
+The fingerprint detects stale data; it is not a security hash and must not be presented as tamper protection. The persistence module is also storage-agnostic: a later IndexedDB adapter may save its serialized output, while React consumes only validated results.
+
+```mermaid
+flowchart LR
+    Trace["Normalized trace"] --> Fingerprint["Deterministic fingerprint"]
+    Selection["Session + event"] --> Snapshot["Versioned snapshot"]
+    Filters["Filter state"] --> Snapshot
+    Fingerprint --> Snapshot
+    Snapshot --> Serialize["Bounded JSON"]
+    Serialize --> Adapter["Future IndexedDB adapter"]
+    Adapter --> Parse["Runtime validation"]
+    Trace --> Parse
+    Parse -->|valid fingerprint + selection| Restore["Investigation state"]
+    Parse -->|invalid or stale| Errors["Actionable rejection"]
+```

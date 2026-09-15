@@ -9,6 +9,7 @@
 - Keep large-file work off the main interface thread.
 - Pair every visualization with an accessible textual representation.
 - Explain every heuristic so findings remain reviewable engineering evidence.
+- Restore saved investigations only after version, trace fingerprint, and session-event identity validation.
 
 ## System Design
 
