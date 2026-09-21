@@ -3,6 +3,7 @@ import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { selectCausalChain } from "../lib/trace-analysis";
 import { describeAlignment, describeFirstDivergence } from "../lib/comparison-presentation";
 import { compareTraceSessions } from "../lib/trace-comparison";
+import { buildDebuggingReport } from "../lib/debugging-report";
 import { DEFAULT_IMPORT_LIMITS, detectTraceFormat } from "../lib/trace-parser";
 import { buildSessionTimeline, findTimelineSelection, type TimelineNavigationKey } from "../lib/timeline-view";
 import { createTraceImportWorker } from "../workers/create-trace-import-worker";
@@ -31,6 +32,7 @@ export const App = () => {
   const [selectedSessionId, setSelectedSessionId] = useState<string | undefined>();
   const [selectedEventId, setSelectedEventId] = useState<string | undefined>();
   const [baselineSessionId, setBaselineSessionId] = useState<string | undefined>();
+  const [reportStatus, setReportStatus] = useState("");
   const workerRef = useRef<Worker | undefined>(undefined);
   const activeRequestIdRef = useRef<string | undefined>(undefined);
   const baselineRequestIdRef = useRef<string | undefined>(undefined);
@@ -95,6 +97,30 @@ export const App = () => {
     setSelectedEventId(nextId);
     const nextIndex = eventIds.indexOf(nextId);
     requestAnimationFrame(() => document.getElementById(`timeline-event-${nextIndex}`)?.focus());
+  };
+
+  const downloadReport = () => {
+    if (!state.trace || !selectedSessionId || !selectedEventId) return;
+    const report = buildDebuggingReport({
+      trace: state.trace,
+      sessionId: selectedSessionId,
+      selectedEventId,
+      generatedAt: new Date().toISOString(),
+      comparison,
+    });
+    if (!report) {
+      setReportStatus("The selected evidence is no longer available. Choose an event and try again.");
+      return;
+    }
+    const url = URL.createObjectURL(new Blob([report.markdown], { type: "text/markdown;charset=utf-8" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = report.fileName;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 0);
+    setReportStatus(`${report.fileName} downloaded locally. Review trace content before sharing.`);
   };
 
   const importFile = (file?: File, target: "candidate" | "baseline" = "candidate") => {
@@ -291,16 +317,20 @@ export const App = () => {
                 <p className="eyebrow">Trace explorer</p>
                 <h2 id="explorer-title">Follow the workflow, event by event.</h2>
               </div>
-              <label className="session-picker">
-                <span>Session</span>
-                <select value={timeline.session.id} onChange={(event) => selectSession(event.currentTarget.value)}>
-                  {state.trace.sessions.map((session) => (
-                    <option key={session.id} value={session.id}>
-                      {session.id} · {session.eventIds.length} events · {session.outcome}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <div className="explorer-actions">
+                <label className="session-picker">
+                  <span>Session</span>
+                  <select value={timeline.session.id} onChange={(event) => selectSession(event.currentTarget.value)}>
+                    {state.trace.sessions.map((session) => (
+                      <option key={session.id} value={session.id}>
+                        {session.id} · {session.eventIds.length} events · {session.outcome}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <button className="report-button" type="button" onClick={downloadReport}>Download debugging report</button>
+                <p className="report-status" role="status" aria-live="polite">{reportStatus || "Markdown export stays on this device until you choose to share it."}</p>
+              </div>
             </div>
 
             <div className="explorer-grid">

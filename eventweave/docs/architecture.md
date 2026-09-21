@@ -106,6 +106,12 @@ The paired checkout fixtures share the same initial actions. Comparison correctl
 
 The product workflow keeps the current exploration trace as the candidate and imports a second baseline through the same worker-backed validation boundary. Users select one session from each trace, review aggregate confidence and the first divergence, then inspect every alignment in a semantic table. Candidate event controls reuse the timeline selection state so comparison evidence leads back to causal context without duplicating event-detail UI.
 
+## Markdown Report Boundary
+
+The report adapter is a pure deterministic function over the normalized trace, selected session and event, optional comparison, and an injected generation timestamp. It includes explicit causal evidence, the complete session timeline, and active baseline alignment without reading from React or browser APIs. Imported values are collapsed to one line and Markdown-sensitive characters are escaped before they enter headings, lists, or table cells.
+
+The browser layer only turns the returned Markdown into a short-lived object URL and starts a local download. EventWeave revokes that URL immediately and reminds users to review imported telemetry before sharing; export itself never creates a network request.
+
 ## Testing Strategy
 
 - Implemented unit tests for JSON/NDJSON parsing, guards, deterministic normalization, size limits, identity integrity, relation integrity, and worker-message validation.
