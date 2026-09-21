@@ -64,6 +64,7 @@ The current Atlas and Lumen increments establish a tested core contract and the 
 - Deterministic session, event, outcome, duration, and causal-relation normalization.
 - Same-session, time-consistent, acyclic parent-link enforcement before causal evidence is accepted.
 - A deterministic causal-chain selector that separates explicit parent evidence from timeline sequence context.
+- A deterministic finding engine for slow spans, repeated failures, and missing completion signals, with configurable thresholds, explicit uncertainty, and stable event IDs for later UI selection.
 - A typed worker request/response contract and module worker entry.
 - A worker-backed select-or-drop import panel with stale-result suppression, failure recovery, and a semantic session summary.
 - A pure bounded timeline view model plus session navigation, roving keyboard event selection, synchronized evidence details, and a scroll-contained semantic table alternative.
@@ -88,9 +89,11 @@ flowchart LR
     TimelineVM --> TimelineUI["Keyboard timeline + table"]
     TimelineUI --> CausalUI["Selected causal evidence"]
     Normalize --> Compare["Session alignment"]
+    Normalize --> Findings["Transparent finding rules"]
     ImportUI --> UI["Exploration workspace"]
     CausalUI --> UI
     Compare --> UI
+    Findings --> UI
 ```
 
 ## Project Structure
@@ -99,6 +102,8 @@ flowchart LR
 eventweave/
   docs/
     architecture.md
+    handoffs/
+      2026-09-14-atlas-findings.md
     trace-format.md
   public/samples/
     checkout-success.json
@@ -109,6 +114,8 @@ eventweave/
       trace-model.ts
       trace-parser.ts
       trace-parser.test.ts
+      trace-findings.ts
+      trace-findings.test.ts
     styles/
     workers/
       trace-import-contract.ts

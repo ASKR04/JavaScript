@@ -1,6 +1,6 @@
 # EventWeave Architecture
 
-> Status: approved and active. This document records the implemented import, causal-integrity, comparison, and accessible timeline boundaries plus the planned extension points for the one-week delivery cycle.
+> Status: approved and active. This document records the implemented import, causal-integrity, comparison, accessible timeline, and transparent-findings boundaries plus the planned extension points for the one-week delivery cycle.
 
 ## Architecture Goals
 
@@ -32,7 +32,7 @@ flowchart TB
     Store --> IndexedDB["Optional local persistence"]
 ```
 
-Parsing, normalization, causal validation, causal-chain selection, worker-backed import state, first-divergence comparison, and the accessible timeline explorer are implemented. Filtering, persistence, findings, and reporting remain deliberate extension points for subsequent shifts.
+Parsing, normalization, causal validation, causal-chain selection, worker-backed import state, first-divergence comparison, the accessible timeline explorer, and transparent finding rules are implemented. Filtering, persistence, findings presentation, and reporting remain deliberate extension points for subsequent shifts.
 
 ## Implemented Domain Model
 
@@ -43,7 +43,8 @@ The canonical model separates untrusted imported data from derived analysis:
 - `TraceRelation`: explicit parent and deterministic within-session sequence edges.
 - `NormalizedTrace`: version, import time, sorted events, sessions, and relations.
 - `TraceComparison`: ordered event alignments, match basis, confidence, change signals, and the first meaningful divergence.
-- `Investigation` and `Finding` will be added when interactive selection and heuristics require them.
+- `TraceFinding`: stable finding and session IDs, rule kind, severity, transparent explanation, and ordered evidence event IDs.
+- `Investigation` will be added when persistence requires a versioned saved-work boundary.
 
 Imported attributes remain primitive unknown data behind runtime guards. Arbitrary nested telemetry is rejected instead of being trusted through a TypeScript assertion.
 
@@ -104,6 +105,12 @@ Each alignment exposes its stable-ID, semantic, or unmatched basis and a numeric
 
 The paired checkout fixtures share the same initial actions. Comparison correctly identifies the payment request as the first divergence because the failed trace marks its outcome as failed and its duration grows from 184 ms to 428 ms; later timeout and recovery differences remain ordered evidence rather than obscuring that earlier signal.
 
+## Transparent Finding Rules
+
+The finding engine is a pure, linear pass over normalized sessions. It flags recorded durations at or above a configurable threshold, groups repeated failures only when actor and event type match, and reports a missing completion signal only when a session contains state transitions but no configured completion event type or destination state. This keeps the rules deterministic and product-neutral while allowing an adapter to supply its own completion vocabulary.
+
+Every result has a stable ID, ordered event IDs, severity, and an explanation containing the exact observed value and configured threshold or vocabulary limitation. Findings are review prompts: slow spans do not claim root cause, repeated failures may represent independent attempts, and a missing completion may indicate either an incomplete trace or unfamiliar terminology. The engine does not depend on React, persistence, comparison, or report export, so Lumen can add presentation without duplicating its logic.
+
 The product workflow keeps the current exploration trace as the candidate and imports a second baseline through the same worker-backed validation boundary. Users select one session from each trace, review aggregate confidence and the first divergence, then inspect every alignment in a semantic table. Candidate event controls reuse the timeline selection state so comparison evidence leads back to causal context without duplicating event-detail UI.
 
 ## Markdown Report Boundary
@@ -118,7 +125,7 @@ The browser layer only turns the returned Markdown into a short-lived object URL
 - Planned property-focused tests for ordering, duration, and relation invariants.
 - Implemented fixture and focused tests for stable-ID priority, semantic alignment, unmatched insertions, missing sessions, confidence, and the first successful-versus-failed checkout divergence.
 - Implemented fixture-backed timeline tests for canonical order, bounded geometry, missing sessions, adjacent keyboard movement, boundary keys, and stale-selection recovery.
-- Planned rule tests that prove both findings and non-findings.
+- Implemented rule tests proving findings and non-findings, inclusive duration boundaries, repeated-failure grouping, configurable completion vocabulary, stable evidence IDs, and invalid-setting rejection.
 - Planned component tests for accessible names, filters, and empty/error states.
 - Live browser checks cover successful sample import, roving timeline focus/selection, synchronized causal details, desktop layout, 390 × 844 containment, minimum control sizing, and clean browser logs. Comparison, report export, and expanded browser integration remain planned.
 
