@@ -35,6 +35,7 @@ EventWeave provides a focused local analysis workspace. A developer can import a
 - Vite for local development and production builds.
 - A dedicated Web Worker boundary for parsing without blocking future interactions.
 - IndexedDB for local traces and saved investigations later in the build.
+- A versioned, runtime-validated investigation snapshot contract keeps future IndexedDB storage separate from React and imported trace contents.
 - Vitest for parser, normalization, worker-contract, comparison, and heuristic tests.
 - SVG with focused utility functions for the first timeline and causal graph.
 
