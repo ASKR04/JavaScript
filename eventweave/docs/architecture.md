@@ -97,6 +97,12 @@ The interface uses one roving tab stop across timeline event buttons. Arrow keys
 
 Color may reinforce latency, outcome, and selection but cannot be the only status signal. Shapes, labels, icons, and accessible descriptions will carry the same meaning. The Day 1 shell already provides visible focus, responsive layout, reduced-motion behavior, and text labels for example states.
 
+## Event Filtering Boundary
+
+Filtering is a pure projection over the selected session's canonical timeline. Exact actor, exact type, outcome, and inclusive minimum-duration predicates compose without mutating the normalized trace or recalculating event geometry. Missing durations do not behave like zero-duration spans, and available actor/type choices are uniquely sorted from the active session.
+
+Presentation remains deliberately separate while the report UI PR is open. Its contract is to use one filter state for both the visual timeline and semantic table, move selection to the first visible event when needed, retain evidence with an explicit note when no events match, and clear filters only when a cross-view jump must reveal a hidden target. The live prototype verified that interaction policy and mobile control sizing before UI wiring was deferred to keep the PR conflict-free.
+
 ## Comparison Strategy
 
 Trace comparison aligns one baseline session with one candidate session through a deterministic, order-preserving pass with bounded lookahead. Stable event identifiers receive exact-match priority. When traces use different identifiers, type, actor, normalized label, and relative order provide an explicit semantic fallback; unrelated events stay unmatched instead of being forced into a pair. The bounded window keeps memory linear and runtime proportional to trace size at the 20,000-event import ceiling.

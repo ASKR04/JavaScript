@@ -66,6 +66,7 @@ The current Atlas and Lumen increments establish a tested core contract and the 
 - A deterministic causal-chain selector that separates explicit parent evidence from timeline sequence context.
 - A deterministic finding engine for slow spans, repeated failures, and missing completion signals, with configurable thresholds, explicit uncertainty, and stable event IDs for later UI selection.
 - A typed worker request/response contract and module worker entry.
+- A pure composable event-filter model for exact actor, type, outcome, and inclusive minimum-duration refinement while preserving canonical order.
 - A worker-backed select-or-drop import panel with stale-result suppression, failure recovery, and a semantic session summary.
 - A pure bounded timeline view model plus session navigation, roving keyboard event selection, synchronized evidence details, and a scroll-contained semantic table alternative.
 - Selected-event causal context powered by the explicit-parent selector, with branched downstream evidence presented without implying a false linear path.

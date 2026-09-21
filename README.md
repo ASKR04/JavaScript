@@ -21,6 +21,7 @@ Each project in this repository is designed to be useful, documented, and struct
 
 | Project | Phase | Date | Engineering evidence | Review |
 | --- | --- | --- | --- | --- |
+| EventWeave | Event filter model | 2026-09-14 | Composable actor, type, outcome, and inclusive duration predicates with canonical ordering, sorted options, missing-duration semantics, and focused tests | Lumen branch `codex/lumen-eventweave-event-filters` |
 | SignalForge | Foundation | 2026-08-10 | React/TypeScript architecture, responsive dashboard, typed domain model, and Mermaid documentation | Merged on `main` |
 | SignalForge | Editable workspace | 2026-08-10 | Immutable state transitions, versioned browser persistence, runtime data guards, accessible form controls, and Vitest coverage | [PR #1](https://github.com/ASKR04/JavaScript/pull/1) |
 | SignalForge | Plan composition | 2026-08-11 | Validated feature and milestone creation, stable IDs, confirmed removal, and deterministic roadmap resequencing | [PR #1](https://github.com/ASKR04/JavaScript/pull/1) |
