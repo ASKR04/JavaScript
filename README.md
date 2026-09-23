@@ -58,4 +58,4 @@ See the [EventWeave architecture notes](./eventweave/docs/architecture.md) for i
 
 ## Active Review Queue
 
-- EventWeave findings review controls: accessible severity filtering, live visible/total status, filtered-empty guidance, and 44 px evidence actions on `codex/lumen-eventweave-findings-review`.
+- EventWeave findings review controls: accessible severity filtering, live visible/total status, filtered-empty guidance, and 44 px evidence actions in [PR #17](https://github.com/ASKR04/JavaScript/pull/17).
