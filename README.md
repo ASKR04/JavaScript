@@ -11,7 +11,7 @@ This repository collects original JavaScript and front-end focused projects buil
 
 ## Active Project
 
-[EventWeave](./eventweave) was approved on 2026-09-04 and is now in its one-week delivery cycle. Atlas and Lumen contribute coordinated core-systems and product-experience shifts on one shared feature branch and pull request into `aug_release`.
+[EventWeave](./eventweave) was approved on 2026-09-04 and remains the active closeout project. Atlas and Lumen contribute coordinated core-systems and product-experience increments on separate feature branches and pull requests into `sep_release`.
 
 ## Repository Goal
 
@@ -21,9 +21,10 @@ Each project in this repository is designed to be useful, documented, and struct
 
 | Project | Phase | Date | Engineering evidence | Review |
 | --- | --- | --- | --- | --- |
-| EventWeave | Event filter model | 2026-09-14 | Composable actor, type, outcome, and inclusive duration predicates with canonical ordering, sorted options, missing-duration semantics, and focused tests | Lumen branch `codex/lumen-eventweave-event-filters` |
+| EventWeave | Investigation service boundary | 2026-09-23 | Typed save/list/restore/remove facade that composes validated snapshots with IndexedDB while exposing only UI-safe summaries and restore state | Atlas branch `codex/atlas-eventweave-investigation-service`, review pending |
+| EventWeave | Event filter model | 2026-09-14 | Composable actor, type, outcome, and inclusive duration predicates with canonical ordering, sorted options, missing-duration semantics, and focused tests | [PR #10](https://github.com/ASKR04/JavaScript/pull/10) merged into `sep_release` |
 | SignalForge | Foundation | 2026-08-10 | React/TypeScript architecture, responsive dashboard, typed domain model, and Mermaid documentation | Merged on `main` |
-| EventWeave | Investigation persistence contract | 2026-09-15 | Versioned bounded snapshots, deterministic trace fingerprints, runtime shape validation, stale-selection rejection, and storage-independent round trips | Atlas branch `codex/atlas-eventweave-investigation-persistence` |
+| EventWeave | Investigation persistence contract | 2026-09-15 | Versioned bounded snapshots, deterministic trace fingerprints, runtime shape validation, stale-selection rejection, and storage-independent round trips | [PR #11](https://github.com/ASKR04/JavaScript/pull/11) merged into `sep_release` |
 | SignalForge | Editable workspace | 2026-08-10 | Immutable state transitions, versioned browser persistence, runtime data guards, accessible form controls, and Vitest coverage | [PR #1](https://github.com/ASKR04/JavaScript/pull/1) |
 | SignalForge | Plan composition | 2026-08-11 | Validated feature and milestone creation, stable IDs, confirmed removal, and deterministic roadmap resequencing | [PR #1](https://github.com/ASKR04/JavaScript/pull/1) |
 | SignalForge | Decision log | 2026-08-12 | Validated ADR creation and editing, stable human-readable sequences, confirmed removal, responsive forms, and immutable state tests | [PR #1](https://github.com/ASKR04/JavaScript/pull/1) |

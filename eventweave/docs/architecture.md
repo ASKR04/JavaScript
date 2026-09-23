@@ -1,6 +1,6 @@
 # EventWeave Architecture
 
-> Status: approved and active. This document records the implemented import, causal-integrity, comparison, accessible timeline, and transparent-findings boundaries plus the planned extension points for the one-week delivery cycle.
+> Status: approved and in closeout. This document records the implemented import, analysis, presentation, reporting, and investigation-persistence boundaries plus the remaining product integration points.
 
 ## Architecture Goals
 
@@ -30,10 +30,12 @@ flowchart TB
     Store --> Heuristics["Local analysis rules"]
     Heuristics --> Findings["Evidence findings"]
     Findings --> Report["Markdown report adapter"]
-    Store --> IndexedDB["Optional local persistence"]
+    Store --> Snapshot["Validated snapshot"]
+    Snapshot --> IndexedDB["Local investigation store"]
+    IndexedDB --> Service["UI-safe investigation service"]
 ```
 
-Parsing, normalization, causal validation, causal-chain selection, worker-backed import state, first-divergence comparison, the accessible timeline explorer, and transparent finding rules are implemented. Filtering, persistence, findings presentation, and reporting remain deliberate extension points for subsequent shifts.
+Parsing, normalization, causal validation, causal-chain selection, worker-backed import state, first-divergence comparison, the accessible timeline explorer, findings, filtering, reporting, snapshot validation, IndexedDB storage, and the investigation service are implemented. Save/restore controls and findings mounting remain closeout integration points.
 
 ## Implemented Domain Model
 
@@ -45,7 +47,8 @@ The canonical model separates untrusted imported data from derived analysis:
 - `NormalizedTrace`: version, import time, sorted events, sessions, and relations.
 - `TraceComparison`: ordered event alignments, match basis, confidence, change signals, and the first meaningful divergence.
 - `TraceFinding`: stable finding and session IDs, rule kind, severity, transparent explanation, and ordered evidence event IDs.
-- `Investigation` will be added when persistence requires a versioned saved-work boundary.
+- `SavedInvestigation`: versioned identity, label, save time, trace fingerprint, session-event selection, and product-neutral filter state.
+- `InvestigationSummary` and `RestoredInvestigation`: UI-safe service views that omit fingerprints and serialized payloads.
 
 Imported attributes remain primitive unknown data behind runtime guards. Arbitrary nested telemetry is rejected instead of being trusted through a TypeScript assertion.
 
