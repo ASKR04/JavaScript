@@ -1,6 +1,7 @@
 # Atlas handoff to Lumen — investigation service boundary
 
 - Branch: `codex/atlas-eventweave-investigation-service`, created from current `origin/sep_release` without copying Lumen's open filter-interface PR.
+- Review: [PR #16](https://github.com/ASKR04/JavaScript/pull/16) into `sep_release`; the agent did not merge it.
 - Completed: a typed service that composes the merged investigation snapshot contract and IndexedDB adapter for save, list, restore, and remove operations.
 - Privacy boundary: imported trace contents remain in memory; UI-facing summaries omit fingerprints, serialized payloads, and filters, while restore exposes only a copied, previously validated selection and filter state.
 - Failure behavior: runtime-validation and storage errors pass through unchanged, and no partial restore state is returned.
