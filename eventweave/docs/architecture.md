@@ -33,7 +33,7 @@ flowchart TB
     Store --> IndexedDB["Optional local persistence"]
 ```
 
-Parsing, normalization, causal validation, causal-chain selection, worker-backed import state, first-divergence comparison, the accessible timeline explorer, transparent finding rules, filter predicates, local Markdown reporting, and the investigation snapshot contract are implemented. Filter presentation is being completed on a Lumen branch. Browser storage, save/restore controls, and findings presentation remain extension points for closeout.
+Parsing, normalization, causal validation, causal-chain selection, worker-backed import state, first-divergence comparison, the accessible timeline explorer, transparent finding rules, filter predicates, local Markdown reporting, the investigation snapshot contract, cross-feature journey tests, a standalone accessible findings panel, and a tested IndexedDB adapter are implemented. Filter presentation is being completed on a Lumen branch. Save/restore controls and mounting the findings panel remain closeout work.
 
 ## Implemented Domain Model
 

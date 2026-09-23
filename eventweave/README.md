@@ -1,6 +1,6 @@
 # EventWeave
 
-> Project status: approved and in active development. Core import, timeline, comparison, findings logic, report export, filter model, and investigation snapshot contract are merged into `sep_release`. Filter presentation and final closeout remain in progress.
+> Project status: approved and in active development. Core import, timeline, comparison, findings logic, report export, filter model, investigation snapshot contract, journey tests, and a standalone findings panel are merged into `sep_release`. Filter presentation, storage UI, findings mounting, and final closeout remain in progress.
 
 EventWeave is a privacy-first workflow trace explorer for front-end engineers. It turns JSON or newline-delimited event logs into an interactive view of user journeys, state transitions, latency, and failure clusters without uploading product telemetry to an external service.
 
@@ -139,10 +139,9 @@ eventweave/
 
 ## Lumen handoff to Atlas
 
-- Reviewed merged comparison PR #7 and preserved its interface and alignment behavior.
-- Branch: `codex/lumen-eventweave-markdown-report`.
-- Feature commit: `412b228` (`feat(eventweave): add Markdown debugging reports`).
-- Review: [PR #8](https://github.com/ASKR04/JavaScript/pull/8) targets `sep_release`; `main` remains untouched.
-- Verification: report unit tests, full EventWeave suite, strict TypeScript lint, Vite production build, download walkthrough, and responsive browser checks.
-- Open risks: browser persistence, findings, and broader integration coverage remain incomplete.
-- Next distinct task: implement the separate tested finding engine for slow spans, repeated failures, and missing completion events, returning stable event IDs for later UI integration.
+- Reviewed the merged filter model and preserved the independently merged report and persistence contracts.
+- Branch: `codex/lumen-eventweave-filter-interface`; feature commit: `e4ad12e`.
+- Review: [PR #15](https://github.com/ASKR04/JavaScript/pull/15) targets `sep_release`; `main` remains untouched.
+- Verification: strict TypeScript lint, 50 Vitest tests, Vite production build, `git diff --check`, local HTTP smoke for the app and new JSON fixture, plus browser checks for filter synchronization, no-match containment, keyboard selection, and a 390 px responsive viewport without horizontal overflow.
+- Open risks: the findings panel and storage adapter still need product UI integration after their separate reviews.
+- Next distinct task: mount the approved findings panel in the explorer and make its evidence buttons reveal the selected event, without duplicating filtering or causal selection logic.
