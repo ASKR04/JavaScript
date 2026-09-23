@@ -1,6 +1,6 @@
 # EventWeave
 
-> Project status: approved and in closeout. Core import, causal exploration, comparison, findings, filters, reporting, investigation validation, IndexedDB storage, and cross-feature tests are merged into `sep_release`. The investigation service is in Atlas review, while save/restore controls and findings mounting remain.
+> Project status: approved and in active development. Validated local import, causal integrity, deterministic session comparison, and the first accessible timeline explorer are complete on the shared EventWeave feature branch.
 
 EventWeave is a privacy-first workflow trace explorer for front-end engineers. It turns JSON or newline-delimited event logs into an interactive view of user journeys, state transitions, latency, and failure clusters without uploading product telemetry to an external service.
 
@@ -34,8 +34,8 @@ EventWeave provides a focused local analysis workspace. A developer can import a
 - React and TypeScript for a typed interactive analysis workspace.
 - Vite for local development and production builds.
 - A dedicated Web Worker boundary for parsing without blocking future interactions.
-- IndexedDB for small local investigation snapshots; imported trace contents are not persisted.
-- A versioned, runtime-validated snapshot contract plus a typed investigation service keeps browser storage separate from React.
+- IndexedDB for local traces and saved investigations later in the build.
+- A versioned, runtime-validated investigation snapshot contract keeps future IndexedDB storage separate from React and imported trace contents.
 - Vitest for parser, normalization, worker-contract, comparison, and heuristic tests.
 - SVG with focused utility functions for the first timeline and causal graph.
 
@@ -74,8 +74,6 @@ The current Atlas and Lumen increments establish a tested core contract and the 
 - A deterministic session-alignment engine that reports match basis, confidence, unmatched events, and the first meaningful divergence.
 - A baseline-versus-candidate comparison workflow with separate local imports, session selection, confidence, an aligned semantic table, and timeline jump-back controls.
 - A safe local Markdown debugging report covering the selected event, explicit causal context, full session timeline, and active comparison evidence.
-- A validated IndexedDB adapter and a typed investigation service that expose only safe summaries and restore state to future controls.
-- Cross-feature journey coverage and a standalone accessible findings panel ready for explorer integration.
 - Successful and failed checkout fixtures that model the same realistic journey.
 - A responsive, accessible React workspace that communicates the local-only product promise.
 
@@ -99,6 +97,12 @@ flowchart LR
     Compare --> UI
     Findings --> UI
 ```
+
+## Investigation Service Boundary
+
+Atlas's closeout service composes the runtime-validated snapshot contract with the IndexedDB adapter without exposing serialized storage data to React. Save injects an ID and timestamp, list returns compact summaries, restore returns only the validated selection and copied filters, and remove delegates storage deletion. Imported trace contents remain in memory and are never written into an investigation snapshot.
+
+Validation and storage failures pass through unchanged, so UI controls cannot receive partial restore state. Focused tests cover generated metadata, summary privacy, restore mapping, error propagation, and deletion delegation.
 
 ## Project Structure
 
@@ -131,17 +135,18 @@ eventweave/
 
 1. **Complete:** trace format, application scaffold, fixtures, validated local import, and first-divergence comparison foundation.
 2. **Complete:** session navigation, an accessible event timeline/table, and synchronized causal context.
-3. **Complete:** dedicated causal-chain exploration plus transparent performance and failure findings.
+3. **Next:** dedicated causal-chain exploration plus transparent performance and failure findings.
 4. **Complete:** comparison workflow UI on the implemented first-divergence engine.
-5. **In progress:** persistence contracts and storage are complete; save/restore controls remain.
-6. **In progress:** Markdown reporting, expanded samples, keyboard checks, and integration tests are complete; findings mounting remains.
-7. **Next:** final regression, responsive/documentation closeout, retrospective, and the next written proposal.
+5. Transparent performance and failure heuristics with saved investigations.
+6. **In progress:** Markdown reporting is complete; expanded samples, keyboard checks, and browser integration tests remain.
+7. Responsive polish, documentation, retrospective, and the next written proposal.
 
-## Atlas handoff to Lumen
+## Lumen handoff to Atlas
 
-- Preserved Lumen's ready, green filter-interface PR without copying its commits.
-- Branch: `codex/atlas-eventweave-investigation-service`.
-- Completed: a typed service composing the merged snapshot contract and IndexedDB adapter for save, list, restore, and remove operations. React-facing results omit trace fingerprints and serialized payloads.
-- Verification: focused service tests plus the complete lint, unit-test, and production-build workflow.
-- Open risks: the service is not yet mounted; save/restore controls and findings-panel integration remain closeout UI work.
-- Next distinct task: after the filter-interface PR merges, add accessible save/restore controls that consume this service and apply restored session, event, and filter state atomically.
+- Reviewed merged comparison PR #7 and preserved its interface and alignment behavior.
+- Branch: `codex/lumen-eventweave-markdown-report`.
+- Feature commit: `412b228` (`feat(eventweave): add Markdown debugging reports`).
+- Review: [PR #8](https://github.com/ASKR04/JavaScript/pull/8) targets `sep_release`; `main` remains untouched.
+- Verification: report unit tests, full EventWeave suite, strict TypeScript lint, Vite production build, download walkthrough, and responsive browser checks.
+- Open risks: browser persistence, findings, and broader integration coverage remain incomplete.
+- Next distinct task: implement the separate tested finding engine for slow spans, repeated failures, and missing completion events, returning stable event IDs for later UI integration.

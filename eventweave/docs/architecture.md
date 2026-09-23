@@ -1,6 +1,6 @@
 # EventWeave Architecture
 
-> Status: approved and in closeout. This document records the implemented import, analysis, presentation, reporting, and investigation-persistence boundaries plus the remaining product integration points.
+> Status: approved and active. This document records the implemented import, causal-integrity, comparison, accessible timeline, and transparent-findings boundaries plus the planned extension points for the one-week delivery cycle.
 
 ## Architecture Goals
 
@@ -30,12 +30,10 @@ flowchart TB
     Store --> Heuristics["Local analysis rules"]
     Heuristics --> Findings["Evidence findings"]
     Findings --> Report["Markdown report adapter"]
-    Store --> Snapshot["Validated snapshot"]
-    Snapshot --> IndexedDB["Local investigation store"]
-    IndexedDB --> Service["UI-safe investigation service"]
+    Store --> IndexedDB["Optional local persistence"]
 ```
 
-Parsing, normalization, causal validation, causal-chain selection, worker-backed import state, first-divergence comparison, the accessible timeline explorer, findings, filtering, reporting, snapshot validation, IndexedDB storage, and the investigation service are implemented. Save/restore controls and findings mounting remain closeout integration points.
+Parsing, normalization, causal validation, causal-chain selection, worker-backed import state, first-divergence comparison, the accessible timeline explorer, and transparent finding rules are implemented. Filtering, persistence, findings presentation, and reporting remain deliberate extension points for subsequent shifts.
 
 ## Implemented Domain Model
 
@@ -47,8 +45,7 @@ The canonical model separates untrusted imported data from derived analysis:
 - `NormalizedTrace`: version, import time, sorted events, sessions, and relations.
 - `TraceComparison`: ordered event alignments, match basis, confidence, change signals, and the first meaningful divergence.
 - `TraceFinding`: stable finding and session IDs, rule kind, severity, transparent explanation, and ordered evidence event IDs.
-- `SavedInvestigation`: versioned identity, label, save time, trace fingerprint, session-event selection, and product-neutral filter state.
-- `InvestigationSummary` and `RestoredInvestigation`: UI-safe service views that omit fingerprints and serialized payloads.
+- `Investigation` will be added when persistence requires a versioned saved-work boundary.
 
 Imported attributes remain primitive unknown data behind runtime guards. Arbitrary nested telemetry is rejected instead of being trusted through a TypeScript assertion.
 
@@ -128,6 +125,12 @@ The product workflow keeps the current exploration trace as the candidate and im
 The report adapter is a pure deterministic function over the normalized trace, selected session and event, optional comparison, and an injected generation timestamp. It includes explicit causal evidence, the complete session timeline, and active baseline alignment without reading from React or browser APIs. Imported values are collapsed to one line and Markdown-sensitive characters are escaped before they enter headings, lists, or table cells.
 
 The browser layer only turns the returned Markdown into a short-lived object URL and starts a local download. EventWeave revokes that URL immediately and reminds users to review imported telemetry before sharing; export itself never creates a network request.
+
+## Investigation Service Boundary
+
+The investigation service composes the versioned snapshot contract with the IndexedDB adapter while keeping browser storage out of React. Save injects identity and time before delegating validation and persistence. List projects validated records into compact summaries, while restore exposes only the saved label, session-event selection, and a copied filter state. Trace fingerprints and serialized payloads never cross this UI-facing boundary.
+
+The store remains the authority for runtime shape, schema version, trace identity, and session-event membership. The service passes validation and storage errors through unchanged, so a caller either receives complete validated restore state or no state at all. Imported trace contents remain memory-only.
 
 ## Testing Strategy
 
