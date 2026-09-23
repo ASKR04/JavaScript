@@ -55,3 +55,7 @@ Each project in this repository is designed to be useful, documented, and struct
 | EventWeave | Markdown debugging report | 2026-09-13 | Safe filename generation, escaped imported content, selected causal evidence, full timeline, active comparison, and local-only download | Lumen commit `412b228`; [PR #8](https://github.com/ASKR04/JavaScript/pull/8) into `sep_release` |
 
 See the [EventWeave architecture notes](./eventweave/docs/architecture.md) for its current component and data-flow diagrams.
+
+## Active Review Queue
+
+- EventWeave findings review controls: accessible severity filtering, live visible/total status, filtered-empty guidance, and 44 px evidence actions on `codex/lumen-eventweave-findings-review`.
