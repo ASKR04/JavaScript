@@ -21,6 +21,19 @@ const jsonTrace = (events: unknown[]) =>
   JSON.stringify({ schemaVersion: "1.0", events });
 
 describe("parseTraceText", () => {
+  it("imports the profile-save failure sample with its failed response and recovery steps", () => {
+    const result = parseTraceText(fixture("profile-save-failure.json"), { format: "json" });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.trace.sessions).toEqual([
+      expect.objectContaining({ id: "profile-save-failure", outcome: "failure", durationMs: 702 }),
+    ]);
+    expect(result.trace.events.find(({ id }) => id === "profile-004")).toEqual(
+      expect.objectContaining({ type: "network.response", outcome: "failure", message: "Profile update failed: service unavailable" }),
+    );
+  });
+
   it("normalizes JSON events into ordered sessions and causal relations", () => {
     const result = parseTraceText(
       jsonTrace([

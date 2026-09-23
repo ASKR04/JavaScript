@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "1.0",
+  "events": [
+    {
+      "id": "profile-001",
+      "sessionId": "profile-save-failure",
+      "timestamp": "2026-09-21T14:10:00.000Z",
+      "type": "user.action",
+      "actor": "account-owner",
+      "message": "Selected Save profile",
+      "outcome": "success",
+      "attributes": { "surface": "profile-editor" }
+    },
+    {
+      "id": "profile-002",
+      "sessionId": "profile-save-failure",
+      "timestamp": "2026-09-21T14:10:00.012Z",
+      "type": "state.transition",
+      "actor": "profile-store",
+      "message": "Profile moved to saving",
+      "parentId": "profile-001",
+      "outcome": "success",
+      "attributes": { "from": "editing", "to": "saving" }
+    },
+    {
+      "id": "profile-003",
+      "sessionId": "profile-save-failure",
+      "timestamp": "2026-09-21T14:10:00.030Z",
+      "type": "network.request",
+      "actor": "profile-api",
+      "message": "Profile update requested",
+      "parentId": "profile-001",
+      "durationMs": 620,
+      "outcome": "unknown",
+      "attributes": { "method": "PUT", "route": "/profile" }
+    },
+    {
+      "id": "profile-004",
+      "sessionId": "profile-save-failure",
+      "timestamp": "2026-09-21T14:10:00.650Z",
+      "type": "network.response",
+      "actor": "profile-api",
+      "message": "Profile update failed: service unavailable",
+      "parentId": "profile-003",
+      "outcome": "failure",
+      "attributes": { "status": 503, "retryable": true }
+    },
+    {
+      "id": "profile-005",
+      "sessionId": "profile-save-failure",
+      "timestamp": "2026-09-21T14:10:00.670Z",
+      "type": "state.transition",
+      "actor": "profile-store",
+      "message": "Profile returned to editing without saving",
+      "parentId": "profile-004",
+      "outcome": "failure",
+      "attributes": { "from": "saving", "to": "editing" }
+    },
+    {
+      "id": "profile-006",
+      "sessionId": "profile-save-failure",
+      "timestamp": "2026-09-21T14:10:00.690Z",
+      "type": "ui.render",
+      "actor": "profile-page",
+      "message": "Could not save profile banner displayed",
+      "parentId": "profile-005",
+      "durationMs": 12,
+      "outcome": "failure",
+      "attributes": { "surface": "profile-editor", "messageCode": "save-unavailable" }
+    }
+  ]
+}

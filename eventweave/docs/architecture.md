@@ -33,7 +33,7 @@ flowchart TB
     Store --> IndexedDB["Optional local persistence"]
 ```
 
-Parsing, normalization, causal validation, causal-chain selection, worker-backed import state, first-divergence comparison, the accessible timeline explorer, and transparent finding rules are implemented. Filtering, persistence, findings presentation, and reporting remain deliberate extension points for subsequent shifts.
+Parsing, normalization, causal validation, causal-chain selection, worker-backed import state, first-divergence comparison, the accessible timeline explorer, transparent finding rules, filter predicates, local Markdown reporting, the investigation snapshot contract, cross-feature journey tests, a standalone accessible findings panel, and a tested IndexedDB adapter are implemented. Filter presentation is being completed on a Lumen branch. Save/restore controls and mounting the findings panel remain closeout work.
 
 ## Implemented Domain Model
 
@@ -102,7 +102,7 @@ Color may reinforce latency, outcome, and selection but cannot be the only statu
 
 Filtering is a pure projection over the selected session's canonical timeline. Exact actor, exact type, outcome, and inclusive minimum-duration predicates compose without mutating the normalized trace or recalculating event geometry. Missing durations do not behave like zero-duration spans, and available actor/type choices are uniquely sorted from the active session.
 
-Presentation remains deliberately separate while the report UI PR is open. Its contract is to use one filter state for both the visual timeline and semantic table, move selection to the first visible event when needed, retain evidence with an explicit note when no events match, and clear filters only when a cross-view jump must reveal a hidden target. The live prototype verified that interaction policy and mobile control sizing before UI wiring was deferred to keep the PR conflict-free.
+The current Lumen branch wires one filter state to both the visual timeline and semantic table. Selection falls back to the first visible event when needed; zero matches show an explicit empty state and disable evidence export. A comparison-table jump clears filters so its target is revealed. Displayed step numbers retain canonical timeline positions even when intermediate events are hidden. Filtering never changes the imported trace or comparison result.
 
 ## Comparison Strategy
 
