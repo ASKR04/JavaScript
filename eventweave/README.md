@@ -66,7 +66,7 @@ The current Atlas and Lumen increments establish a tested core contract and the 
 - Same-session, time-consistent, acyclic parent-link enforcement before causal evidence is accepted.
 - A deterministic causal-chain selector that separates explicit parent evidence from timeline sequence context.
 - A deterministic finding engine for slow spans, repeated failures, and missing completion signals, with configurable thresholds, explicit uncertainty, and stable event IDs for later UI selection.
-- A standalone findings review panel with an accessible severity filter, honest filtered-empty state, live result count, and 44 px evidence controls, ready to mount after the current explorer work merges.
+- A standalone findings review panel with an accessible severity filter linked to its controlled results and described by a live count, honest filtered-empty state, and 44 px evidence controls, ready to mount after the current explorer work merges.
 - A typed worker request/response contract and module worker entry.
 - A pure composable event-filter model for exact actor, type, outcome, and inclusive minimum-duration refinement while preserving canonical order.
 - A worker-backed select-or-drop import panel with stale-result suppression, failure recovery, and a semantic session summary.

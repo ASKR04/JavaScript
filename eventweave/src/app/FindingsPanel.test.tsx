@@ -24,6 +24,8 @@ describe("FindingsPanel", () => {
     expect(markup).toContain("2 of 2 findings shown");
     expect(markup).toContain("All severities");
     expect(markup).toContain("Showing 2 of 2 findings for this session");
+    expect(markup).toMatch(/<select[^>]+aria-controls="[^"]+"[^>]+aria-describedby="[^"]+"/);
+    expect(markup).toMatch(/<p[^>]+id="[^"]+"[^>]+role="status"[^>]+aria-live="polite"/);
     expect(markup).toContain("Slow span: 428 ms");
     expect(markup).toContain("No completion signal recorded");
     expect(markup).toContain("Inspect event: Payment authorization request");
