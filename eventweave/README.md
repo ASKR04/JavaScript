@@ -98,6 +98,12 @@ flowchart LR
     Findings --> UI
 ```
 
+## Investigation Service Boundary
+
+Atlas's closeout service composes the runtime-validated snapshot contract with the IndexedDB adapter without exposing serialized storage data to React. Save injects an ID and timestamp, list returns compact summaries, restore returns only the validated selection and copied filters, and remove delegates storage deletion. Imported trace contents remain in memory and are never written into an investigation snapshot.
+
+Validation and storage failures pass through unchanged, so UI controls cannot receive partial restore state. Focused tests cover generated metadata, summary privacy, restore mapping, error propagation, and deletion delegation. A complete service-to-IndexedDB journey test saves the failed checkout selection and filters, lists and restores them, then confirms the same snapshot cannot be applied to the successful trace.
+
 ## Project Structure
 
 ```text
