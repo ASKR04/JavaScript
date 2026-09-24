@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { createTestIndexedDbFactory } from "../test/create-test-indexeddb-factory";
 import { createInvestigationStore } from "./investigation-store";
 import { parseTraceText } from "./trace-parser";
 
@@ -18,76 +19,9 @@ const input = (id = "payment-timeout") => ({
   filters: { actor: "checkout-api", outcome: "failure" as const },
 });
 
-/** Minimal asynchronous IndexedDB double: requests settle before transaction completion. */
-const createFactory = () => {
-  const records = new Map<string, unknown>();
-  let initialized = false;
-  let failWrites = false;
-  const database = {
-    objectStoreNames: { contains: () => initialized },
-    createObjectStore: () => { initialized = true; },
-    close: () => undefined,
-    transaction: (_name: string, mode: IDBTransactionMode) => {
-      const transaction: {
-        oncomplete?: () => void;
-        onerror?: () => void;
-        onabort?: () => void;
-        error: Error | null;
-        objectStore: () => object;
-        abort: () => void;
-      } = {
-        error: null,
-        objectStore: () => ({
-          put: (value: { id: string }) => finish(() => records.set(value.id, value)),
-          delete: (id: string) => finish(() => records.delete(id)),
-          get: (id: string) => request(() => records.get(id)),
-          getAll: () => request(() => [...records.values()]),
-        }),
-        abort: () => transaction.onabort?.(),
-      };
-      const finish = (action: () => void) => queueMicrotask(() => {
-        if (failWrites && mode === "readwrite") {
-          transaction.error = new Error("Quota exceeded");
-          transaction.onabort?.();
-          return;
-        }
-        action();
-        queueMicrotask(() => transaction.oncomplete?.());
-      });
-      const request = (read: () => unknown) => {
-        const result: { result?: unknown; onsuccess?: () => void; onerror?: () => void } = {};
-        queueMicrotask(() => {
-          result.result = read();
-          result.onsuccess?.();
-          queueMicrotask(() => transaction.oncomplete?.());
-        });
-        return result;
-      };
-      return transaction;
-    },
-  };
-  const factory = {
-    open: () => {
-      const request: {
-        result: typeof database;
-        onupgradeneeded?: () => void;
-        onsuccess?: () => void;
-        onerror?: () => void;
-        onblocked?: () => void;
-      } = { result: database };
-      queueMicrotask(() => {
-        if (!initialized) request.onupgradeneeded?.();
-        request.onsuccess?.();
-      });
-      return request;
-    },
-  } as unknown as IDBFactory;
-  return { factory, records, setFailWrites: (value: boolean) => { failWrites = value; } };
-};
-
 describe("IndexedDB investigation store", () => {
   it("saves, loads, lists, and removes a validated investigation", async () => {
-    const { factory, records } = createFactory();
+    const { factory, records } = createTestIndexedDbFactory();
     const store = createInvestigationStore(factory);
     const saved = await store.save(input());
     expect(saved).toMatchObject({ ok: true, value: { name: "Payment timeout" } });
@@ -100,14 +34,14 @@ describe("IndexedDB investigation store", () => {
   });
 
   it("rejects invalid input before opening or writing storage", async () => {
-    const { factory, records } = createFactory();
+    const { factory, records } = createTestIndexedDbFactory();
     const result = await createInvestigationStore(factory).save({ ...input(), eventId: "missing" });
     expect(result).toMatchObject({ ok: false, errors: [{ code: "stale-selection" }] });
     expect(records.size).toBe(0);
   });
 
   it("does not restore an investigation against a changed trace", async () => {
-    const { factory } = createFactory();
+    const { factory } = createTestIndexedDbFactory();
     const store = createInvestigationStore(factory);
     await store.save(input());
     const changed = { ...trace, events: [] };
@@ -116,7 +50,7 @@ describe("IndexedDB investigation store", () => {
   });
 
   it("rejects damaged stored data instead of exposing it to the UI", async () => {
-    const { factory, records } = createFactory();
+    const { factory, records } = createTestIndexedDbFactory();
     const store = createInvestigationStore(factory);
     records.set("damaged", { id: "damaged", payload: "not json" });
     expect(await store.load("damaged", trace)).toMatchObject({ ok: false, errors: [{ code: "invalid-json" }] });
@@ -125,7 +59,7 @@ describe("IndexedDB investigation store", () => {
 
   it("reports unavailable storage and failed writes without claiming success", async () => {
     expect(await createInvestigationStore(undefined).save(input())).toMatchObject({ ok: false, errors: [{ code: "unavailable" }] });
-    const { factory, setFailWrites } = createFactory();
+    const { factory, setFailWrites } = createTestIndexedDbFactory();
     setFailWrites(true);
     expect(await createInvestigationStore(factory).save(input())).toMatchObject({ ok: false, errors: [{ code: "storage-error" }] });
   });

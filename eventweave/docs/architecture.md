@@ -132,6 +132,8 @@ The investigation service composes the versioned snapshot contract with the Inde
 
 The store remains the authority for runtime shape, schema version, trace identity, and session-event membership. The service passes validation and storage errors through unchanged, so a caller either receives complete validated restore state or no state at all. Imported trace contents remain memory-only.
 
+The shared asynchronous IndexedDB test double now exercises both the adapter contract and the full service journey. The integration proof saves a failed-checkout investigation, verifies its compact list summary, restores the exact session/event/filter state, hides it from a different trace's list, and reports trace mismatch instead of applying stale state.
+
 ## Testing Strategy
 
 - Implemented unit tests for JSON/NDJSON parsing, guards, deterministic normalization, size limits, identity integrity, relation integrity, and worker-message validation.
@@ -139,6 +141,7 @@ The store remains the authority for runtime shape, schema version, trace identit
 - Implemented fixture and focused tests for stable-ID priority, semantic alignment, unmatched insertions, missing sessions, confidence, and the first successful-versus-failed checkout divergence.
 - Implemented fixture-backed timeline tests for canonical order, bounded geometry, missing sessions, adjacent keyboard movement, boundary keys, and stale-selection recovery.
 - Implemented rule tests proving findings and non-findings, inclusive duration boundaries, repeated-failure grouping, configurable completion vocabulary, stable evidence IDs, and invalid-setting rejection.
+- Implemented service-to-IndexedDB journey coverage for save, list, validated restore, and changed-trace rejection.
 - Planned component tests for accessible names, filters, and empty/error states.
 - Live browser checks cover successful sample import, roving timeline focus/selection, synchronized causal details, desktop layout, 390 × 844 containment, minimum control sizing, and clean browser logs. Comparison, report export, and expanded browser integration remain planned.
 
