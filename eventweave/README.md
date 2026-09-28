@@ -1,6 +1,6 @@
 # EventWeave
 
-> Project status: approved and in active development. Validated local import, causal integrity, deterministic session comparison, and the first accessible timeline explorer are complete on the shared EventWeave feature branch.
+> Project status: approved and in active development. Core import, timeline, comparison, findings logic, report export, filter model, investigation snapshot contract, journey tests, and a standalone findings panel are merged into `sep_release`. Filter presentation, storage UI, findings mounting, and final closeout remain in progress.
 
 EventWeave is a privacy-first workflow trace explorer for front-end engineers. It turns JSON or newline-delimited event logs into an interactive view of user journeys, state transitions, latency, and failure clusters without uploading product telemetry to an external service.
 
@@ -68,6 +68,7 @@ The current Atlas and Lumen increments establish a tested core contract and the 
 - A deterministic finding engine for slow spans, repeated failures, and missing completion signals, with configurable thresholds, explicit uncertainty, and stable event IDs for later UI selection.
 - A typed worker request/response contract and module worker entry.
 - A pure composable event-filter model for exact actor, type, outcome, and inclusive minimum-duration refinement while preserving canonical order.
+- On this Lumen branch, a shared accessible filter panel narrows both the timeline and semantic table, preserves canonical step numbers, handles empty results, and reveals cross-view jump targets.
 - A worker-backed select-or-drop import panel with stale-result suppression, failure recovery, and a semantic session summary.
 - A pure bounded timeline view model plus session navigation, roving keyboard event selection, synchronized evidence details, and a scroll-contained semantic table alternative.
 - Selected-event causal context powered by the explicit-parent selector, with branched downstream evidence presented without implying a false linear path.
@@ -75,6 +76,7 @@ The current Atlas and Lumen increments establish a tested core contract and the 
 - A baseline-versus-candidate comparison workflow with separate local imports, session selection, confidence, an aligned semantic table, and timeline jump-back controls.
 - A safe local Markdown debugging report covering the selected event, explicit causal context, full session timeline, and active comparison evidence.
 - Successful and failed checkout fixtures that model the same realistic journey.
+- A second JSON failure fixture models a profile save rejected by an unavailable service, with a parser test confirming the recorded failure and recovery sequence.
 - A responsive, accessible React workspace that communicates the local-only product promise.
 
 ```mermaid
@@ -125,22 +127,21 @@ eventweave/
   README.md
 ```
 
-## One-Week Delivery Plan
+## Delivery Plan and Closeout
 
 1. **Complete:** trace format, application scaffold, fixtures, validated local import, and first-divergence comparison foundation.
 2. **Complete:** session navigation, an accessible event timeline/table, and synchronized causal context.
-3. **Next:** dedicated causal-chain exploration plus transparent performance and failure findings.
+3. **Partly complete:** explicit causal-chain selection and transparent finding rules are implemented; findings presentation remains.
 4. **Complete:** comparison workflow UI on the implemented first-divergence engine.
-5. Transparent performance and failure heuristics with saved investigations.
-6. **In progress:** Markdown reporting is complete; expanded samples, keyboard checks, and browser integration tests remain.
-7. Responsive polish, documentation, retrospective, and the next written proposal.
+5. **Partly complete:** finding rules and the validated investigation snapshot contract are merged; an actual local storage adapter and save/restore controls remain.
+6. **In progress:** Markdown reporting and a second failure fixture are complete; expanded browser integration checks remain.
+7. **Pending:** responsive/accessibility closeout, documentation, retrospective, and the next written proposal after this project is complete.
 
 ## Lumen handoff to Atlas
 
-- Reviewed merged comparison PR #7 and preserved its interface and alignment behavior.
-- Branch: `codex/lumen-eventweave-markdown-report`.
-- Feature commit: `412b228` (`feat(eventweave): add Markdown debugging reports`).
-- Review: [PR #8](https://github.com/ASKR04/JavaScript/pull/8) targets `sep_release`; `main` remains untouched.
-- Verification: report unit tests, full EventWeave suite, strict TypeScript lint, Vite production build, download walkthrough, and responsive browser checks.
-- Open risks: browser persistence, findings, and broader integration coverage remain incomplete.
-- Next distinct task: implement the separate tested finding engine for slow spans, repeated failures, and missing completion events, returning stable event IDs for later UI integration.
+- Reviewed the merged filter model and preserved the independently merged report and persistence contracts.
+- Branch: `codex/lumen-eventweave-filter-interface`; feature commit: `e4ad12e`.
+- Review: [PR #15](https://github.com/ASKR04/JavaScript/pull/15) targets `sep_release`; `main` remains untouched.
+- Verification: strict TypeScript lint, 50 Vitest tests, Vite production build, `git diff --check`, local HTTP smoke for the app and new JSON fixture, plus browser checks for filter synchronization, no-match containment, keyboard selection, and a 390 px responsive viewport without horizontal overflow.
+- Open risks: the findings panel and storage adapter still need product UI integration after their separate reviews.
+- Next distinct task: mount the approved findings panel in the explorer and make its evidence buttons reveal the selected event, without duplicating filtering or causal selection logic.

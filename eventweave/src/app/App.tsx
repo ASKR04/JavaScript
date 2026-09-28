@@ -4,6 +4,7 @@ import { selectCausalChain } from "../lib/trace-analysis";
 import { describeAlignment, describeFirstDivergence } from "../lib/comparison-presentation";
 import { compareTraceSessions } from "../lib/trace-comparison";
 import { buildDebuggingReport } from "../lib/debugging-report";
+import { EMPTY_EVENT_FILTERS, eventFilterOptions, filterTimelineEvents, hasEventFilters, type EventFilters } from "../lib/event-filters";
 import { DEFAULT_IMPORT_LIMITS, detectTraceFormat } from "../lib/trace-parser";
 import { buildSessionTimeline, findTimelineSelection, type TimelineNavigationKey } from "../lib/timeline-view";
 import { createTraceImportWorker } from "../workers/create-trace-import-worker";
@@ -33,6 +34,7 @@ export const App = () => {
   const [selectedEventId, setSelectedEventId] = useState<string | undefined>();
   const [baselineSessionId, setBaselineSessionId] = useState<string | undefined>();
   const [reportStatus, setReportStatus] = useState("");
+  const [filters, setFilters] = useState<EventFilters>(EMPTY_EVENT_FILTERS);
   const workerRef = useRef<Worker | undefined>(undefined);
   const activeRequestIdRef = useRef<string | undefined>(undefined);
   const baselineRequestIdRef = useRef<string | undefined>(undefined);
@@ -58,6 +60,7 @@ export const App = () => {
     const firstSession = state.trace?.sessions[0];
     setSelectedSessionId(firstSession?.id);
     setSelectedEventId(firstSession?.eventIds[0]);
+    setFilters(EMPTY_EVENT_FILTERS);
   }, [state.trace]);
 
   useEffect(() => {
@@ -70,10 +73,16 @@ export const App = () => {
       : undefined,
     [selectedSessionId, state.trace],
   );
-  const selectedEvent = timeline?.events.find(({ event }) => event.id === selectedEventId)?.event;
+  const filterOptions = useMemo(() => eventFilterOptions(timeline?.events ?? []), [timeline]);
+  const visibleEvents = useMemo(() => filterTimelineEvents(timeline?.events ?? [], filters), [filters, timeline]);
+  const eventOrderById = useMemo(
+    () => new Map(timeline?.events.map(({ event }, index) => [event.id, index + 1]) ?? []),
+    [timeline],
+  );
+  const selectedEvent = visibleEvents.find(({ event }) => event.id === selectedEventId)?.event ?? visibleEvents[0]?.event;
   const causalChain = useMemo(
-    () => state.trace && selectedEventId ? selectCausalChain(state.trace, selectedEventId) : undefined,
-    [selectedEventId, state.trace],
+    () => state.trace && selectedEvent ? selectCausalChain(state.trace, selectedEvent.id) : undefined,
+    [selectedEvent, state.trace],
   );
   const comparison = useMemo(
     () => baselineState.trace && baselineSessionId && state.trace && selectedSessionId
@@ -86,13 +95,14 @@ export const App = () => {
     setSelectedSessionId(sessionId);
     const session = state.trace?.sessions.find(({ id }) => id === sessionId);
     setSelectedEventId(session?.eventIds[0]);
+    setFilters(EMPTY_EVENT_FILTERS);
   };
 
   const handleTimelineKey = (event: React.KeyboardEvent<HTMLButtonElement>) => {
-    if (!timelineNavigationKeys.has(event.key as TimelineNavigationKey) || !timeline) return;
+    if (!timelineNavigationKeys.has(event.key as TimelineNavigationKey) || visibleEvents.length === 0) return;
     event.preventDefault();
-    const eventIds = timeline.events.map(({ event: timelineEvent }) => timelineEvent.id);
-    const nextId = findTimelineSelection(eventIds, selectedEventId ?? "", event.key as TimelineNavigationKey);
+    const eventIds = visibleEvents.map(({ event: timelineEvent }) => timelineEvent.id);
+    const nextId = findTimelineSelection(eventIds, selectedEvent?.id ?? "", event.key as TimelineNavigationKey);
     if (!nextId) return;
     setSelectedEventId(nextId);
     const nextIndex = eventIds.indexOf(nextId);
@@ -100,11 +110,11 @@ export const App = () => {
   };
 
   const downloadReport = () => {
-    if (!state.trace || !selectedSessionId || !selectedEventId) return;
+    if (!state.trace || !selectedSessionId || !selectedEvent) return;
     const report = buildDebuggingReport({
       trace: state.trace,
       sessionId: selectedSessionId,
-      selectedEventId,
+      selectedEventId: selectedEvent.id,
       generatedAt: new Date().toISOString(),
       comparison,
     });
@@ -263,10 +273,11 @@ export const App = () => {
                 <strong>{isBusy ? "Choose another trace" : "Select or drop a trace"}</strong>
                 <span>Only this browser reads the file</span>
               </label>
-              <div className="sample-links" aria-label="Sample trace downloads">
+              <div className="sample-links" aria-label="Sample traces">
                 <span>Need a known-good file?</span>
                 <button type="button" onClick={() => void importSample("/samples/checkout-success.json", "checkout-success.json")}>Open JSON sample</button>
                 <button type="button" onClick={() => void importSample("/samples/checkout-failure.ndjson", "checkout-failure.ndjson")}>Open NDJSON sample</button>
+                <button type="button" onClick={() => void importSample("/samples/profile-save-failure.json", "profile-save-failure.json")}>Open profile-save failure</button>
               </div>
             </div>
 
@@ -310,7 +321,7 @@ export const App = () => {
           </div>
         </section>
 
-        {state.trace && timeline && selectedEvent && (
+        {state.trace && timeline && (
           <section className="explorer" aria-labelledby="explorer-title">
             <div className="explorer-heading">
               <div>
@@ -328,7 +339,7 @@ export const App = () => {
                     ))}
                   </select>
                 </label>
-                <button className="report-button" type="button" onClick={downloadReport}>Download debugging report</button>
+                <button className="report-button" type="button" onClick={downloadReport} disabled={!selectedEvent}>Download debugging report</button>
                 <p className="report-status" role="status" aria-live="polite">{reportStatus || "Markdown export stays on this device until you choose to share it."}</p>
               </div>
             </div>
@@ -339,12 +350,41 @@ export const App = () => {
                   <div><p className="eyebrow">Visual timeline</p><h3 id="timeline-title">{timeline.session.id}</h3></div>
                   <span>{formatDuration(timeline.session.durationMs)} total</span>
                 </div>
+                <div className="event-filter-panel" aria-labelledby="event-filter-title">
+                  <div className="event-filter-heading">
+                    <h4 id="event-filter-title">Filter events</h4>
+                    <button type="button" onClick={() => setFilters(EMPTY_EVENT_FILTERS)} disabled={!hasEventFilters(filters)}>Clear filters</button>
+                  </div>
+                  <div className="event-filter-controls">
+                    <label><span>Actor</span><select value={filters.actor} onChange={(event) => setFilters({ ...filters, actor: event.currentTarget.value })}>
+                      <option value="">All actors</option>
+                      {filterOptions.actors.map((actor) => <option key={actor} value={actor}>{actor}</option>)}
+                    </select></label>
+                    <label><span>Type</span><select value={filters.type} onChange={(event) => setFilters({ ...filters, type: event.currentTarget.value })}>
+                      <option value="">All types</option>
+                      {filterOptions.types.map((type) => <option key={type} value={type}>{type}</option>)}
+                    </select></label>
+                    <label><span>Outcome</span><select value={filters.outcome} onChange={(event) => setFilters({ ...filters, outcome: event.currentTarget.value as EventFilters["outcome"] })}>
+                      <option value="all">All outcomes</option>
+                      <option value="success">Success</option>
+                      <option value="failure">Failure</option>
+                      <option value="unknown">Unknown</option>
+                    </select></label>
+                    <label><span>Minimum duration (ms)</span><input type="number" min="0" step="1" inputMode="numeric" value={filters.minimumDurationMs ?? ""} onChange={(event) => {
+                      const value = event.currentTarget.value;
+                      const duration = Number(value);
+                      setFilters({ ...filters, minimumDurationMs: value === "" || !Number.isFinite(duration) ? undefined : Math.max(0, duration) });
+                    }} /></label>
+                  </div>
+                  <p className="event-filter-count" role="status" aria-live="polite">Showing {visibleEvents.length} of {timeline.events.length} events. Filtering does not change the imported trace or comparison.</p>
+                </div>
                 <p className="interaction-hint" id="timeline-instructions">
                   Use arrow keys, Home, or End to move between events.
                 </p>
+                {visibleEvents.length === 0 && <p className="filter-empty">No events match these filters. Adjust or clear them to see evidence.</p>}
                 <ol className="timeline" aria-describedby="timeline-instructions">
-                  {timeline.events.map((item, index) => {
-                    const isSelected = item.event.id === selectedEvent.id;
+                  {visibleEvents.map((item, index) => {
+                    const isSelected = item.event.id === selectedEvent?.id;
                     return (
                       <li key={item.event.id}>
                         <button
@@ -357,7 +397,7 @@ export const App = () => {
                           onClick={() => setSelectedEventId(item.event.id)}
                           onKeyDown={handleTimelineKey}
                         >
-                          <span className="event-order" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+                          <span className="event-order" aria-hidden="true">{String(eventOrderById.get(item.event.id) ?? index + 1).padStart(2, "0")}</span>
                           <span className="event-copy">
                             <strong>{item.event.message}</strong>
                             <small>{item.event.actor} · {item.event.type}</small>
@@ -378,34 +418,40 @@ export const App = () => {
               </div>
 
               <aside id="selected-event-evidence" className="evidence-card" aria-labelledby="evidence-title">
-                <div className="panel-heading">
-                  <div><p className="eyebrow">Selected evidence</p><h3 id="evidence-title">{selectedEvent.message}</h3></div>
-                  <span className={`outcome outcome--${selectedEvent.outcome}`}>{selectedEvent.outcome}</span>
-                </div>
-                <dl className="event-details">
-                  <div><dt>Actor</dt><dd>{selectedEvent.actor}</dd></div>
-                  <div><dt>Type</dt><dd>{selectedEvent.type}</dd></div>
-                  <div><dt>Started</dt><dd>{new Date(selectedEvent.timestamp).toLocaleTimeString()}</dd></div>
-                  <div><dt>Duration</dt><dd>{selectedEvent.durationMs === undefined ? "Not recorded" : formatDuration(selectedEvent.durationMs)}</dd></div>
-                </dl>
-                <div className="causal-summary">
-                  <h4>Causal context</h4>
-                  <p>
-                    {causalChain?.ancestors.length ?? 0} ancestor{causalChain?.ancestors.length === 1 ? "" : "s"}
-                    {" · "}
-                    {causalChain?.descendants.length ?? 0} downstream event{causalChain?.descendants.length === 1 ? "" : "s"}
-                  </p>
-                  {causalChain && causalChain.ancestors.length > 0 && (
-                    <p><strong>Ancestor path:</strong> {causalChain.ancestors.map(({ message }) => message).join(" → ")}</p>
-                  )}
-                  {causalChain && causalChain.descendants.length > 0 && (
-                    <div className="downstream-events">
-                      <strong>Downstream evidence</strong>
-                      <ul>{causalChain.descendants.map(({ id, message }) => <li key={id}>{message}</li>)}</ul>
+                {selectedEvent ? (
+                  <>
+                    <div className="panel-heading">
+                      <div><p className="eyebrow">Selected evidence</p><h3 id="evidence-title">{selectedEvent.message}</h3></div>
+                      <span className={`outcome outcome--${selectedEvent.outcome}`}>{selectedEvent.outcome}</span>
                     </div>
-                  )}
-                  {!selectedEvent.parentId && causalChain?.descendants.length === 0 && <p>No explicit parent relations connect this event.</p>}
-                </div>
+                    <dl className="event-details">
+                      <div><dt>Actor</dt><dd>{selectedEvent.actor}</dd></div>
+                      <div><dt>Type</dt><dd>{selectedEvent.type}</dd></div>
+                      <div><dt>Started</dt><dd>{new Date(selectedEvent.timestamp).toLocaleTimeString()}</dd></div>
+                      <div><dt>Duration</dt><dd>{selectedEvent.durationMs === undefined ? "Not recorded" : formatDuration(selectedEvent.durationMs)}</dd></div>
+                    </dl>
+                    <div className="causal-summary">
+                      <h4>Causal context</h4>
+                      <p>
+                        {causalChain?.ancestors.length ?? 0} ancestor{causalChain?.ancestors.length === 1 ? "" : "s"}
+                        {" · "}
+                        {causalChain?.descendants.length ?? 0} downstream event{causalChain?.descendants.length === 1 ? "" : "s"}
+                      </p>
+                      {causalChain && causalChain.ancestors.length > 0 && (
+                        <p><strong>Ancestor path:</strong> {causalChain.ancestors.map(({ message }) => message).join(" → ")}</p>
+                      )}
+                      {causalChain && causalChain.descendants.length > 0 && (
+                        <div className="downstream-events">
+                          <strong>Downstream evidence</strong>
+                          <ul>{causalChain.descendants.map(({ id, message }) => <li key={id}>{message}</li>)}</ul>
+                        </div>
+                      )}
+                      {!selectedEvent.parentId && causalChain?.descendants.length === 0 && <p>No explicit parent relations connect this event.</p>}
+                    </div>
+                  </>
+                ) : (
+                  <div><p className="eyebrow">Selected evidence</p><h3 id="evidence-title">No matching event</h3><p>Clear or adjust the filters to inspect event evidence.</p></div>
+                )}
               </aside>
             </div>
 
@@ -416,16 +462,16 @@ export const App = () => {
               </div>
               <div className="table-scroll" tabIndex={0} aria-label="Scrollable event table">
                 <table>
-                  <caption>Events in {timeline.session.id}, ordered by occurrence</caption>
+                  <caption>Matching events in {timeline.session.id}, ordered by occurrence</caption>
                   <thead><tr><th scope="col">Time</th><th scope="col">Event</th><th scope="col">Actor</th><th scope="col">Type</th><th scope="col">Duration</th><th scope="col">Outcome</th></tr></thead>
                   <tbody>
-                    {timeline.events.map((item) => (
-                      <tr key={item.event.id} className={item.event.id === selectedEvent.id ? "table-row--selected" : undefined}>
+                    {visibleEvents.map((item) => (
+                      <tr key={item.event.id} className={item.event.id === selectedEvent?.id ? "table-row--selected" : undefined}>
                         <td>+{formatDuration(item.offsetMs)}</td>
                         <th scope="row">
                           <button
                             type="button"
-                            aria-pressed={item.event.id === selectedEvent.id}
+                            aria-pressed={item.event.id === selectedEvent?.id}
                             aria-controls="selected-event-evidence"
                             onClick={() => setSelectedEventId(item.event.id)}
                           >
@@ -498,7 +544,7 @@ export const App = () => {
                               <td>{isFirst ? "First divergence" : index + 1}</td>
                               <td>{alignment.baseline?.message ?? "Missing"}</td>
                               <th scope="row">
-                                {focusId ? <button type="button" onClick={() => setSelectedEventId(focusId)}>{alignment.candidate?.message}</button> : "Missing"}
+                                {focusId ? <button type="button" onClick={() => { setFilters(EMPTY_EVENT_FILTERS); setSelectedEventId(focusId); }}>{alignment.candidate?.message}</button> : "Missing"}
                               </th>
                               <td>{alignment.matchBasis} · {Math.round(alignment.confidence * 100)}%</td>
                               <td>{describeAlignment(alignment)}</td>

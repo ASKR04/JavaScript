@@ -11,7 +11,7 @@ This repository collects original JavaScript and front-end focused projects buil
 
 ## Active Project
 
-[EventWeave](./eventweave) was approved on 2026-09-04 and is now in its one-week delivery cycle. Atlas and Lumen contribute coordinated core-systems and product-experience shifts on one shared feature branch and pull request into `aug_release`.
+[EventWeave](./eventweave) was approved on 2026-09-04. Its core trace workflow is on `sep_release`; the original delivery window has slipped and closeout is in progress. Each developer now uses a separate feature branch and review PR into the monthly release branch. Promotion into `main` requires a separately approved monthly PR.
 
 ## Repository Goal
 
@@ -21,7 +21,12 @@ Each project in this repository is designed to be useful, documented, and struct
 
 | Project | Phase | Date | Engineering evidence | Review |
 | --- | --- | --- | --- | --- |
-| EventWeave | Event filter model | 2026-09-14 | Composable actor, type, outcome, and inclusive duration predicates with canonical ordering, sorted options, missing-duration semantics, and focused tests | Lumen branch `codex/lumen-eventweave-event-filters` |
+| EventWeave | Event filter model | 2026-09-14 | Composable actor, type, outcome, and inclusive duration predicates with canonical ordering, sorted options, missing-duration semantics, and focused tests | [PR #10](https://github.com/ASKR04/JavaScript/pull/10) merged into `sep_release` |
+| EventWeave | Investigation snapshot contract | 2026-09-15 | Versioned, bounded, trace-bound snapshots with runtime validation and stale-selection rejection; storage and UI remain pending | [PR #11](https://github.com/ASKR04/JavaScript/pull/11) merged into `sep_release` |
+| EventWeave | Cross-feature journey tests | 2026-09-21 | Checkout fixtures exercised through import, timeline, causal analysis, comparison, reporting, findings, and investigation restore | [PR #12](https://github.com/ASKR04/JavaScript/pull/12) merged into `sep_release` |
+| EventWeave | Accessible findings panel | 2026-09-21 | Tested standalone findings presentation with evidence-selection controls; explorer mounting remains | [PR #13](https://github.com/ASKR04/JavaScript/pull/13) merged into `sep_release` |
+| EventWeave | Browser investigation store | 2026-09-21 | IndexedDB save/load/list/remove adapter with trace-bound validation and focused tests; save/restore UI remains | [PR #14](https://github.com/ASKR04/JavaScript/pull/14) merged into `sep_release` |
+| EventWeave | Filter interface and second failure fixture | 2026-09-21 | Shared timeline/table filtering, explicit empty state, and profile-save failure sample with parser coverage | [Draft PR #15](https://github.com/ASKR04/JavaScript/pull/15) into `sep_release` |
 | SignalForge | Foundation | 2026-08-10 | React/TypeScript architecture, responsive dashboard, typed domain model, and Mermaid documentation | Merged on `main` |
 | EventWeave | Investigation persistence contract | 2026-09-15 | Versioned bounded snapshots, deterministic trace fingerprints, runtime shape validation, stale-selection rejection, and storage-independent round trips | Atlas branch `codex/atlas-eventweave-investigation-persistence` |
 | SignalForge | Editable workspace | 2026-08-10 | Immutable state transitions, versioned browser persistence, runtime data guards, accessible form controls, and Vitest coverage | [PR #1](https://github.com/ASKR04/JavaScript/pull/1) |
