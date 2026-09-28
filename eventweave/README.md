@@ -1,6 +1,6 @@
 # EventWeave
 
-> Project status: approved and in active development. Core import, timeline, comparison, findings logic, report export, filter model, investigation snapshot contract, journey tests, and a standalone findings panel are merged into `sep_release`. Filter presentation, storage UI, findings mounting, and final closeout remain in progress.
+> Project status: approved and in active development. Core import, timeline, comparison, findings logic and review, report export, filter presentation, investigation persistence service, and journey tests are merged into `sep_release`. Storage UI, findings mounting, and final closeout remain in progress.
 
 EventWeave is a privacy-first workflow trace explorer for front-end engineers. It turns JSON or newline-delimited event logs into an interactive view of user journeys, state transitions, latency, and failure clusters without uploading product telemetry to an external service.
 
@@ -69,7 +69,7 @@ The current Atlas and Lumen increments establish a tested core contract and the 
 - A standalone findings review panel with an accessible severity filter linked to its controlled results and described by a live count, honest filtered-empty state, and 44 px evidence controls, ready to mount after the current explorer work merges.
 - A typed worker request/response contract and module worker entry.
 - A pure composable event-filter model for exact actor, type, outcome, and inclusive minimum-duration refinement while preserving canonical order.
-- On this Lumen branch, a shared accessible filter panel narrows both the timeline and semantic table, preserves canonical step numbers, handles empty results, and reveals cross-view jump targets.
+- A shared accessible filter panel narrows both the timeline and semantic table, preserves canonical step numbers, handles empty results, and reveals cross-view jump targets.
 - A worker-backed select-or-drop import panel with stale-result suppression, failure recovery, and a semantic session summary.
 - A pure bounded timeline view model plus session navigation, roving keyboard event selection, synchronized evidence details, and a scroll-contained semantic table alternative.
 - Selected-event causal context powered by the explicit-parent selector, with branched downstream evidence presented without implying a false linear path.
