@@ -61,3 +61,7 @@ Each project in this repository is designed to be useful, documented, and struct
 | EventWeave | Investigation service boundary | 2026-09-24 | Typed save/list/restore/remove facade plus an IndexedDB-backed journey test that restores selection/filters and rejects a changed trace | [PR #16](https://github.com/ASKR04/JavaScript/pull/16) into `sep_release` |
 
 See the [EventWeave architecture notes](./eventweave/docs/architecture.md) for its current component and data-flow diagrams.
+
+## Active Review Queue
+
+- EventWeave findings review controls: accessible severity filtering linked to controlled results and live status, filtered-empty guidance, and 44 px evidence actions in [PR #17](https://github.com/ASKR04/JavaScript/pull/17).

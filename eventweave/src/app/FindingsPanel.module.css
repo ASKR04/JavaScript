@@ -21,6 +21,10 @@
 .disclaimer, .empty { color: #526b62; font-size: .82rem; line-height: 1.55; }
 .disclaimer { margin: 12px 0 20px; }
 .empty { margin: 0; padding: 18px; border-radius: 12px; background: #edf1ed; }
+.filters { display: grid; grid-template-columns: auto minmax(150px, 220px); gap: 12px; align-items: center; margin-bottom: 8px; }
+.filters label { color: #49665e; font-size: .74rem; font-weight: 800; }
+.filters select { width: 100%; min-height: 44px; padding: 8px 34px 8px 10px; border: 1px solid #9db6a8; border-radius: 9px; background: #fffdf8; color: #17352e; font: inherit; font-size: .78rem; }
+.filterStatus { margin: 0 0 16px; color: #60776f; font-size: .72rem; line-height: 1.5; }
 .list { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
 .finding { min-width: 0; padding: 18px; border: 1px solid #d2d9d3; border-radius: 13px; background: #fffdf8; }
 .finding h4 { margin: 0; overflow-wrap: anywhere; font-size: .92rem; }
@@ -29,7 +33,7 @@
 .warning { background: #fff0bf; color: #624d0c; }
 .critical { background: #ffe0da; color: #8d2e27; }
 .evidence { display: flex; flex-wrap: wrap; gap: 8px; }
-.evidence button { max-width: 100%; padding: 8px 10px; border: 1px solid #9db6a8; border-radius: 8px; background: #eef7f1; color: #174d3b; cursor: pointer; font: inherit; font-size: .75rem; font-weight: 700; text-align: left; overflow-wrap: anywhere; }
+.evidence button { display: inline-flex; align-items: center; max-width: 100%; min-height: 44px; padding: 8px 10px; border: 1px solid #9db6a8; border-radius: 8px; background: #eef7f1; color: #174d3b; cursor: pointer; font: inherit; font-size: .75rem; font-weight: 700; text-align: left; overflow-wrap: anywhere; }
 .evidence button:hover { background: #dcefe3; }
 .evidence button:focus-visible { outline: 3px solid #bd6d1a; outline-offset: 2px; }
 
@@ -37,4 +41,6 @@
   .panel { padding: 18px; }
   .finding { padding: 14px; }
   .findingHeading { flex-wrap: wrap; }
+  .filters { grid-template-columns: 1fr; gap: 6px; }
+  .filters select { max-width: none; }
 }
