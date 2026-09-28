@@ -11,7 +11,7 @@ This repository collects original JavaScript and front-end focused projects buil
 
 ## Active Project
 
-[EventWeave](./eventweave) was approved on 2026-09-04. Its core trace workflow is on `sep_release`; the original delivery window has slipped and closeout is in progress. Each developer now uses a separate feature branch and review PR into the monthly release branch. Promotion into `main` requires a separately approved monthly PR.
+[EventWeave](./eventweave) was approved on 2026-09-04. Its core trace workflow, filters, findings review, and investigation persistence service are on `sep_release`; the original delivery window has slipped and UI closeout is in progress. Each developer uses a separate feature branch and review PR into the monthly release branch. Promotion into `main` requires a separately approved monthly PR.
 
 ## Repository Goal
 
@@ -26,7 +26,8 @@ Each project in this repository is designed to be useful, documented, and struct
 | EventWeave | Cross-feature journey tests | 2026-09-21 | Checkout fixtures exercised through import, timeline, causal analysis, comparison, reporting, findings, and investigation restore | [PR #12](https://github.com/ASKR04/JavaScript/pull/12) merged into `sep_release` |
 | EventWeave | Accessible findings panel | 2026-09-21 | Tested standalone findings presentation with evidence-selection controls; explorer mounting remains | [PR #13](https://github.com/ASKR04/JavaScript/pull/13) merged into `sep_release` |
 | EventWeave | Browser investigation store | 2026-09-21 | IndexedDB save/load/list/remove adapter with trace-bound validation and focused tests; save/restore UI remains | [PR #14](https://github.com/ASKR04/JavaScript/pull/14) merged into `sep_release` |
-| EventWeave | Filter interface and second failure fixture | 2026-09-21 | Shared timeline/table filtering, explicit empty state, and profile-save failure sample with parser coverage | [Draft PR #15](https://github.com/ASKR04/JavaScript/pull/15) into `sep_release` |
+| EventWeave | Filter interface and second failure fixture | 2026-09-21 | Shared timeline/table filtering, explicit empty state, and profile-save failure sample with parser coverage | [PR #15](https://github.com/ASKR04/JavaScript/pull/15) merged into `sep_release` |
+| EventWeave | Findings severity review | 2026-09-24 | Accessible severity filtering linked to controlled results and live status, filtered-empty guidance, and 44 px evidence actions | [PR #17](https://github.com/ASKR04/JavaScript/pull/17) merged into `sep_release` |
 | SignalForge | Foundation | 2026-08-10 | React/TypeScript architecture, responsive dashboard, typed domain model, and Mermaid documentation | Merged on `main` |
 | EventWeave | Investigation persistence contract | 2026-09-15 | Versioned bounded snapshots, deterministic trace fingerprints, runtime shape validation, stale-selection rejection, and storage-independent round trips | Atlas branch `codex/atlas-eventweave-investigation-persistence` |
 | SignalForge | Editable workspace | 2026-08-10 | Immutable state transitions, versioned browser persistence, runtime data guards, accessible form controls, and Vitest coverage | [PR #1](https://github.com/ASKR04/JavaScript/pull/1) |
@@ -58,10 +59,10 @@ Each project in this repository is designed to be useful, documented, and struct
 | EventWeave | Accessible session timeline | 2026-09-10 | Bounded timeline geometry, session navigation, roving keyboard selection, synchronized causal evidence, semantic table alternative, and responsive browser checks | Local commit `e264745`; publication awaiting direct approval |
 | EventWeave | Comparison workflow | 2026-09-12 | Separate baseline import, session pairing, confidence, first-divergence evidence, aligned semantic table, and timeline jump-back controls | Lumen branch `codex/lumen-eventweave-compare-workflow` |
 | EventWeave | Markdown debugging report | 2026-09-13 | Safe filename generation, escaped imported content, selected causal evidence, full timeline, active comparison, and local-only download | Lumen commit `412b228`; [PR #8](https://github.com/ASKR04/JavaScript/pull/8) into `sep_release` |
-| EventWeave | Investigation service boundary | 2026-09-24 | Typed save/list/restore/remove facade plus an IndexedDB-backed journey test that restores selection/filters and rejects a changed trace | [PR #16](https://github.com/ASKR04/JavaScript/pull/16) into `sep_release` |
+| EventWeave | Investigation service boundary | 2026-09-24 | Typed save/list/restore/remove facade plus an IndexedDB-backed journey test that restores selection/filters and rejects a changed trace | [PR #16](https://github.com/ASKR04/JavaScript/pull/16) merged into `sep_release` |
 
 See the [EventWeave architecture notes](./eventweave/docs/architecture.md) for its current component and data-flow diagrams.
 
 ## Active Review Queue
 
-- EventWeave findings review controls: accessible severity filtering linked to controlled results and live status, filtered-empty guidance, and 44 px evidence actions in [PR #17](https://github.com/ASKR04/JavaScript/pull/17).
+- EventWeave restored-filter context proof: service-to-IndexedDB restore applies the saved filters, keeps the selected event visible, and preserves the imported trace on `codex/atlas-eventweave-restored-filter-context`.

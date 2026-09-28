@@ -102,7 +102,7 @@ Color may reinforce latency, outcome, and selection but cannot be the only statu
 
 Filtering is a pure projection over the selected session's canonical timeline. Exact actor, exact type, outcome, and inclusive minimum-duration predicates compose without mutating the normalized trace or recalculating event geometry. Missing durations do not behave like zero-duration spans, and available actor/type choices are uniquely sorted from the active session.
 
-The current Lumen branch wires one filter state to both the visual timeline and semantic table. Selection falls back to the first visible event when needed; zero matches show an explicit empty state and disable evidence export. A comparison-table jump clears filters so its target is revealed. Displayed step numbers retain canonical timeline positions even when intermediate events are hidden. Filtering never changes the imported trace or comparison result.
+The merged explorer wires one filter state to both the visual timeline and semantic table. Selection falls back to the first visible event when needed; zero matches show an explicit empty state and disable evidence export. A comparison-table jump clears filters so its target is revealed. Displayed step numbers retain canonical timeline positions even when intermediate events are hidden. Filtering never changes the imported trace or comparison result.
 
 ## Comparison Strategy
 
@@ -134,7 +134,7 @@ The investigation service composes the versioned snapshot contract with the Inde
 
 The store remains the authority for runtime shape, schema version, trace identity, and session-event membership. The service passes validation and storage errors through unchanged, so a caller either receives complete validated restore state or no state at all. Imported trace contents remain memory-only.
 
-The shared asynchronous IndexedDB test double now exercises both the adapter contract and the full service journey. The integration proof saves a failed-checkout investigation, verifies its compact list summary, restores the exact session/event/filter state, hides it from a different trace's list, and reports trace mismatch instead of applying stale state.
+The shared asynchronous IndexedDB test double now exercises both the adapter contract and the full service journey. The integration proof saves a failed-checkout investigation, verifies its compact list summary, restores the exact session/event/filter state, applies those filters to reveal the selected event without mutating the imported trace, hides the snapshot from a different trace's list, and reports trace mismatch instead of applying stale state.
 
 ## Testing Strategy
 
