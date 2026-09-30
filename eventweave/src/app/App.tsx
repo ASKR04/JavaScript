@@ -5,10 +5,13 @@ import { describeAlignment, describeFirstDivergence } from "../lib/comparison-pr
 import { compareTraceSessions } from "../lib/trace-comparison";
 import { buildDebuggingReport } from "../lib/debugging-report";
 import { EMPTY_EVENT_FILTERS, eventFilterOptions, filterTimelineEvents, hasEventFilters, type EventFilters } from "../lib/event-filters";
+import { createInvestigationService, type RestoredInvestigation } from "../lib/investigation-service";
+import { createInvestigationStore } from "../lib/investigation-store";
 import { DEFAULT_IMPORT_LIMITS, detectTraceFormat } from "../lib/trace-parser";
 import { buildSessionTimeline, findTimelineSelection, type TimelineNavigationKey } from "../lib/timeline-view";
 import { createTraceImportWorker } from "../workers/create-trace-import-worker";
 import type { TraceImportRequest, TraceImportResponse } from "../workers/trace-import-contract";
+import { InvestigationPanel } from "./InvestigationPanel";
 import { initialTraceImportState, reduceTraceImportState, type TraceImportAction } from "./trace-import-state";
 
 const createRequestId = (): string =>
@@ -35,6 +38,10 @@ export const App = () => {
   const [baselineSessionId, setBaselineSessionId] = useState<string | undefined>();
   const [reportStatus, setReportStatus] = useState("");
   const [filters, setFilters] = useState<EventFilters>(EMPTY_EVENT_FILTERS);
+  const investigationService = useMemo(
+    () => createInvestigationService(createInvestigationStore()),
+    [],
+  );
   const workerRef = useRef<Worker | undefined>(undefined);
   const activeRequestIdRef = useRef<string | undefined>(undefined);
   const baselineRequestIdRef = useRef<string | undefined>(undefined);
@@ -96,6 +103,21 @@ export const App = () => {
     const session = state.trace?.sessions.find(({ id }) => id === sessionId);
     setSelectedEventId(session?.eventIds[0]);
     setFilters(EMPTY_EVENT_FILTERS);
+  };
+
+  const restoreInvestigation = (investigation: RestoredInvestigation): string | undefined => {
+    if (!state.trace) return "Import the investigation's trace before restoring it.";
+    const restoredTimeline = buildSessionTimeline(state.trace, investigation.sessionId);
+    if (!restoredTimeline) return "The saved session is no longer available in this trace.";
+    const restoredEvents = filterTimelineEvents(restoredTimeline.events, investigation.filters);
+    if (!restoredEvents.some(({ event }) => event.id === investigation.eventId)) {
+      return "The saved filters no longer reveal the selected event, so nothing was changed.";
+    }
+    setSelectedSessionId(investigation.sessionId);
+    setFilters({ ...investigation.filters });
+    setSelectedEventId(investigation.eventId);
+    requestAnimationFrame(() => document.getElementById("selected-event-evidence")?.focus());
+    return undefined;
   };
 
   const handleTimelineKey = (event: React.KeyboardEvent<HTMLButtonElement>) => {
@@ -417,7 +439,7 @@ export const App = () => {
                 </ol>
               </div>
 
-              <aside id="selected-event-evidence" className="evidence-card" aria-labelledby="evidence-title">
+              <aside id="selected-event-evidence" className="evidence-card" aria-labelledby="evidence-title" tabIndex={-1}>
                 {selectedEvent ? (
                   <>
                     <div className="panel-heading">
@@ -454,6 +476,17 @@ export const App = () => {
                 )}
               </aside>
             </div>
+
+            {selectedEvent && (
+              <InvestigationPanel
+                service={investigationService}
+                trace={state.trace}
+                sessionId={timeline.session.id}
+                eventId={selectedEvent.id}
+                filters={filters}
+                onRestore={restoreInvestigation}
+              />
+            )}
 
             <div className="table-card" aria-labelledby="event-table-title">
               <div className="panel-heading">

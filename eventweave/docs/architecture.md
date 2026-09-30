@@ -136,6 +136,8 @@ The store remains the authority for runtime shape, schema version, trace identit
 
 The shared asynchronous IndexedDB test double now exercises both the adapter contract and the full service journey. The integration proof saves a failed-checkout investigation, verifies its compact list summary, restores the exact session/event/filter state, applies those filters to reveal the selected event without mutating the imported trace, hides the snapshot from a different trace's list, and reports trace mismatch instead of applying stale state.
 
+The React investigation panel depends only on the service interface. It saves the current trace-bound session, selected event, and filters; lists only summaries valid for the imported trace; and announces asynchronous outcomes through one polite status. Restore first verifies that the session exists and the restored filters still reveal the selected event, then applies session, copied filters, and selection in one React update and focuses the evidence region. Removal requires a second explicit action before deletion. Imported trace events are never serialized to IndexedDB.
+
 ## Testing Strategy
 
 - Implemented unit tests for JSON/NDJSON parsing, guards, deterministic normalization, size limits, identity integrity, relation integrity, and worker-message validation.
@@ -144,8 +146,8 @@ The shared asynchronous IndexedDB test double now exercises both the adapter con
 - Implemented fixture-backed timeline tests for canonical order, bounded geometry, missing sessions, adjacent keyboard movement, boundary keys, and stale-selection recovery.
 - Implemented rule tests proving findings and non-findings, inclusive duration boundaries, repeated-failure grouping, configurable completion vocabulary, stable evidence IDs, and invalid-setting rejection.
 - Implemented service-to-IndexedDB journey coverage for save, list, validated restore, and changed-trace rejection.
-- Planned component tests for accessible names, filters, and empty/error states.
-- Live browser checks cover successful sample import, roving timeline focus/selection, synchronized causal details, desktop layout, 390 × 844 containment, minimum control sizing, and clean browser logs. Comparison, report export, and expanded browser integration remain planned.
+- Implemented component contract tests for findings and investigation control names, privacy copy, status announcements, and disabled empty states; broader interaction coverage remains planned.
+- Live browser checks cover successful sample import, roving timeline focus/selection, synchronized causal details, local investigation save and atomic restore, desktop layout, 390 × 844 containment, minimum control sizing, and clean browser logs. Comparison, report export, and expanded browser integration remain planned.
 
 ## Decisions
 
@@ -156,8 +158,7 @@ The shared asynchronous IndexedDB test double now exercises both the adapter con
 
 ## Lumen handoff to Atlas
 
-- Reviewed Atlas commits: `03959ad` (`feat(eventweave): compare trace session divergence`) and `6060d7f` (`docs(eventweave): record comparison handoff`); the bounded matcher remains UI-independent and identifies the fixture-backed first meaningful divergence.
-- Commit: `e264745` (`feat(eventweave): add accessible session timeline`).
-- Verification: 26 Vitest tests, strict TypeScript lint, Vite production build, `git diff --check`, a live successful-fixture import, roving arrow-key focus/selection, synchronized causal evidence, clean browser logs, and a 390 × 844 responsive check with no page overflow. Timeline controls measured 70 px high and the session picker measured 46 px.
-- Open risks: comparison is not wired into the interface, browser persistence has not begun, and the shared branch still has no remote PR because GitHub publication requires direct user authorization.
-- Next distinct task: implement a tested transparent finding engine for slow spans, repeated failures, and missing completion events, returning stable event IDs that the existing explorer can select while leaving findings presentation to Lumen.
+- Added accessible local investigation controls on `codex/lumen-eventweave-investigation-controls`, using the merged service/store boundary without exposing serialized payloads to React.
+- Verification: 69 Vitest tests, strict TypeScript lint, Vite production build, `git diff --check`, live save and atomic restore, 390 × 844 containment, 44 px controls, and clean browser logs.
+- Open risks: findings mounting, final workflow regression, closeout retrospective, and explicit user authorization before a September promotion PR into `main`.
+- Next distinct task: prove through a focused integration test that replacing the imported trace refreshes the investigation list without exposing or applying snapshots from the previous trace.

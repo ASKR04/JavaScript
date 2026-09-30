@@ -1,6 +1,6 @@
 # EventWeave
 
-> Project status: approved and in active development. Core import, timeline, comparison, findings logic and review, report export, filter presentation, investigation persistence service, and journey tests are merged into `sep_release`. Storage UI, findings mounting, and final closeout remain in progress.
+> Project status: approved and in active development. Core import, timeline, comparison, findings logic and review, report export, filter presentation, investigation persistence service, and journey tests are merged into `sep_release`. Investigation controls are ready on the current Lumen branch; findings mounting and final closeout remain.
 
 EventWeave is a privacy-first workflow trace explorer for front-end engineers. It turns JSON or newline-delimited event logs into an interactive view of user journeys, state transitions, latency, and failure clusters without uploading product telemetry to an external service.
 
@@ -76,6 +76,7 @@ The current Atlas and Lumen increments establish a tested core contract and the 
 - A deterministic session-alignment engine that reports match basis, confidence, unmatched events, and the first meaningful divergence.
 - A baseline-versus-candidate comparison workflow with separate local imports, session selection, confidence, an aligned semantic table, and timeline jump-back controls.
 - A safe local Markdown debugging report covering the selected event, explicit causal context, full session timeline, and active comparison evidence.
+- Accessible investigation controls save, list, restore, and remove trace-bound session, event, and filter context in IndexedDB without persisting imported trace contents.
 - Successful and failed checkout fixtures that model the same realistic journey.
 - A second JSON failure fixture models a profile save rejected by an unavailable service, with a parser test confirming the recorded failure and recovery sequence.
 - A responsive, accessible React workspace that communicates the local-only product promise.
@@ -106,6 +107,8 @@ flowchart LR
 Atlas's closeout service composes the runtime-validated snapshot contract with the IndexedDB adapter without exposing serialized storage data to React. Save injects an ID and timestamp, list returns compact summaries, restore returns only the validated selection and copied filters, and remove delegates storage deletion. Imported trace contents remain in memory and are never written into an investigation snapshot.
 
 Validation and storage failures pass through unchanged, so UI controls cannot receive partial restore state. Focused tests cover generated metadata, summary privacy, restore mapping, error propagation, and deletion delegation. A complete service-to-IndexedDB journey test saves the failed checkout selection and filters, lists and restores them, then confirms the same snapshot cannot be applied to the successful trace.
+
+The current Lumen controls expose this boundary without serialized storage details. Restore validates that the saved filters still reveal the saved event before React applies session, filters, and selection together, then moves focus to the selected evidence. Removal requires an explicit second action. Pending, success, validation, and storage outcomes use one polite live status; all controls remain at least 44 px high and fit a 390 px viewport.
 
 ## Project Structure
 
@@ -140,15 +143,13 @@ eventweave/
 2. **Complete:** session navigation, an accessible event timeline/table, and synchronized causal context.
 3. **Partly complete:** explicit causal-chain selection and transparent finding rules are implemented; findings presentation remains.
 4. **Complete:** comparison workflow UI on the implemented first-divergence engine.
-5. **Partly complete:** finding rules and the validated investigation snapshot contract are merged; an actual local storage adapter and save/restore controls remain.
-6. **In progress:** Markdown reporting and a second failure fixture are complete; expanded browser integration checks remain.
+5. **Review pending:** the validated snapshot contract, IndexedDB adapter, service, and save/list/restore/remove controls are implemented; the control branch still requires user review.
+6. **In progress:** Markdown reporting, the second failure fixture, and investigation browser checks are complete; expanded final regression remains.
 7. **Pending:** responsive/accessibility closeout, documentation, retrospective, and the next written proposal after this project is complete.
 
 ## Lumen handoff to Atlas
 
-- Reviewed the merged filter model and preserved the independently merged report and persistence contracts.
-- Branch: `codex/lumen-eventweave-filter-interface`; feature commit: `e4ad12e`.
-- Review: [PR #15](https://github.com/ASKR04/JavaScript/pull/15) targets `sep_release`; `main` remains untouched.
-- Verification: strict TypeScript lint, 50 Vitest tests, Vite production build, `git diff --check`, local HTTP smoke for the app and new JSON fixture, plus browser checks for filter synchronization, no-match containment, keyboard selection, and a 390 px responsive viewport without horizontal overflow.
-- Open risks: the findings panel and storage adapter still need product UI integration after their separate reviews.
-- Next distinct task: mount the approved findings panel in the explorer and make its evidence buttons reveal the selected event, without duplicating filtering or causal selection logic.
+- Branch: `codex/lumen-eventweave-investigation-controls` from merged `sep_release` after PR #18.
+- Verification: strict TypeScript lint, 69 Vitest tests, Vite production build, `git diff --check`, live save and atomic restore, a 390 px responsive review without horizontal overflow, and clean browser logs.
+- Open risks: the findings panel remains standalone, final end-to-end regression and retrospective remain, and September promotion still requires the user's explicit release date/time.
+- Next distinct task: add a focused integration assertion that an investigation saved for one trace never appears after a replacement trace is imported, while preserving the existing service/store trace-mismatch behavior.
