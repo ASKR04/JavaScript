@@ -60,9 +60,10 @@ Each project in this repository is designed to be useful, documented, and struct
 | EventWeave | Comparison workflow | 2026-09-12 | Separate baseline import, session pairing, confidence, first-divergence evidence, aligned semantic table, and timeline jump-back controls | Lumen branch `codex/lumen-eventweave-compare-workflow` |
 | EventWeave | Markdown debugging report | 2026-09-13 | Safe filename generation, escaped imported content, selected causal evidence, full timeline, active comparison, and local-only download | Lumen commit `412b228`; [PR #8](https://github.com/ASKR04/JavaScript/pull/8) into `sep_release` |
 | EventWeave | Investigation service boundary | 2026-09-24 | Typed save/list/restore/remove facade plus an IndexedDB-backed journey test that restores selection/filters and rejects a changed trace | [PR #16](https://github.com/ASKR04/JavaScript/pull/16) merged into `sep_release` |
+| EventWeave | Investigation controls | 2026-09-29 | Accessible local save/list/restore/remove controls with atomic context restore, trace-content privacy, responsive containment, and live browser verification | Lumen branch `codex/lumen-eventweave-investigation-controls` |
 
 See the [EventWeave architecture notes](./eventweave/docs/architecture.md) for its current component and data-flow diagrams.
 
 ## Active Review Queue
 
-- EventWeave restored-filter context proof: service-to-IndexedDB restore applies the saved filters, keeps the selected event visible, and preserves the imported trace on `codex/atlas-eventweave-restored-filter-context`.
+- EventWeave investigation controls: local save/list/restore/remove UI with atomic session, event, and filter restore on `codex/lumen-eventweave-investigation-controls`.
