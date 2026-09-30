@@ -4,13 +4,14 @@ import { selectCausalChain } from "../lib/trace-analysis";
 import { describeAlignment, describeFirstDivergence } from "../lib/comparison-presentation";
 import { compareTraceSessions } from "../lib/trace-comparison";
 import { buildDebuggingReport } from "../lib/debugging-report";
-import { EMPTY_EVENT_FILTERS, eventFilterOptions, filterTimelineEvents, hasEventFilters, type EventFilters } from "../lib/event-filters";
+import { EMPTY_EVENT_FILTERS, eventFilterOptions, filterTimelineEvents, hasEventFilters, revealEventFilters, type EventFilters } from "../lib/event-filters";
 import { createInvestigationService, type RestoredInvestigation } from "../lib/investigation-service";
 import { createInvestigationStore } from "../lib/investigation-store";
 import { DEFAULT_IMPORT_LIMITS, detectTraceFormat } from "../lib/trace-parser";
 import { buildSessionTimeline, findTimelineSelection, type TimelineNavigationKey } from "../lib/timeline-view";
 import { createTraceImportWorker } from "../workers/create-trace-import-worker";
 import type { TraceImportRequest, TraceImportResponse } from "../workers/trace-import-contract";
+import { FindingsPanel } from "./FindingsPanel";
 import { InvestigationPanel } from "./InvestigationPanel";
 import { initialTraceImportState, reduceTraceImportState, type TraceImportAction } from "./trace-import-state";
 
@@ -118,6 +119,14 @@ export const App = () => {
     setSelectedEventId(investigation.eventId);
     requestAnimationFrame(() => document.getElementById("selected-event-evidence")?.focus());
     return undefined;
+  };
+
+  const revealFindingEvidence = (eventId: string) => {
+    const target = timeline?.events.find(({ event }) => event.id === eventId)?.event;
+    if (!target) return;
+    setFilters(revealEventFilters(target, filters));
+    setSelectedEventId(eventId);
+    requestAnimationFrame(() => document.getElementById("selected-event-evidence")?.focus());
   };
 
   const handleTimelineKey = (event: React.KeyboardEvent<HTMLButtonElement>) => {
@@ -476,6 +485,12 @@ export const App = () => {
                 )}
               </aside>
             </div>
+
+            <FindingsPanel
+              trace={state.trace}
+              sessionId={timeline.session.id}
+              onSelectEvent={revealFindingEvidence}
+            />
 
             {selectedEvent && (
               <InvestigationPanel

@@ -11,7 +11,7 @@ This repository collects original JavaScript and front-end focused projects buil
 
 ## Active Project
 
-[EventWeave](./eventweave) was approved on 2026-09-04. Its core trace workflow, filters, findings review, and investigation persistence service are on `sep_release`; the original delivery window has slipped and UI closeout is in progress. Each developer uses a separate feature branch and review PR into the monthly release branch. Promotion into `main` requires a separately approved monthly PR.
+[EventWeave](./eventweave) was approved on 2026-09-04. Its approved product scope is feature-complete on the final closeout branch after missing the original delivery window. The closeout PR must merge into `sep_release`, followed by a separate user-reviewed promotion PR into `main`. [TraceRelay](./docs/proposals/tracerelay.md) is the next proposal and must not begin without explicit approval.
 
 ## Repository Goal
 
@@ -61,9 +61,10 @@ Each project in this repository is designed to be useful, documented, and struct
 | EventWeave | Markdown debugging report | 2026-09-13 | Safe filename generation, escaped imported content, selected causal evidence, full timeline, active comparison, and local-only download | Lumen commit `412b228`; [PR #8](https://github.com/ASKR04/JavaScript/pull/8) into `sep_release` |
 | EventWeave | Investigation service boundary | 2026-09-24 | Typed save/list/restore/remove facade plus an IndexedDB-backed journey test that restores selection/filters and rejects a changed trace | [PR #16](https://github.com/ASKR04/JavaScript/pull/16) merged into `sep_release` |
 | EventWeave | Investigation controls | 2026-09-29 | Accessible local save/list/restore/remove controls with atomic context restore, trace-content privacy, responsive containment, and live browser verification | Lumen branch `codex/lumen-eventweave-investigation-controls` |
+| EventWeave | Portfolio closeout | 2026-09-29 | Integrated findings evidence, compatible-filter reveal behavior, replacement-trace snapshot isolation, final regression, retrospective, and TraceRelay proposal | Lumen branch `codex/lumen-eventweave-closeout` |
 
 See the [EventWeave architecture notes](./eventweave/docs/architecture.md) for its current component and data-flow diagrams.
 
 ## Active Review Queue
 
-- EventWeave investigation controls: local save/list/restore/remove UI with atomic session, event, and filter restore on `codex/lumen-eventweave-investigation-controls`.
+- EventWeave final closeout: integrated findings, final regression, retrospective, and next-project proposal on `codex/lumen-eventweave-closeout`.
