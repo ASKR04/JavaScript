@@ -7,10 +7,11 @@ This repository collects original JavaScript and front-end focused projects buil
 | Project | Description | Stack |
 | --- | --- | --- |
 | [SignalForge](./signalforge) | Local-first dashboard for planning portfolio-ready software projects, tracking architecture decisions, roadmap progress, and project storytelling. | React, TypeScript, Vite |
+| [EventWeave](./eventweave) | Privacy-first workflow trace explorer for validated local import, causal timelines, comparisons, and evidence-backed reports. | React, TypeScript, Vite, Web Workers |
 
-## Proposed Next Project
+## Active Project
 
-[EventWeave](./eventweave) is a privacy-first workflow trace explorer proposed for the next weekly build. Its proposal and architecture are ready for review; implementation will not begin until approved.
+[EventWeave](./eventweave) was approved on 2026-09-04. Its approved product scope is feature-complete on the final closeout branch after missing the original delivery window. The closeout PR must merge into `sep_release`, followed by a separate user-reviewed promotion PR into `main`. [TraceRelay](./docs/proposals/tracerelay.md) is the next proposal and must not begin without explicit approval.
 
 ## Repository Goal
 
@@ -20,7 +21,15 @@ Each project in this repository is designed to be useful, documented, and struct
 
 | Project | Phase | Date | Engineering evidence | Review |
 | --- | --- | --- | --- | --- |
+| EventWeave | Event filter model | 2026-09-14 | Composable actor, type, outcome, and inclusive duration predicates with canonical ordering, sorted options, missing-duration semantics, and focused tests | [PR #10](https://github.com/ASKR04/JavaScript/pull/10) merged into `sep_release` |
+| EventWeave | Investigation snapshot contract | 2026-09-15 | Versioned, bounded, trace-bound snapshots with runtime validation and stale-selection rejection; storage and UI remain pending | [PR #11](https://github.com/ASKR04/JavaScript/pull/11) merged into `sep_release` |
+| EventWeave | Cross-feature journey tests | 2026-09-21 | Checkout fixtures exercised through import, timeline, causal analysis, comparison, reporting, findings, and investigation restore | [PR #12](https://github.com/ASKR04/JavaScript/pull/12) merged into `sep_release` |
+| EventWeave | Accessible findings panel | 2026-09-21 | Tested standalone findings presentation with evidence-selection controls; explorer mounting remains | [PR #13](https://github.com/ASKR04/JavaScript/pull/13) merged into `sep_release` |
+| EventWeave | Browser investigation store | 2026-09-21 | IndexedDB save/load/list/remove adapter with trace-bound validation and focused tests; save/restore UI remains | [PR #14](https://github.com/ASKR04/JavaScript/pull/14) merged into `sep_release` |
+| EventWeave | Filter interface and second failure fixture | 2026-09-21 | Shared timeline/table filtering, explicit empty state, and profile-save failure sample with parser coverage | [PR #15](https://github.com/ASKR04/JavaScript/pull/15) merged into `sep_release` |
+| EventWeave | Findings severity review | 2026-09-24 | Accessible severity filtering linked to controlled results and live status, filtered-empty guidance, and 44 px evidence actions | [PR #17](https://github.com/ASKR04/JavaScript/pull/17) merged into `sep_release` |
 | SignalForge | Foundation | 2026-08-10 | React/TypeScript architecture, responsive dashboard, typed domain model, and Mermaid documentation | Merged on `main` |
+| EventWeave | Investigation persistence contract | 2026-09-15 | Versioned bounded snapshots, deterministic trace fingerprints, runtime shape validation, stale-selection rejection, and storage-independent round trips | Atlas branch `codex/atlas-eventweave-investigation-persistence` |
 | SignalForge | Editable workspace | 2026-08-10 | Immutable state transitions, versioned browser persistence, runtime data guards, accessible form controls, and Vitest coverage | [PR #1](https://github.com/ASKR04/JavaScript/pull/1) |
 | SignalForge | Plan composition | 2026-08-11 | Validated feature and milestone creation, stable IDs, confirmed removal, and deterministic roadmap resequencing | [PR #1](https://github.com/ASKR04/JavaScript/pull/1) |
 | SignalForge | Decision log | 2026-08-12 | Validated ADR creation and editing, stable human-readable sequences, confirmed removal, responsive forms, and immutable state tests | [PR #1](https://github.com/ASKR04/JavaScript/pull/1) |
@@ -42,5 +51,20 @@ Each project in this repository is designed to be useful, documented, and struct
 | SignalForge | Clock-safe tab synchronization | 2026-09-01 | Storage-event ordering, clock-skew conflict coverage, and last-observed external-write retention | [PR #4](https://github.com/ASKR04/JavaScript/pull/4) |
 | SignalForge | Stable identity validation | 2026-09-02 | Shared snapshot, backup, and cross-tab guards for blank, padded, and duplicate collection IDs | [PR #4](https://github.com/ASKR04/JavaScript/pull/4) |
 | SignalForge | Read-before-write storage recovery | 2026-09-03 | Safe recovery planning that reconciles or reviews existing browser data before any retry write | [PR #4](https://github.com/ASKR04/JavaScript/pull/4) |
+| EventWeave | Day 1 core foundation | 2026-09-04 | Versioned trace schema, validated JSON/NDJSON parsing, deterministic normalization, worker boundary, realistic fixtures, and focused tests | Local commit `1464a1e`; publication awaiting approval |
+| EventWeave | Transparent trace findings | 2026-09-14 | Deterministic slow-span, repeated-failure, and missing-completion rules with configurable thresholds, honest explanations, stable evidence IDs, and focused positive/negative tests | Atlas commit `5f5d0be`; [PR #9](https://github.com/ASKR04/JavaScript/pull/9) into `sep_release` |
+| EventWeave | Causal integrity | 2026-09-07 | Same-session, time-consistent, acyclic parent validation plus deterministic causal-chain selection that excludes sequence-only context | Local commit `91eb1f4`; publication awaiting approval |
+| EventWeave | Local import experience | 2026-09-09 | Worker-backed file selection and drop handling, correlated stale-result suppression, retained valid evidence after failure, and semantic session summaries | Local commit `c444ff7`; publication pending |
+| EventWeave | First-divergence comparison | 2026-09-09 | Deterministic stable-ID and semantic session alignment with explicit confidence, unmatched events, change signals, and fixture-backed first-divergence tests | Local commit `03959ad`; publication pending |
+| EventWeave | Accessible session timeline | 2026-09-10 | Bounded timeline geometry, session navigation, roving keyboard selection, synchronized causal evidence, semantic table alternative, and responsive browser checks | Local commit `e264745`; publication awaiting direct approval |
+| EventWeave | Comparison workflow | 2026-09-12 | Separate baseline import, session pairing, confidence, first-divergence evidence, aligned semantic table, and timeline jump-back controls | Lumen branch `codex/lumen-eventweave-compare-workflow` |
+| EventWeave | Markdown debugging report | 2026-09-13 | Safe filename generation, escaped imported content, selected causal evidence, full timeline, active comparison, and local-only download | Lumen commit `412b228`; [PR #8](https://github.com/ASKR04/JavaScript/pull/8) into `sep_release` |
+| EventWeave | Investigation service boundary | 2026-09-24 | Typed save/list/restore/remove facade plus an IndexedDB-backed journey test that restores selection/filters and rejects a changed trace | [PR #16](https://github.com/ASKR04/JavaScript/pull/16) merged into `sep_release` |
+| EventWeave | Investigation controls | 2026-09-29 | Accessible local save/list/restore/remove controls with atomic context restore, trace-content privacy, responsive containment, and live browser verification | Lumen branch `codex/lumen-eventweave-investigation-controls` |
+| EventWeave | Portfolio closeout | 2026-09-29 | Integrated findings evidence, compatible-filter reveal behavior, replacement-trace snapshot isolation, final regression, retrospective, and TraceRelay proposal | Lumen branch `codex/lumen-eventweave-closeout` |
 
-See the [SignalForge architecture notes](./signalforge/docs/architecture.md) for the current component and data flow diagrams.
+See the [EventWeave architecture notes](./eventweave/docs/architecture.md) for its current component and data-flow diagrams.
+
+## Active Review Queue
+
+- EventWeave final closeout: integrated findings, final regression, retrospective, and next-project proposal on `codex/lumen-eventweave-closeout`.

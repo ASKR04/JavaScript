@@ -1,6 +1,6 @@
-# EventWeave Proposed Architecture
+# EventWeave Architecture
 
-> Proposal status: awaiting approval. This document describes the intended design, not an implemented system.
+> Status: approved and active. This document records the implemented import, causal-integrity, comparison, accessible timeline, and transparent-findings boundaries plus the planned extension points for the one-week delivery cycle.
 
 ## Architecture Goals
 
@@ -9,91 +9,160 @@
 - Keep large-file work off the main interface thread.
 - Pair every visualization with an accessible textual representation.
 - Explain every heuristic so findings remain reviewable engineering evidence.
+- Restore saved investigations only after version, trace fingerprint, and session-event identity validation.
 
 ## System Design
 
 ```mermaid
 flowchart TB
-    File["JSON or NDJSON trace"] --> Import["Import boundary"]
-    Import --> Worker["Parser Web Worker"]
-    Worker --> Guard["Schema and size validation"]
-    Guard --> Normalize["Canonical trace model"]
+    File["JSON or NDJSON trace"] --> UI["Import controller"]
+    UI --> Worker["Parser Web Worker"]
+    Worker --> Limits["Byte + event limits"]
+    Limits --> Syntax["JSON / line-aware NDJSON parser"]
+    Syntax --> Guard["Shared event guard"]
+    Guard --> Identity["ID + parent integrity"]
+    Identity --> Causal["Causal index + selector"]
+    Causal --> Normalize["Canonical trace model"]
     Normalize --> Store["Investigation state"]
-    Store --> Timeline["Timeline view"]
-    Store --> Graph["Causal graph"]
+    Store --> Timeline["Timeline + table"]
+    Store --> Graph["Causal graph + relation list"]
     Store --> Compare["Trace comparison"]
     Store --> Heuristics["Local analysis rules"]
     Heuristics --> Findings["Evidence findings"]
-    Timeline --> Selection["Shared event selection"]
-    Graph --> Selection
-    Compare --> Selection
-    Selection --> Inspector["Accessible event inspector"]
     Findings --> Report["Markdown report adapter"]
     Store --> IndexedDB["Optional local persistence"]
 ```
 
-## Proposed Domain Model
+Parsing, normalization, causal validation, causal-chain selection, worker-backed import state, first-divergence comparison, the accessible timeline explorer, transparent finding rules, filter predicates, local Markdown reporting, the investigation snapshot contract, cross-feature journey tests, a standalone accessible findings panel, and a tested IndexedDB adapter are implemented. Filter presentation is being completed on a Lumen branch. Save/restore controls and mounting the findings panel remain closeout work.
 
-The canonical model will separate imported data from derived analysis:
+## Implemented Domain Model
 
-- `TraceSession`: identity, start/end time, outcome, and ordered event references.
-- `TraceEvent`: timestamp, type, actor, message, attributes, and optional duration.
-- `TraceRelation`: explicit or inferred parent, request, state, and sequence relationships.
-- `Investigation`: selected sessions, filters, annotations, and saved findings.
-- `Finding`: rule identifier, severity, explanation, and supporting event references.
+The canonical model separates untrusted imported data from derived analysis:
 
-Imported attributes will remain unknown data until accessed through narrow typed guards. This avoids pretending that arbitrary product telemetry is trusted simply because the outer file is valid.
+- `TraceEvent`: stable ID, session identity, timestamp, type, actor, message, duration, outcome, optional parent, and primitive attributes.
+- `TraceSession`: identity, start/end time, duration, derived outcome, and ordered event references.
+- `TraceRelation`: explicit parent and deterministic within-session sequence edges.
+- `NormalizedTrace`: version, import time, sorted events, sessions, and relations.
+- `TraceComparison`: ordered event alignments, match basis, confidence, change signals, and the first meaningful divergence.
+- `TraceFinding`: stable finding and session IDs, rule kind, severity, transparent explanation, and ordered evidence event IDs.
+- `Investigation` will be added when persistence requires a versioned saved-work boundary.
 
-## Data and State Flow
+Imported attributes remain primitive unknown data behind runtime guards. Arbitrary nested telemetry is rejected instead of being trusted through a TypeScript assertion.
+
+## Import and State Flow
 
 ```mermaid
 sequenceDiagram
     participant User
     participant Interface
     participant Worker
-    participant Analyzer
-    participant Storage
+    participant Parser
+    participant Store
 
     User->>Interface: chooses a local trace
-    Interface->>Worker: sends file contents
-    Worker->>Worker: validates and normalizes events
-    Worker-->>Interface: returns canonical trace or actionable errors
-    Interface->>Analyzer: requests timeline, comparison, and rules
-    Analyzer-->>Interface: returns derived views and evidence
-    User->>Interface: filters, compares, and annotates
-    Interface->>Storage: saves investigation locally
-    User->>Interface: exports a debugging report
+    Interface->>Worker: parse request + request ID
+    Worker->>Parser: text, format, limits, import time
+    Parser->>Parser: parse, validate, normalize
+    alt every event is valid
+        Parser-->>Worker: canonical trace
+        Worker-->>Interface: correlated success response
+        Interface->>Store: commit complete trace
+    else any error occurs
+        Parser-->>Worker: actionable error collection
+        Worker-->>Interface: correlated failure response
+        Interface->>Interface: retain prior investigation
+    end
 ```
+
+The request ID makes stale-result suppression possible without coupling that policy to the worker. The parser has no React, file-system, or browser-storage dependency, so both synchronous tests and worker execution use exactly the same contract.
 
 ## Parsing Boundary
 
-The import boundary should enforce configurable file and event limits before analysis. JSON and NDJSON will share a canonical event guard so the two formats cannot drift. Invalid lines should report their line number and reason without partially committing data to investigation state.
+The implemented import boundary enforces a 2 MiB file limit and 20,000-event limit before normalization. JSON and NDJSON share one event guard so their contracts cannot drift. NDJSON syntax failures report their source line; all semantic errors identify the event position and stable ID when available.
 
-Parsing will move to a Web Worker once the initial synchronous parser contract is tested. The interface will own cancellation and progress feedback, while the worker will own only parsing, validation, and normalization.
+Validation is transactional: malformed fields, invalid timestamps, negative durations, nested attributes, duplicate IDs, and missing parent references reject the entire import. No partial event list is presented as valid evidence. Events and sessions receive deterministic ordering, including an ID fallback for equal timestamps.
+
+The interface owns file reading, progress feedback, and stale-response policy. Its pure reducer keeps the previous valid trace when a replacement read or parse fails, and request correlation prevents an older reader or worker response from replacing newer evidence. The worker owns only parsing, validation, and normalization.
+
+## Causal Integrity and Selection
+
+An explicit parent relation is accepted only when both events belong to the same session, the parent occurs no later than the child, and following parent links cannot form a cycle. These checks run transactionally with the rest of import validation, so an invalid relation cannot become causal evidence.
+
+The pure causal-chain selector indexes events by ID, walks rootward ancestors, gathers downstream branches, and returns events in normalized trace order. It includes only explicit parent relations. Within-session sequence relations remain useful timeline context but are not promoted to causal claims.
 
 ## Visualization and Accessibility
 
-The timeline and causal graph will consume derived view models rather than raw events. That keeps layout calculations separate from the domain model and makes a table view straightforward. Keyboard users should be able to move between events, inspect details, change filters, and follow relations without interacting with SVG paths directly.
+The timeline consumes a pure derived view model rather than calculating geometry in React. It resolves canonical session event references, computes bounded offsets and duration segments, and contains unknown sessions without inventing evidence. Rendered duration segments stay inside their track even when an asynchronous event extends beyond the session's final timestamp.
 
-Color will reinforce latency, outcome, and selection but never be the only status signal. Event shapes, labels, icons, and accessible descriptions will carry the same meaning.
+The interface uses one roving tab stop across timeline event buttons. Arrow keys move to adjacent events, Home and End reach boundaries, and selection synchronizes the timeline, evidence card, causal context, and equivalent semantic table. Table event controls expose their pressed state and target the same evidence region. Downstream causal branches render as a list rather than an arrow-delimited pseudo-chain, avoiding a visual claim that sibling events caused one another.
+
+Color may reinforce latency, outcome, and selection but cannot be the only status signal. Shapes, labels, icons, and accessible descriptions will carry the same meaning. The Day 1 shell already provides visible focus, responsive layout, reduced-motion behavior, and text labels for example states.
+
+## Event Filtering Boundary
+
+Filtering is a pure projection over the selected session's canonical timeline. Exact actor, exact type, outcome, and inclusive minimum-duration predicates compose without mutating the normalized trace or recalculating event geometry. Missing durations do not behave like zero-duration spans, and available actor/type choices are uniquely sorted from the active session.
+
+The merged explorer wires one filter state to both the visual timeline and semantic table. Selection falls back to the first visible event when needed; zero matches show an explicit empty state and disable evidence export. A comparison-table jump clears filters so its target is revealed. Displayed step numbers retain canonical timeline positions even when intermediate events are hidden. Filtering never changes the imported trace or comparison result.
 
 ## Comparison Strategy
 
-Trace comparison will align events using stable identifiers when present and a documented fallback based on event type, actor, relative order, and normalized labels. The algorithm will expose its confidence and stop at the first meaningful divergence rather than claim an exact match when evidence is ambiguous.
+Trace comparison aligns one baseline session with one candidate session through a deterministic, order-preserving pass with bounded lookahead. Stable event identifiers receive exact-match priority. When traces use different identifiers, type, actor, normalized label, and relative order provide an explicit semantic fallback; unrelated events stay unmatched instead of being forced into a pair. The bounded window keeps memory linear and runtime proportional to trace size at the 20,000-event import ceiling.
+
+Each alignment exposes its stable-ID, semantic, or unmatched basis and a numeric confidence contribution. Aggregate confidence is reported as high, medium, or low. Meaningful change signals cover type, actor, normalized label, outcome, attributes, missing events, and material timing or duration shifts; wall-clock start time is deliberately ignored. The first changed alignment becomes the first divergence, while every later alignment remains available for a complete comparison view.
+
+The paired checkout fixtures share the same initial actions. Comparison correctly identifies the payment request as the first divergence because the failed trace marks its outcome as failed and its duration grows from 184 ms to 428 ms; later timeout and recovery differences remain ordered evidence rather than obscuring that earlier signal.
+
+## Transparent Finding Rules
+
+The finding engine is a pure, linear pass over normalized sessions. It flags recorded durations at or above a configurable threshold, groups repeated failures only when actor and event type match, and reports a missing completion signal only when a session contains state transitions but no configured completion event type or destination state. This keeps the rules deterministic and product-neutral while allowing an adapter to supply its own completion vocabulary.
+
+Every result has a stable ID, ordered event IDs, severity, and an explanation containing the exact observed value and configured threshold or vocabulary limitation. Findings are review prompts: slow spans do not claim root cause, repeated failures may represent independent attempts, and a missing completion may indicate either an incomplete trace or unfamiliar terminology. The engine does not depend on React, persistence, comparison, or report export, so Lumen can add presentation without duplicating its logic.
+
+The integrated findings panel preserves engine order, scopes prompts to the selected session, and filters only by the engine's warning/critical severity. The selector programmatically identifies its controlled results and live count, distinguishes a true no-findings state from a filtered-empty state, and keeps every evidence action at least 44 px high. Evidence buttons return stable event IDs to the explorer, which retains every compatible active filter, clears only predicates that hide the requested event, updates selection, and focuses the shared evidence region.
+
+The product workflow keeps the current exploration trace as the candidate and imports a second baseline through the same worker-backed validation boundary. Users select one session from each trace, review aggregate confidence and the first divergence, then inspect every alignment in a semantic table. Candidate event controls reuse the timeline selection state so comparison evidence leads back to causal context without duplicating event-detail UI.
+
+## Markdown Report Boundary
+
+The report adapter is a pure deterministic function over the normalized trace, selected session and event, optional comparison, and an injected generation timestamp. It includes explicit causal evidence, the complete session timeline, and active baseline alignment without reading from React or browser APIs. Imported values are collapsed to one line and Markdown-sensitive characters are escaped before they enter headings, lists, or table cells.
+
+The browser layer only turns the returned Markdown into a short-lived object URL and starts a local download. EventWeave revokes that URL immediately and reminds users to review imported telemetry before sharing; export itself never creates a network request.
+
+## Investigation Service Boundary
+
+The investigation service composes the versioned snapshot contract with the IndexedDB adapter while keeping browser storage out of React. Save injects identity and time before delegating validation and persistence. List projects validated records into compact summaries, while restore exposes only the saved label, session-event selection, and a copied filter state. Trace fingerprints and serialized payloads never cross this UI-facing boundary.
+
+The store remains the authority for runtime shape, schema version, trace identity, and session-event membership. The service passes validation and storage errors through unchanged, so a caller either receives complete validated restore state or no state at all. Imported trace contents remain memory-only.
+
+The shared asynchronous IndexedDB test double now exercises both the adapter contract and the full service journey. The integration proof saves a failed-checkout investigation, verifies its compact list summary, restores the exact session/event/filter state, applies those filters to reveal the selected event without mutating the imported trace, hides the snapshot from a different trace's list, and reports trace mismatch instead of applying stale state.
+
+The React investigation panel depends only on the service interface. It saves the current trace-bound session, selected event, and filters; lists only summaries valid for the imported trace; and announces asynchronous outcomes through one polite status. Restore first verifies that the session exists and the restored filters still reveal the selected event, then applies session, copied filters, and selection in one React update and focuses the evidence region. Removal requires a second explicit action before deletion. Imported trace events are never serialized to IndexedDB.
 
 ## Testing Strategy
 
-- Unit tests for JSON/NDJSON parsing, guards, normalization, and size limits.
-- Property-focused tests for ordering, duration, and relation invariants.
-- Fixture tests for successful and failed trace comparison.
-- Rule tests that prove both findings and non-findings.
-- Component tests for accessible names, filters, and empty/error states.
-- Browser smoke tests for import, timeline navigation, comparison, report export, and responsive layouts.
+- Implemented unit tests for JSON/NDJSON parsing, guards, deterministic normalization, size limits, identity integrity, relation integrity, and worker-message validation.
+- Planned property-focused tests for ordering, duration, and relation invariants.
+- Implemented fixture and focused tests for stable-ID priority, semantic alignment, unmatched insertions, missing sessions, confidence, and the first successful-versus-failed checkout divergence.
+- Implemented fixture-backed timeline tests for canonical order, bounded geometry, missing sessions, adjacent keyboard movement, boundary keys, and stale-selection recovery.
+- Implemented rule tests proving findings and non-findings, inclusive duration boundaries, repeated-failure grouping, configurable completion vocabulary, stable evidence IDs, and invalid-setting rejection.
+- Implemented service-to-IndexedDB journey coverage for save, list, validated restore, and changed-trace rejection.
+- Implemented component contract tests for findings and investigation control names, privacy copy, status announcements, and disabled empty states; broader interaction coverage remains planned.
+- Live browser checks cover successful and failed sample import, roving timeline focus/selection, synchronized causal details, findings evidence reveal, local investigation save and atomic restore, comparison, report export, desktop layout, 390 × 844 containment, minimum control sizing, and clean browser logs.
 
-## Open Decisions for Approval
+## Decisions
 
-1. Start with a product-neutral trace schema or add an OpenTelemetry JSON adapter in week one.
-2. Use SVG only for the initial visualizations or adopt a small graph library after interaction prototyping.
-3. Limit the first comparison workflow to two traces or support a baseline group.
+1. The approved week-one schema is product-neutral; external adapters such as OpenTelemetry remain explicit future boundaries.
+2. Initial visualizations will be SVG-first and paired with semantic tables. A graph library requires demonstrated interaction value.
+3. Initial comparison will align two traces rather than infer a baseline group.
+4. Imported event extensions are ignored at the top level, while the documented `attributes` bag remains flat and runtime-validated.
 
-The recommended week-one scope is a product-neutral schema, SVG-first views, and two-trace comparison. This keeps the product original and the analysis boundaries visible while leaving clear extension points.
+## Lumen handoff to Atlas
+
+- Mounted findings and connected stable evidence IDs through a pure compatible-filter reveal boundary on `codex/lumen-eventweave-closeout`.
+- Strengthened the persistence journey so switching to another trace hides the snapshot and returning to the original trace reveals it again.
+- Open risks: only user review of the closeout PR and monthly promotion PR remain. The TraceRelay proposal is documentation only and requires explicit approval.
+- Next distinct task: after the closeout PR merges, perform a release-only audit of `sep_release` and create the requested promotion PR into `main` without merging it.
+
+## Approval and delivery state
+
+The approved EventWeave scope is complete on the closeout branch. Further EventWeave development is maintenance or a separately approved enhancement. The project [retrospective](./retrospective.md) records the delayed delivery and boundary lessons; the next-project [TraceRelay proposal](../../docs/proposals/tracerelay.md) is intentionally not implemented.
