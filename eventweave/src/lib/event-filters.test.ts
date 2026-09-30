@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { EMPTY_EVENT_FILTERS, eventFilterOptions, filterTimelineEvents, hasEventFilters } from "./event-filters";
+import { EMPTY_EVENT_FILTERS, eventFilterOptions, filterTimelineEvents, hasEventFilters, revealEventFilters } from "./event-filters";
 import { parseTraceText } from "./trace-parser";
 import { buildSessionTimeline } from "./timeline-view";
 
@@ -42,5 +42,28 @@ describe("event filters", () => {
     expect(hasEventFilters(EMPTY_EVENT_FILTERS)).toBe(false);
     expect(hasEventFilters({ ...EMPTY_EVENT_FILTERS, outcome: "failure" })).toBe(true);
     expect(filterTimelineEvents(timeline.events, EMPTY_EVENT_FILTERS)).toEqual(timeline.events);
+  });
+
+  it("clears only filters that hide a requested evidence event", () => {
+    const target = timeline.events.find(({ event }) => event.id === "failure-003")?.event;
+    if (!target) throw new Error("Failure fixture must keep the payment request");
+
+    expect(revealEventFilters(target, {
+      actor: "checkout-api",
+      type: "network.response",
+      outcome: "failure",
+      minimumDurationMs: 400,
+    })).toEqual({
+      actor: "checkout-api",
+      type: "",
+      outcome: "failure",
+      minimumDurationMs: 400,
+    });
+    expect(revealEventFilters(target, {
+      actor: "shopper",
+      type: "user.action",
+      outcome: "success",
+      minimumDurationMs: 500,
+    })).toEqual(EMPTY_EVENT_FILTERS);
   });
 });

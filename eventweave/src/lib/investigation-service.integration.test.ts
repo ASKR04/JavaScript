@@ -56,6 +56,7 @@ describe("investigation service with IndexedDB", () => {
     expect(candidate.events.map(({ id }) => id)).toEqual(candidateEventIds);
 
     expect(await service.list(baseline)).toEqual({ ok: true, value: [] });
+    expect(await service.list(candidate)).toEqual({ ok: true, value: [saved.value] });
     expect(await service.restore("checkout-timeout-review", baseline)).toEqual(expect.objectContaining({
       ok: false,
       errors: expect.arrayContaining([expect.objectContaining({ code: "trace-mismatch" })]),

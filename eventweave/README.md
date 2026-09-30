@@ -1,6 +1,6 @@
 # EventWeave
 
-> Project status: approved and in active development. Core import, timeline, comparison, findings logic and review, report export, filter presentation, investigation persistence service, and journey tests are merged into `sep_release`. Investigation controls are ready on the current Lumen branch; findings mounting and final closeout remain.
+> Project status: feature-complete on the final closeout branch. Core import, timeline, comparison, findings, report export, filtering, and local investigation persistence are integrated. The closeout review must merge into `sep_release` before the user-approved monthly promotion PR into `main`.
 
 EventWeave is a privacy-first workflow trace explorer for front-end engineers. It turns JSON or newline-delimited event logs into an interactive view of user journeys, state transitions, latency, and failure clusters without uploading product telemetry to an external service.
 
@@ -66,7 +66,7 @@ The current Atlas and Lumen increments establish a tested core contract and the 
 - Same-session, time-consistent, acyclic parent-link enforcement before causal evidence is accepted.
 - A deterministic causal-chain selector that separates explicit parent evidence from timeline sequence context.
 - A deterministic finding engine for slow spans, repeated failures, and missing completion signals, with configurable thresholds, explicit uncertainty, and stable event IDs for later UI selection.
-- A standalone findings review panel with an accessible severity filter linked to its controlled results and described by a live count, honest filtered-empty state, and 44 px evidence controls, ready to mount after the current explorer work merges.
+- An integrated findings review panel with an accessible severity filter, live counts, honest empty states, and evidence controls that clear only filters hiding their selected event.
 - A typed worker request/response contract and module worker entry.
 - A pure composable event-filter model for exact actor, type, outcome, and inclusive minimum-duration refinement while preserving canonical order.
 - A shared accessible filter panel narrows both the timeline and semantic table, preserves canonical step numbers, handles empty results, and reveals cross-view jump targets.
@@ -141,15 +141,15 @@ eventweave/
 
 1. **Complete:** trace format, application scaffold, fixtures, validated local import, and first-divergence comparison foundation.
 2. **Complete:** session navigation, an accessible event timeline/table, and synchronized causal context.
-3. **Partly complete:** explicit causal-chain selection and transparent finding rules are implemented; findings presentation remains.
+3. **Complete:** explicit causal-chain selection, transparent finding rules, and integrated evidence-selection controls.
 4. **Complete:** comparison workflow UI on the implemented first-divergence engine.
-5. **Review pending:** the validated snapshot contract, IndexedDB adapter, service, and save/list/restore/remove controls are implemented; the control branch still requires user review.
-6. **In progress:** Markdown reporting, the second failure fixture, and investigation browser checks are complete; expanded final regression remains.
-7. **Pending:** responsive/accessibility closeout, documentation, retrospective, and the next written proposal after this project is complete.
+5. **Complete:** validated snapshot contract, IndexedDB adapter, service, and save/list/restore/remove controls.
+6. **Complete:** Markdown reporting, a second failure fixture, and end-to-end browser checks.
+7. **Complete on the closeout branch:** responsive/accessibility review, [retrospective](./docs/retrospective.md), and the written [TraceRelay proposal](../docs/proposals/tracerelay.md). Release review remains.
 
 ## Lumen handoff to Atlas
 
-- Branch: `codex/lumen-eventweave-investigation-controls` from merged `sep_release` after PR #18.
-- Verification: strict TypeScript lint, 69 Vitest tests, Vite production build, `git diff --check`, live save and atomic restore, a 390 px responsive review without horizontal overflow, and clean browser logs.
-- Open risks: the findings panel remains standalone, final end-to-end regression and retrospective remain, and September promotion still requires the user's explicit release date/time.
-- Next distinct task: add a focused integration assertion that an investigation saved for one trace never appears after a replacement trace is imported, while preserving the existing service/store trace-mismatch behavior.
+- Branch: `codex/lumen-eventweave-closeout` from `sep_release` after PR #19 merged.
+- Completed: mounted findings, preserved compatible filters when revealing evidence, strengthened replacement-trace snapshot isolation, and recorded the retrospective plus next-project proposal.
+- Open risks: the closeout PR and the later `sep_release` to `main` promotion PR still require user review. No product-scope work remains.
+- Next distinct task: Atlas should perform a release-only audit of `sep_release` after this PR merges; do not add features or begin TraceRelay without explicit approval.

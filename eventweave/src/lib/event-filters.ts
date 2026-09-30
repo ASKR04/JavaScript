@@ -39,3 +39,14 @@ export const filterTimelineEvents = (
 
 export const hasEventFilters = (filters: EventFilters): boolean =>
   filters.actor !== "" || filters.type !== "" || filters.outcome !== "all" || filters.minimumDurationMs !== undefined;
+
+/** Keeps compatible filters while clearing only the predicates that hide an evidence target. */
+export const revealEventFilters = (event: TraceEvent, filters: EventFilters): EventFilters => ({
+  actor: filters.actor === "" || event.actor === filters.actor ? filters.actor : "",
+  type: filters.type === "" || event.type === filters.type ? filters.type : "",
+  outcome: filters.outcome === "all" || event.outcome === filters.outcome ? filters.outcome : "all",
+  minimumDurationMs: filters.minimumDurationMs === undefined ||
+    (event.durationMs !== undefined && event.durationMs >= filters.minimumDurationMs)
+    ? filters.minimumDurationMs
+    : undefined,
+});

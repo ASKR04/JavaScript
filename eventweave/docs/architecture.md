@@ -118,7 +118,7 @@ The finding engine is a pure, linear pass over normalized sessions. It flags rec
 
 Every result has a stable ID, ordered event IDs, severity, and an explanation containing the exact observed value and configured threshold or vocabulary limitation. Findings are review prompts: slow spans do not claim root cause, repeated failures may represent independent attempts, and a missing completion may indicate either an incomplete trace or unfamiliar terminology. The engine does not depend on React, persistence, comparison, or report export, so Lumen can add presentation without duplicating its logic.
 
-The standalone findings panel preserves engine order, scopes prompts to the selected session, and filters only by the engine's warning/critical severity. The selector programmatically identifies its controlled results and live count, distinguishes a true no-findings state from a filtered-empty state, and keeps every evidence action at least 44 px high. Evidence buttons still return stable event IDs to the parent explorer; mounting and reveal behavior remain an explicit integration step.
+The integrated findings panel preserves engine order, scopes prompts to the selected session, and filters only by the engine's warning/critical severity. The selector programmatically identifies its controlled results and live count, distinguishes a true no-findings state from a filtered-empty state, and keeps every evidence action at least 44 px high. Evidence buttons return stable event IDs to the explorer, which retains every compatible active filter, clears only predicates that hide the requested event, updates selection, and focuses the shared evidence region.
 
 The product workflow keeps the current exploration trace as the candidate and imports a second baseline through the same worker-backed validation boundary. Users select one session from each trace, review aggregate confidence and the first divergence, then inspect every alignment in a semantic table. Candidate event controls reuse the timeline selection state so comparison evidence leads back to causal context without duplicating event-detail UI.
 
@@ -147,7 +147,7 @@ The React investigation panel depends only on the service interface. It saves th
 - Implemented rule tests proving findings and non-findings, inclusive duration boundaries, repeated-failure grouping, configurable completion vocabulary, stable evidence IDs, and invalid-setting rejection.
 - Implemented service-to-IndexedDB journey coverage for save, list, validated restore, and changed-trace rejection.
 - Implemented component contract tests for findings and investigation control names, privacy copy, status announcements, and disabled empty states; broader interaction coverage remains planned.
-- Live browser checks cover successful sample import, roving timeline focus/selection, synchronized causal details, local investigation save and atomic restore, desktop layout, 390 × 844 containment, minimum control sizing, and clean browser logs. Comparison, report export, and expanded browser integration remain planned.
+- Live browser checks cover successful and failed sample import, roving timeline focus/selection, synchronized causal details, findings evidence reveal, local investigation save and atomic restore, comparison, report export, desktop layout, 390 × 844 containment, minimum control sizing, and clean browser logs.
 
 ## Decisions
 
@@ -158,7 +158,11 @@ The React investigation panel depends only on the service interface. It saves th
 
 ## Lumen handoff to Atlas
 
-- Added accessible local investigation controls on `codex/lumen-eventweave-investigation-controls`, using the merged service/store boundary without exposing serialized payloads to React.
-- Verification: 69 Vitest tests, strict TypeScript lint, Vite production build, `git diff --check`, live save and atomic restore, 390 × 844 containment, 44 px controls, and clean browser logs.
-- Open risks: findings mounting, final workflow regression, closeout retrospective, and explicit user authorization before a September promotion PR into `main`.
-- Next distinct task: prove through a focused integration test that replacing the imported trace refreshes the investigation list without exposing or applying snapshots from the previous trace.
+- Mounted findings and connected stable evidence IDs through a pure compatible-filter reveal boundary on `codex/lumen-eventweave-closeout`.
+- Strengthened the persistence journey so switching to another trace hides the snapshot and returning to the original trace reveals it again.
+- Open risks: only user review of the closeout PR and monthly promotion PR remain. The TraceRelay proposal is documentation only and requires explicit approval.
+- Next distinct task: after the closeout PR merges, perform a release-only audit of `sep_release` and create the requested promotion PR into `main` without merging it.
+
+## Approval and delivery state
+
+The approved EventWeave scope is complete on the closeout branch. Further EventWeave development is maintenance or a separately approved enhancement. The project [retrospective](./retrospective.md) records the delayed delivery and boundary lessons; the next-project [TraceRelay proposal](../../docs/proposals/tracerelay.md) is intentionally not implemented.
