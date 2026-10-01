@@ -8,10 +8,11 @@ This repository collects original JavaScript and front-end focused projects buil
 | --- | --- | --- |
 | [SignalForge](./signalforge) | Local-first dashboard for planning portfolio-ready software projects, tracking architecture decisions, roadmap progress, and project storytelling. | React, TypeScript, Vite |
 | [EventWeave](./eventweave) | Privacy-first workflow trace explorer for validated local import, causal timelines, comparisons, and evidence-backed reports. | React, TypeScript, Vite, Web Workers |
+| [TraceRelay](./tracerelay) | Privacy-first local capture companion for reviewing and exporting EventWeave-compatible traces. | React, TypeScript, Vite |
 
 ## Active Project
 
-[EventWeave](./eventweave) was approved on 2026-09-04. Its approved product scope is feature-complete on the final closeout branch after missing the original delivery window. The closeout PR must merge into `sep_release`, followed by a separate user-reviewed promotion PR into `main`. [TraceRelay](./docs/proposals/tracerelay.md) is the next proposal and must not begin without explicit approval.
+[EventWeave](./eventweave) was promoted to `main` through PR #21 after its final closeout review. [TraceRelay](./tracerelay) was explicitly approved on 2026-09-29 and began on 2026-09-30 as the active project. Version one remains an explicit, local, manual-export capture companion; automation and production telemetry are outside the approved scope.
 
 ## Repository Goal
 
@@ -21,6 +22,7 @@ Each project in this repository is designed to be useful, documented, and struct
 
 | Project | Phase | Date | Engineering evidence | Review |
 | --- | --- | --- | --- | --- |
+| TraceRelay | Capture review foundation | 2026-09-30 | Responsive protected-event review, privacy-treatment details, honest export boundary, synthetic fixture, and accessibility contracts | Lumen branch `codex/lumen-tracerelay-capture-review`; held for `oct_release` |
 | EventWeave | Event filter model | 2026-09-14 | Composable actor, type, outcome, and inclusive duration predicates with canonical ordering, sorted options, missing-duration semantics, and focused tests | [PR #10](https://github.com/ASKR04/JavaScript/pull/10) merged into `sep_release` |
 | EventWeave | Investigation snapshot contract | 2026-09-15 | Versioned, bounded, trace-bound snapshots with runtime validation and stale-selection rejection; storage and UI remain pending | [PR #11](https://github.com/ASKR04/JavaScript/pull/11) merged into `sep_release` |
 | EventWeave | Cross-feature journey tests | 2026-09-21 | Checkout fixtures exercised through import, timeline, causal analysis, comparison, reporting, findings, and investigation restore | [PR #12](https://github.com/ASKR04/JavaScript/pull/12) merged into `sep_release` |
