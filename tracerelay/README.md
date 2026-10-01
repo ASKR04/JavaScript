@@ -31,4 +31,6 @@ npm test
 npm run build
 ```
 
+The current locked dependency graph reports zero known npm audit vulnerabilities. TraceRelay uses the advisory-fixed Vitest 5 release for its test runner.
+
 See [architecture.md](./docs/architecture.md) for the approved boundaries and current data flow.
