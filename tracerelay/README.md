@@ -14,7 +14,16 @@ The first product-experience increment establishes an honest capture-review surf
 - disabled export controls with clear dependency guidance rather than a simulated download;
 - server-rendered accessibility-contract coverage and pure summary tests.
 
-The capture SDK, bounded buffer, identifiers, validated export contract, and real recording controls remain Atlas-owned core work.
+Atlas's first core increment now provides the non-visual recording boundary behind that review:
+
+- explicit `start`, `record`, and `stop` lifecycle states with stable trace, session, and event identifiers;
+- a hard event-count limit that rejects new evidence instead of evicting accepted parents;
+- product-neutral, parent-linked event inputs aligned with EventWeave's version-one contract;
+- default-deny attribute protection, configurable masking, and unconditional removal of sensitive keys;
+- isolated review snapshots plus deterministic EventWeave-compatible JSON and NDJSON serialization;
+- focused lifecycle, validation, privacy, ordering, compatibility, and size-limit tests.
+
+The browser controls and download workflow remain Lumen-owned integration work. No recording occurs automatically.
 
 ## Run locally
 

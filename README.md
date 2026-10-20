@@ -22,7 +22,8 @@ Each project in this repository is designed to be useful, documented, and struct
 
 | Project | Phase | Date | Engineering evidence | Review |
 | --- | --- | --- | --- | --- |
-| TraceRelay | Capture review foundation | 2026-09-30 | Responsive protected-event review, privacy-treatment details, honest export boundary, synthetic fixture, and accessibility contracts | Lumen branch `codex/lumen-tracerelay-capture-review`; held for `oct_release` |
+| TraceRelay | Capture core | 2026-10-07 | Explicit bounded lifecycle, stable identifiers, default-deny privacy protection, parent validation, isolated review snapshots, and deterministic EventWeave JSON/NDJSON | Atlas branch `codex/atlas-tracerelay-capture-core`; review pending |
+| TraceRelay | Capture review foundation | 2026-09-30 | Responsive protected-event review, privacy-treatment details, honest export boundary, synthetic fixture, and accessibility contracts | [PR #22](https://github.com/ASKR04/JavaScript/pull/22) merged into `oct_release` |
 | EventWeave | Event filter model | 2026-09-14 | Composable actor, type, outcome, and inclusive duration predicates with canonical ordering, sorted options, missing-duration semantics, and focused tests | [PR #10](https://github.com/ASKR04/JavaScript/pull/10) merged into `sep_release` |
 | EventWeave | Investigation snapshot contract | 2026-09-15 | Versioned, bounded, trace-bound snapshots with runtime validation and stale-selection rejection; storage and UI remain pending | [PR #11](https://github.com/ASKR04/JavaScript/pull/11) merged into `sep_release` |
 | EventWeave | Cross-feature journey tests | 2026-09-21 | Checkout fixtures exercised through import, timeline, causal analysis, comparison, reporting, findings, and investigation restore | [PR #12](https://github.com/ASKR04/JavaScript/pull/12) merged into `sep_release` |
@@ -69,4 +70,4 @@ See the [EventWeave architecture notes](./eventweave/docs/architecture.md) for i
 
 ## Active Review Queue
 
-- EventWeave final closeout: integrated findings, final regression, retrospective, and next-project proposal on `codex/lumen-eventweave-closeout`.
+- TraceRelay capture core: explicit lifecycle, privacy enforcement, bounded evidence, and EventWeave-compatible serialization on `codex/atlas-tracerelay-capture-core`.
