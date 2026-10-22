@@ -6,13 +6,15 @@ The approved version-one boundary is intentionally narrow: no invisible producti
 
 ## Current increment
 
-The first product-experience increment establishes an honest capture-review surface with synthetic profile-save evidence. It provides:
+The product experience now connects the protected capture core to an explicit synthetic demo. It provides:
 
 - a responsive review workspace with a summary of events, actors, types, and protected fields;
 - an ordered, keyboard-operable event sequence and synchronized selected-event details;
 - explicit allowed, masked, and removed attribute treatments;
-- disabled export controls with clear dependency guidance rather than a simulated download;
-- server-rendered accessibility-contract coverage and pure summary tests.
+- visible start/stop state and separate successful and failed profile-save journeys;
+- human-confirmed JSON and NDJSON downloads for manual EventWeave upload;
+- accessible status announcements, locked controls outside valid lifecycle states, and responsive 44 px controls;
+- server-rendered accessibility coverage plus pure journey, privacy, filename, and export tests.
 
 Atlas's first core increment now provides the non-visual recording boundary behind that review:
 
@@ -23,7 +25,7 @@ Atlas's first core increment now provides the non-visual recording boundary behi
 - isolated review snapshots plus deterministic EventWeave-compatible JSON and NDJSON serialization;
 - focused lifecycle, validation, privacy, ordering, compatibility, and size-limit tests.
 
-The browser controls and download workflow remain Lumen-owned integration work. No recording occurs automatically.
+No recording occurs automatically. Starting a new capture clears the prior generated journey, the user chooses one synthetic outcome, and export remains unavailable until that capture is explicitly stopped.
 
 ## Run locally
 
@@ -40,6 +42,6 @@ npm test
 npm run build
 ```
 
-The current locked dependency graph reports zero known npm audit vulnerabilities. TraceRelay uses the advisory-fixed Vitest 5 release for its test runner.
+The current locked dependency graph reports zero known npm audit vulnerabilities. TraceRelay uses Vitest 5 and Vite 7.3.7, including the fixed Windows development-server boundary.
 
 See [architecture.md](./docs/architecture.md) for the approved boundaries and current data flow.

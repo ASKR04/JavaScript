@@ -31,18 +31,21 @@ Review snapshots retain privacy-treatment metadata for a human. EventWeave proje
 
 ## Current product-experience slice
 
-The first Lumen increment intentionally begins at the review boundary so it can remain independent of the not-yet-implemented SDK. The synthetic view model contains only already-protected values and drives an accessible master-detail interface.
+The Lumen workflow now drives the merged capture core through explicit instrumentation. A user must start recording, choose one synthetic outcome, and stop the capture before the review can export a local file.
 
 ```mermaid
 flowchart TD
-    Fixture["Synthetic protected fixture"] --> Summary["Capture summary"]
-    Fixture --> Sequence["Ordered event controls"]
-    Sequence --> Selection["Selected evidence"]
-    Selection --> Attributes["Allowed / masked / removed attributes"]
-    Contract["Future validated export contract"] -. unlocks .-> Export["Disabled export controls"]
+    Start["Start visible capture"] --> Scenario{"Synthetic outcome"}
+    Scenario -->|Success| Success["Instrument success events"]
+    Scenario -->|Failure| Failure["Instrument failure events"]
+    Success --> Stop["Explicit stop"]
+    Failure --> Stop
+    Stop --> Review["Protected local review"]
+    Review --> Confirm["Human chooses JSON or NDJSON"]
+    Confirm --> File["Local download for manual upload"]
 ```
 
-The core contract is now available for Lumen to replace the provisional fixture. Export controls remain disabled until the browser workflow explicitly starts/stops a real capture, presents its protected review, and confirms the download action.
+The initial fixture remains only as a clearly labelled sample before the first recording. Generated reviews come from `CaptureCore.toReview`; download content comes from the stopped core's deterministic serializers. Safe filenames are derived from the synthetic capture name and trace ID, and object URLs are released after the browser receives the click.
 
 ## Privacy and safety constraints
 
@@ -58,4 +61,4 @@ The core contract is now available for Lumen to replace the provisional fixture.
 ## Ownership
 
 - **Atlas:** capture schema, SDK lifecycle, bounded buffer, identifiers, redaction, validation, compatibility, and core tests. The first core boundary is implemented in `src/lib/capture-core.ts`.
-- **Lumen:** capture review, recording controls after the SDK lands, export workflow, demo journey, accessibility, responsive behavior, browser review, and integration documentation.
+- **Lumen:** capture review, recording controls, export workflow, demo journey, accessibility, responsive behavior, browser review, and integration documentation. The first end-to-end local workflow is implemented without automatic capture or upload.
