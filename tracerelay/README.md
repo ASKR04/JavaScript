@@ -13,8 +13,9 @@ The product experience now connects the protected capture core to an explicit sy
 - explicit allowed, masked, and removed attribute treatments;
 - visible start/stop state and separate successful and failed profile-save journeys;
 - human-confirmed JSON and NDJSON downloads for manual EventWeave upload;
+- tested browser-download orchestration with temporary URL cleanup and actionable permission-failure feedback;
 - accessible status announcements, locked controls outside valid lifecycle states, and responsive 44 px controls;
-- server-rendered accessibility coverage plus pure journey, privacy, filename, and export tests.
+- server-rendered accessibility coverage plus pure journey, privacy, filename, export, and browser-boundary tests.
 
 Atlas's first core increment now provides the non-visual recording boundary behind that review:
 

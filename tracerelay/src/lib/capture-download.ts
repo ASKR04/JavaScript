@@ -8,6 +8,21 @@ export type CaptureDownload = {
   mimeType: "application/json" | "application/x-ndjson";
 };
 
+type DownloadAnchor = {
+  href: string;
+  download: string;
+  click: () => void;
+  remove: () => void;
+};
+
+export type CaptureDownloadEnvironment = {
+  createObjectUrl: (content: string, mimeType: CaptureDownload["mimeType"]) => string;
+  createAnchor: () => DownloadAnchor;
+  appendAnchor: (anchor: DownloadAnchor) => void;
+  scheduleCleanup: (cleanup: () => void) => void;
+  revokeObjectUrl: (url: string) => void;
+};
+
 function safeSegment(value: string) {
   return value
     .normalize("NFKD")
@@ -32,13 +47,27 @@ export function createCaptureDownload(
   };
 }
 
-export function downloadCaptureFile(download: CaptureDownload) {
-  const url = URL.createObjectURL(new Blob([download.content], { type: download.mimeType }));
-  const anchor = document.createElement("a");
+function browserDownloadEnvironment(): CaptureDownloadEnvironment {
+  return {
+    createObjectUrl: (content, mimeType) =>
+      URL.createObjectURL(new Blob([content], { type: mimeType })),
+    createAnchor: () => document.createElement("a"),
+    appendAnchor: (anchor) => document.body.append(anchor as HTMLAnchorElement),
+    scheduleCleanup: (cleanup) => window.setTimeout(cleanup, 0),
+    revokeObjectUrl: (url) => URL.revokeObjectURL(url),
+  };
+}
+
+export function downloadCaptureFile(
+  download: CaptureDownload,
+  environment: CaptureDownloadEnvironment = browserDownloadEnvironment(),
+) {
+  const url = environment.createObjectUrl(download.content, download.mimeType);
+  const anchor = environment.createAnchor();
   anchor.href = url;
   anchor.download = download.filename;
-  document.body.append(anchor);
+  environment.appendAnchor(anchor);
   anchor.click();
   anchor.remove();
-  window.setTimeout(() => URL.revokeObjectURL(url), 0);
+  environment.scheduleCleanup(() => environment.revokeObjectUrl(url));
 }
