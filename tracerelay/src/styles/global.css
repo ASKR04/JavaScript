@@ -33,6 +33,8 @@ button, input, select { font: inherit; }
   border: 1px solid #c3c6cc; border-radius: 999px; font-size: 0.75rem; font-weight: 800;
 }
 .local-pill span { color: #2e8b74; font-size: 0.68rem; }
+.local-pill--recording { border-color: #ae463b; background: #fff0ed; color: #87362e; }
+.local-pill--recording span { color: #c33f32; }
 .hero {
   display: grid; min-height: 500px; grid-template-columns: minmax(0, 1.25fr) minmax(260px, 0.55fr);
   align-items: center; gap: 80px;
@@ -46,6 +48,18 @@ h1 { max-width: 790px; margin-bottom: 0; font-size: clamp(3rem, 6.8vw, 6.2rem); 
 .note-number { display: grid; flex: 0 0 42px; width: 42px; height: 42px; place-items: center; border-radius: 12px; background: #ffcb6b; font-size: 0.72rem; font-weight: 900; }
 .hero-note strong { font-size: 1rem; }
 .hero-note p { margin: 8px 0 0; color: #687289; font-size: 0.78rem; line-height: 1.55; }
+.control-panel {
+  display: grid; grid-template-columns: minmax(260px, 0.75fr) minmax(0, 1.25fr); gap: 34px;
+  margin-bottom: 22px; padding: 28px; border: 1px solid #cbc8c1; border-radius: 22px; background: rgba(255, 255, 255, 0.62);
+}
+.control-panel h2 { margin-bottom: 0; font-size: clamp(1.7rem, 3vw, 2.7rem); }
+.control-panel > div > p:last-child { margin: 12px 0 0; color: #657087; line-height: 1.6; }
+.control-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-content: center; }
+.control-actions button { min-height: 48px; padding: 10px 14px; border: 1px solid #aeb4c0; border-radius: 11px; background: #fff; color: #17243d; font-weight: 800; cursor: pointer; }
+.control-actions .primary-action { background: #17243d; color: #fff; }
+.control-actions .stop-action { border-color: #a94b41; color: #8e382f; }
+.control-actions button:disabled { cursor: not-allowed; opacity: 0.48; }
+.capture-status { grid-column: 1 / -1; margin: 0; padding: 13px 15px; border-radius: 11px; background: #e9edf4; color: #43516a; font-size: 0.78rem; font-weight: 750; }
 .review-shell { margin-bottom: 70px; padding: 54px; border-radius: 30px; background: #17243d; color: #f7f7f2; box-shadow: 0 36px 90px rgba(23, 36, 61, 0.18); }
 .review-heading { display: flex; align-items: end; justify-content: space-between; gap: 32px; }
 .review-heading h2 { max-width: 720px; margin-bottom: 0; font-size: clamp(2.3rem, 4vw, 4.1rem); line-height: 1; }
@@ -62,6 +76,7 @@ h1 { max-width: 790px; margin-bottom: 0; font-size: clamp(3rem, 6.8vw, 6.2rem); 
 .panel-heading h3, .details-card h3 { margin-bottom: 0; font-size: 1.3rem; }
 .panel-heading > span { color: #69738a; font-size: 0.72rem; font-weight: 800; }
 .event-list { display: grid; gap: 9px; margin: 22px 0 0; padding: 0; list-style: none; }
+.empty-journey { margin: 22px 0 0; padding: 26px; border: 1px dashed #bbc1cb; border-radius: 13px; color: #68738a; text-align: center; }
 .event-button {
   display: flex; width: 100%; min-height: 68px; align-items: center; gap: 12px; padding: 10px 12px;
   border: 1px solid #d8d8d2; border-radius: 13px; background: #fff; color: #17243d; cursor: pointer; text-align: left;
@@ -99,6 +114,7 @@ h1 { max-width: 790px; margin-bottom: 0; font-size: clamp(3rem, 6.8vw, 6.2rem); 
 .privacy-bar > div > p:last-child { max-width: 650px; margin: 10px 0 0; color: #b4bed0; font-size: 0.78rem; line-height: 1.55; }
 .export-actions { display: grid; grid-template-columns: repeat(2, minmax(130px, 1fr)); gap: 9px; }
 .export-actions button { min-height: 44px; padding: 0 14px; border: 1px solid #6b7894; border-radius: 10px; background: #2a3b5a; color: #d2d9e7; font-weight: 800; }
+.export-actions button:not(:disabled) { border-color: #ffcb6b; background: #ffcb6b; color: #17243d; cursor: pointer; }
 .export-actions button:disabled { cursor: not-allowed; opacity: 0.65; }
 .export-actions p { grid-column: 1 / -1; margin: 2px 0 0; color: #9dabc3; font-size: 0.65rem; text-align: right; }
 footer { display: flex; justify-content: space-between; gap: 24px; padding: 0 0 46px; color: #69748a; font-size: 0.76rem; }
@@ -107,6 +123,7 @@ a:focus-visible, button:focus-visible { outline: 3px solid #f2a936; outline-offs
 @media (max-width: 900px) {
   .hero { grid-template-columns: 1fr; gap: 36px; padding: 70px 0; }
   .hero-note { max-width: 620px; }
+  .control-panel { grid-template-columns: 1fr; }
   .review-heading { align-items: start; flex-direction: column; }
   .summary-grid { grid-template-columns: repeat(2, 1fr); }
   .review-grid { grid-template-columns: 1fr; }
@@ -121,6 +138,8 @@ a:focus-visible, button:focus-visible { outline: 3px solid #f2a936; outline-offs
   .hero { min-height: auto; padding: 52px 0; }
   h1 { font-size: clamp(2.7rem, 14vw, 4rem); }
   .hero-copy { font-size: 0.98rem; }
+  .control-panel { padding: 22px 16px; }
+  .control-actions { grid-template-columns: 1fr; }
   .review-shell { padding: 28px 16px; border-radius: 22px; }
   .summary-grid { gap: 8px; }
   .summary-grid div { padding: 13px; }
