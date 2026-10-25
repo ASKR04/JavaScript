@@ -22,7 +22,8 @@ Each project in this repository is designed to be useful, documented, and struct
 
 | Project | Phase | Date | Engineering evidence | Review |
 | --- | --- | --- | --- | --- |
-| TraceRelay | Recording and export workflow | 2026-10-20 | Visible start/stop lifecycle, instrumented success/failure journeys, protected review, safe JSON/NDJSON download, accessible status, responsive browser checks, and security-updated Vite | Lumen branch `codex/lumen-tracerelay-recording-controls`; review pending |
+| TraceRelay | Export reliability | 2026-10-25 | Testable browser-download boundary, deterministic anchor lifecycle, temporary URL revocation, and actionable permission-failure status | Lumen branch `codex/lumen-tracerelay-export-reliability`; review pending |
+| TraceRelay | Recording and export workflow | 2026-10-20 | Visible start/stop lifecycle, instrumented success/failure journeys, protected review, safe JSON/NDJSON download, accessible status, responsive browser checks, and security-updated Vite | [PR #24](https://github.com/ASKR04/JavaScript/pull/24) merged into `oct_release` |
 | TraceRelay | Capture core | 2026-10-07 | Explicit bounded lifecycle, stable identifiers, default-deny privacy protection, parent validation, isolated review snapshots, and deterministic EventWeave JSON/NDJSON | Atlas [PR #23](https://github.com/ASKR04/JavaScript/pull/23) merged into `oct_release` |
 | TraceRelay | Capture review foundation | 2026-09-30 | Responsive protected-event review, privacy-treatment details, honest export boundary, synthetic fixture, and accessibility contracts | [PR #22](https://github.com/ASKR04/JavaScript/pull/22) merged into `oct_release` |
 | EventWeave | Event filter model | 2026-09-14 | Composable actor, type, outcome, and inclusive duration predicates with canonical ordering, sorted options, missing-duration semantics, and focused tests | [PR #10](https://github.com/ASKR04/JavaScript/pull/10) merged into `sep_release` |
@@ -71,4 +72,4 @@ See the [EventWeave architecture notes](./eventweave/docs/architecture.md) for i
 
 ## Active Review Queue
 
-- TraceRelay recording controls: explicit synthetic capture, protected review, and local JSON/NDJSON download on `codex/lumen-tracerelay-recording-controls`.
+- TraceRelay export reliability: browser-boundary verification, cleanup, and recoverable download feedback on `codex/lumen-tracerelay-export-reliability`.

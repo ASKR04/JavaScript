@@ -45,7 +45,7 @@ flowchart TD
     Confirm --> File["Local download for manual upload"]
 ```
 
-The initial fixture remains only as a clearly labelled sample before the first recording. Generated reviews come from `CaptureCore.toReview`; download content comes from the stopped core's deterministic serializers. Safe filenames are derived from the synthetic capture name and trace ID, and object URLs are released after the browser receives the click.
+The initial fixture remains only as a clearly labelled sample before the first recording. Generated reviews come from `CaptureCore.toReview`; download content comes from the stopped core's deterministic serializers. Safe filenames are derived from the synthetic capture name and trace ID. The browser boundary creates one temporary object URL, clicks a short-lived download link, removes it, and schedules URL revocation. That boundary is dependency-injected in tests, and a blocked browser download produces an actionable status message without changing the sealed capture.
 
 ## Privacy and safety constraints
 

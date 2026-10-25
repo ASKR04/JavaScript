@@ -109,8 +109,14 @@ export function App() {
     const demo = demoRef.current;
     if (!demo || !readyToExport) return;
     const download = createCaptureDownload(demo.capture, review.name, review.traceId, format);
-    downloadCaptureFile(download);
-    setStatus(`${format.toUpperCase()} downloaded locally. Upload it to EventWeave manually.`);
+    try {
+      downloadCaptureFile(download);
+      setStatus(`${format.toUpperCase()} downloaded locally. Upload it to EventWeave manually.`);
+    } catch {
+      setStatus(
+        `${format.toUpperCase()} download could not start. Check browser download permissions and try again.`,
+      );
+    }
   };
 
   return (
