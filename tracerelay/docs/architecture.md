@@ -29,6 +29,8 @@ stateDiagram-v2
 
 Review snapshots retain privacy-treatment metadata for a human. EventWeave projections contain only approved or masked primitive attributes. JSON and NDJSON serialization preserve record order, stable IDs, ISO timestamps, outcomes, durations, and valid earlier-parent links.
 
+The compatibility boundary is executable rather than assumed. A cross-project integration test sends both serializers through EventWeave's production parser, compares their normalized traces, verifies ordered event and parent relationships, and confirms masked values remain masked while removed credentials never cross the boundary.
+
 ## Current product-experience slice
 
 The Lumen workflow now drives the merged capture core through explicit instrumentation. A user must start recording, choose one synthetic outcome, and stop the capture before the review can export a local file.

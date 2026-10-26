@@ -22,7 +22,8 @@ Each project in this repository is designed to be useful, documented, and struct
 
 | Project | Phase | Date | Engineering evidence | Review |
 | --- | --- | --- | --- | --- |
-| TraceRelay | Export reliability | 2026-10-25 | Testable browser-download boundary, deterministic anchor lifecycle, temporary URL revocation, and actionable permission-failure status | Lumen branch `codex/lumen-tracerelay-export-reliability`; review pending |
+| TraceRelay | EventWeave compatibility | 2026-10-26 | Generated JSON/NDJSON parsed by EventWeave with identical normalized order and parents; masked values preserved and credentials excluded | Atlas branch `codex/atlas-tracerelay-eventweave-compatibility`; review pending |
+| TraceRelay | Export reliability | 2026-10-25 | Testable browser-download boundary, deterministic anchor lifecycle, temporary URL revocation, and actionable permission-failure status | [PR #25](https://github.com/ASKR04/JavaScript/pull/25) merged into `oct_release` |
 | TraceRelay | Recording and export workflow | 2026-10-20 | Visible start/stop lifecycle, instrumented success/failure journeys, protected review, safe JSON/NDJSON download, accessible status, responsive browser checks, and security-updated Vite | [PR #24](https://github.com/ASKR04/JavaScript/pull/24) merged into `oct_release` |
 | TraceRelay | Capture core | 2026-10-07 | Explicit bounded lifecycle, stable identifiers, default-deny privacy protection, parent validation, isolated review snapshots, and deterministic EventWeave JSON/NDJSON | Atlas [PR #23](https://github.com/ASKR04/JavaScript/pull/23) merged into `oct_release` |
 | TraceRelay | Capture review foundation | 2026-09-30 | Responsive protected-event review, privacy-treatment details, honest export boundary, synthetic fixture, and accessibility contracts | [PR #22](https://github.com/ASKR04/JavaScript/pull/22) merged into `oct_release` |
@@ -72,4 +73,4 @@ See the [EventWeave architecture notes](./eventweave/docs/architecture.md) for i
 
 ## Active Review Queue
 
-- TraceRelay export reliability: browser-boundary verification, cleanup, and recoverable download feedback on `codex/lumen-tracerelay-export-reliability`.
+- TraceRelay EventWeave compatibility: executable JSON/NDJSON import contract on `codex/atlas-tracerelay-eventweave-compatibility`.
