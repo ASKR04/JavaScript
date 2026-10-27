@@ -62,5 +62,7 @@ The initial fixture remains only as a clearly labelled sample before the first r
 
 ## Ownership
 
-- **Atlas:** capture schema, SDK lifecycle, bounded buffer, identifiers, redaction, validation, compatibility, and core tests. The first core boundary is implemented in `src/lib/capture-core.ts`.
-- **Lumen:** capture review, recording controls, export workflow, demo journey, accessibility, responsive behavior, browser review, and integration documentation. The first end-to-end local workflow is implemented without automatic capture or upload.
+- **Atlas:** capture schema, SDK lifecycle, bounded buffer, identifiers, redaction, validation, compatibility, and core tests. The completed core boundary is implemented in `src/lib/capture-core.ts`.
+- **Lumen:** capture review, recording controls, export workflow, demo journey, accessibility, responsive behavior, browser review, and integration documentation. The completed end-to-end local workflow intentionally excludes automatic capture and upload.
+
+Version-one scope and final verification are recorded in [closeout.md](./closeout.md).

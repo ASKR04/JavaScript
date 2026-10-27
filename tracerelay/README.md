@@ -4,7 +4,7 @@ TraceRelay is a privacy-first local capture companion for EventWeave. A develope
 
 The approved version-one boundary is intentionally narrow: no invisible production recording, automatic upload, monitoring backend, trace-ID lookup, proprietary log links, company data, or arbitrary DOM capture.
 
-## Current increment
+## Version-one result
 
 The product experience now connects the protected capture core to an explicit synthetic demo. It provides:
 
@@ -28,6 +28,8 @@ Atlas's first core increment now provides the non-visual recording boundary behi
 - focused lifecycle, validation, privacy, ordering, compatibility, and size-limit tests.
 
 No recording occurs automatically. Starting a new capture clears the prior generated journey, the user chooses one synthetic outcome, and export remains unavailable until that capture is explicitly stopped.
+
+Version one is feature-complete on `oct_release`. See [the closeout review](./docs/closeout.md) for the completed scope, final browser regression, retrospective, deferred ideas, and release boundary.
 
 ## Run locally
 
