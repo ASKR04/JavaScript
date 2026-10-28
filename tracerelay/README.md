@@ -1,6 +1,6 @@
 # TraceRelay
 
-TraceRelay is a privacy-first local capture companion for EventWeave. A developer will explicitly start one bounded browser capture, reproduce a workflow, review the approved and protected fields locally, then export an EventWeave-compatible JSON or NDJSON file for manual upload.
+TraceRelay is a privacy-first local capture companion for EventWeave. A developer explicitly starts one bounded browser capture, reproduces a workflow, reviews the approved and protected fields locally, then exports an EventWeave-compatible JSON or NDJSON file. Version two is adding an explicit, user-confirmed local handoff while preserving manual files as the fallback.
 
 The approved version-one boundary is intentionally narrow: no invisible production recording, automatic upload, monitoring backend, trace-ID lookup, proprietary log links, company data, or arbitrary DOM capture.
 
@@ -15,6 +15,7 @@ The product experience now connects the protected capture core to an explicit sy
 - human-confirmed JSON and NDJSON downloads for manual EventWeave upload;
 - tested browser-download orchestration with temporary URL cleanup and actionable permission-failure feedback;
 - an executable compatibility contract that imports generated JSON and NDJSON through EventWeave and proves identical event order, parent links, and protected values;
+- a versioned local-handoff contract that validates with EventWeave before confirmation, discloses the exact protected payload, sends nothing until confirmed, and preserves recoverable cancellation and retry states;
 - accessible status announcements, locked controls outside valid lifecycle states, and responsive 44 px controls;
 - server-rendered accessibility coverage plus journey, privacy, filename, export, browser-boundary, and cross-project compatibility tests.
 
@@ -28,6 +29,10 @@ Atlas's first core increment now provides the non-visual recording boundary behi
 - focused lifecycle, validation, privacy, ordering, compatibility, and size-limit tests.
 
 No recording occurs automatically. Starting a new capture clears the prior generated journey, the user chooses one synthetic outcome, and export remains unavailable until that capture is explicitly stopped.
+
+## Version two boundary
+
+The first v2 increment prepares a local-only handoff message from a stopped capture and validates it with EventWeave's production parser before it can be confirmed. Its disclosure includes the exact event content and protected attributes that will cross the boundary, plus counts for attributes removed or masked before transfer. Preparation has no side effect. Sending is an explicit later action and can be cancelled or retried without rebuilding or weakening the reviewed payload. Lumen's next product shift will add the visible confirmation and browser transport; JSON and NDJSON downloads remain available throughout.
 
 Version one is feature-complete on `oct_release`. See [the closeout review](./docs/closeout.md) for the completed scope, final browser regression, retrospective, deferred ideas, and release boundary.
 

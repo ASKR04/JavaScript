@@ -31,6 +31,21 @@ Review snapshots retain privacy-treatment metadata for a human. EventWeave proje
 
 The compatibility boundary is executable rather than assumed. A cross-project integration test sends both serializers through EventWeave's production parser, compares their normalized traces, verifies ordered event and parent relationships, and confirms masked values remain masked while removed credentials never cross the boundary.
 
+Version two adds a separate local handoff contract. TraceRelay first creates the same protected JSON payload and validates it with EventWeave's production parser. It then derives a disclosure from that exact payload: bytes, events, actors, types, parent links, approved or masked attributes, and counts of fields already removed or masked. Preparing this contract sends nothing. A handoff session can send only after explicit confirmation, supports abort while in flight, and retains the reviewed payload after a failure so retry does not re-record or silently change evidence.
+
+```mermaid
+flowchart LR
+    Stopped["Stopped protected capture"] --> Validate["Validate with EventWeave parser"]
+    Validate --> Disclosure["Show exact local disclosure"]
+    Disclosure --> Confirm{"Human confirms?"}
+    Confirm -->|No| Cancel["Cancelled; no transfer"]
+    Confirm -->|Yes| Transport["Local browser transport"]
+    Transport --> Complete["EventWeave acknowledges import"]
+    Transport --> Failure["Recoverable error"]
+    Failure --> Disclosure
+    Stopped --> Files["JSON / NDJSON fallback"]
+```
+
 ## Current product-experience slice
 
 The Lumen workflow now drives the merged capture core through explicit instrumentation. A user must start recording, choose one synthetic outcome, and stop the capture before the review can export a local file.

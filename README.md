@@ -12,7 +12,7 @@ This repository collects original JavaScript and front-end focused projects buil
 
 ## Active Project
 
-[EventWeave](./eventweave) was promoted to `main` through PR #21 after its final closeout review. [TraceRelay](./tracerelay) was explicitly approved on 2026-09-29, began on 2026-09-30, and is feature-complete on `oct_release`. Version one remains an explicit, local, manual-export capture companion; automation and production telemetry are outside the approved scope. Promotion to `main` awaits the user's release date and time.
+[EventWeave](./eventweave) and TraceRelay version one are complete on `main`. TraceRelay version two was approved on 2026-10-27 and is now adding a user-confirmed, local-only EventWeave handoff while retaining manual JSON/NDJSON export. IncidentLens is a separate approved public synthetic project and must not share branches, data, or implementation scope with TraceRelay.
 
 ## Repository Goal
 
@@ -22,6 +22,8 @@ Each project in this repository is designed to be useful, documented, and struct
 
 | Project | Phase | Date | Engineering evidence | Review |
 | --- | --- | --- | --- | --- |
+| TraceRelay | Version-two local handoff contract | 2026-10-28 | Pre-transfer EventWeave validation, exact protected-payload disclosure, explicit confirmation state, cancellation, and recoverable retry | Atlas branch `codex/atlas-tracerelay-v2-local-handoff`; November review pending |
+| TraceRelay | Version-one promotion | 2026-10-27 | Frozen October release audit, repository-wide quality checks, production dependency review, HTTP/browser regression, and promotion | [PR #28](https://github.com/ASKR04/JavaScript/pull/28) merged into `main` |
 | TraceRelay | Version-one closeout | 2026-10-26 | Completed scope checklist, success/failure browser regression, keyboard review, JSON/NDJSON download confirmation, 390 × 844 containment, clean logs, and retrospective | Lumen branch `codex/lumen-tracerelay-closeout-review`; review pending |
 | TraceRelay | EventWeave compatibility | 2026-10-26 | Generated JSON/NDJSON parsed by EventWeave with identical normalized order and parents; masked values preserved and credentials excluded | [PR #26](https://github.com/ASKR04/JavaScript/pull/26) merged into `oct_release` |
 | TraceRelay | Export reliability | 2026-10-25 | Testable browser-download boundary, deterministic anchor lifecycle, temporary URL revocation, and actionable permission-failure status | [PR #25](https://github.com/ASKR04/JavaScript/pull/25) merged into `oct_release` |
