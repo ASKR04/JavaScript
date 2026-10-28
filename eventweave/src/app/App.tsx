@@ -8,6 +8,7 @@ import { EMPTY_EVENT_FILTERS, eventFilterOptions, filterTimelineEvents, hasEvent
 import { createInvestigationService, type RestoredInvestigation } from "../lib/investigation-service";
 import { createInvestigationStore } from "../lib/investigation-store";
 import { DEFAULT_IMPORT_LIMITS, detectTraceFormat } from "../lib/trace-parser";
+import { registerLocalHandoffReceiver } from "../lib/local-handoff-receiver";
 import { buildSessionTimeline, findTimelineSelection, type TimelineNavigationKey } from "../lib/timeline-view";
 import { createTraceImportWorker } from "../workers/create-trace-import-worker";
 import type { TraceImportRequest, TraceImportResponse } from "../workers/trace-import-contract";
@@ -63,6 +64,14 @@ export const App = () => {
     });
     return () => worker.terminate();
   }, []);
+
+  useEffect(() => registerLocalHandoffReceiver(window, (result, fileName) => {
+    const requestId = createRequestId();
+    activeRequestIdRef.current = requestId;
+    dispatch({ type: "read-started", requestId, fileName, format: "json" });
+    dispatch({ type: "parse-started", requestId });
+    dispatch({ type: "parse-finished", requestId, result });
+  }), []);
 
   useEffect(() => {
     const firstSession = state.trace?.sessions[0];

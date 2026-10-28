@@ -22,6 +22,7 @@ Each project in this repository is designed to be useful, documented, and struct
 
 | Project | Phase | Date | Engineering evidence | Review |
 | --- | --- | --- | --- | --- |
+| TraceRelay | Version-two confirmation and local browser handoff | 2026-10-28 | Exact disclosure UI, explicit confirmation, strict-origin readiness and parser acknowledgement, cancellation, recoverable failures, responsive layout, and retained JSON/NDJSON fallback | Lumen branch `codex/lumen-tracerelay-v2-confirmation-ui`; November review pending |
 | TraceRelay | Version-two local handoff contract | 2026-10-28 | Pre-transfer EventWeave validation, exact protected-payload disclosure, explicit confirmation state, cancellation, and recoverable retry | Atlas branch `codex/atlas-tracerelay-v2-local-handoff`; November review pending |
 | TraceRelay | Version-one promotion | 2026-10-27 | Frozen October release audit, repository-wide quality checks, production dependency review, HTTP/browser regression, and promotion | [PR #28](https://github.com/ASKR04/JavaScript/pull/28) merged into `main` |
 | TraceRelay | Version-one closeout | 2026-10-26 | Completed scope checklist, success/failure browser regression, keyboard review, JSON/NDJSON download confirmation, 390 × 844 containment, clean logs, and retrospective | Lumen branch `codex/lumen-tracerelay-closeout-review`; review pending |

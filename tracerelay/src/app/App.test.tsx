@@ -19,6 +19,7 @@ describe("TraceRelay review interface", () => {
     expect(html).toContain("Nothing exports before review.");
     expect(html).toContain("Download reviewed JSON");
     expect(html).toContain("Download reviewed NDJSON");
+    expect(html).toContain("Analyze in EventWeave");
     expect(html).toContain("disabled");
     expect(html).toContain("Recording is off");
     expect(html).toContain("No background recorder, automatic upload");

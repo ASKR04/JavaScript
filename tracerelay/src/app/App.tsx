@@ -16,6 +16,16 @@ import {
   type CaptureReview,
   type ReviewEvent,
 } from "../lib/review-model";
+import {
+  EventWeaveHandoffSession,
+  prepareEventWeaveHandoff,
+  type HandoffSessionState,
+} from "../lib/eventweave-handoff";
+import {
+  createBrowserEventWeaveTransport,
+  defaultEventWeaveUrl,
+  type HandoffBrowser,
+} from "../lib/browser-eventweave-transport";
 
 const treatmentLabels = {
   allowed: "Allowed",
@@ -66,6 +76,8 @@ export function App() {
   const [status, setStatus] = useState(
     "Synthetic review sample loaded. Start a new capture when ready.",
   );
+  const handoffRef = useRef<EventWeaveHandoffSession | null>(null);
+  const [handoff, setHandoff] = useState<HandoffSessionState | null>(null);
   const summary = useMemo(() => summarizeCapture(review), [review]);
   const selectedEvent = review.events.find((event) => event.id === selectedId) ?? review.events[0];
   const recording = phase === "recording";
@@ -80,6 +92,59 @@ export function App() {
     setSelectedId("");
     setPhase("recording");
     setStatus("Recording started. Choose one synthetic profile journey to instrument.");
+    handoffRef.current = null;
+    setHandoff(null);
+  };
+
+  const prepareHandoff = () => {
+    const demo = demoRef.current;
+    if (!demo || !readyToExport) return;
+    try {
+      const session = new EventWeaveHandoffSession(prepareEventWeaveHandoff(demo.capture, review));
+      handoffRef.current = session;
+      setHandoff(session.state);
+      setStatus("Review exactly what will be shared, then confirm or cancel the local handoff.");
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "The local handoff could not be prepared.");
+    }
+  };
+
+  const cancelHandoff = () => {
+    const session = handoffRef.current;
+    if (!session) return;
+    if (session.state.phase === "prepared" || session.state.phase === "sending") {
+      setHandoff(session.cancel());
+      setStatus("Local handoff cancelled. Nothing new was shared; downloads remain available.");
+    } else {
+      setHandoff(null);
+      handoffRef.current = null;
+    }
+  };
+
+  const confirmHandoff = async () => {
+    const session = handoffRef.current;
+    if (!session) return;
+    if (session.state.phase === "failed" || session.state.phase === "cancelled") {
+      setHandoff(session.retry());
+    }
+    const transport = createBrowserEventWeaveTransport({
+      browser: window as unknown as HandoffBrowser,
+      eventWeaveUrl: defaultEventWeaveUrl(window.location),
+    });
+    const pending = session.confirm(transport);
+    setHandoff(session.state);
+    setStatus("Waiting for EventWeave to validate and acknowledge the local trace…");
+    const result = await pending;
+    setHandoff(result);
+    setStatus(
+      result.phase === "completed"
+        ? "EventWeave accepted the protected trace in its local browser tab."
+        : result.phase === "cancelled"
+          ? "Local handoff cancelled. Downloads remain available."
+          : result.phase === "failed"
+            ? `${result.message} You can retry or download a file instead.`
+            : "Review the handoff before continuing.",
+    );
   };
 
   const runJourney = (outcome: ProfileJourneyOutcome) => {
@@ -271,6 +336,7 @@ export function App() {
               </p>
             </div>
             <div className="export-actions" aria-describedby="export-help">
+              <button type="button" disabled={!readyToExport} onClick={prepareHandoff}>Analyze in EventWeave</button>
               <button type="button" disabled={!readyToExport} onClick={() => exportCapture("json")}>Download reviewed JSON</button>
               <button type="button" disabled={!readyToExport} onClick={() => exportCapture("ndjson")}>Download reviewed NDJSON</button>
               <p id="export-help">
@@ -280,12 +346,61 @@ export function App() {
               </p>
             </div>
           </section>
+
+          {handoff && (
+            <section className="handoff-panel" aria-labelledby="handoff-title" aria-describedby="handoff-help">
+              <div className="handoff-heading">
+                <div>
+                  <p className="eyebrow">Local handoff confirmation</p>
+                  <h3 id="handoff-title">Review exactly what EventWeave will receive</h3>
+                </div>
+                <span className={`handoff-state handoff-state--${handoff.phase}`}>{handoff.phase}</span>
+              </div>
+              <p id="handoff-help">
+                This opens EventWeave locally and shares only the protected JSON shown below. No server,
+                monitoring tool, or background upload is involved.
+              </p>
+              <dl className="handoff-summary" aria-label="Local handoff disclosure">
+                <div><dt>Events</dt><dd>{handoff.prepared.disclosure.eventCount}</dd></div>
+                <div><dt>Bytes</dt><dd>{handoff.prepared.disclosure.byteCount}</dd></div>
+                <div><dt>Masked fields</dt><dd>{handoff.prepared.disclosure.maskedAttributeCount}</dd></div>
+                <div><dt>Removed fields</dt><dd>{handoff.prepared.disclosure.removedAttributeCount}</dd></div>
+              </dl>
+              <p className="handoff-meta">
+                <strong>Actors:</strong> {handoff.prepared.disclosure.actors.join(", ") || "None"}<br />
+                <strong>Event types:</strong> {handoff.prepared.disclosure.eventTypes.join(", ") || "None"}
+              </p>
+              <details>
+                <summary>Inspect all {handoff.prepared.disclosure.eventCount} event records</summary>
+                <ol className="handoff-events">
+                  {handoff.prepared.disclosure.events.map((event) => (
+                    <li key={event.id}>
+                      <strong>{event.message}</strong>
+                      <span>{event.actor} · {event.type} · {event.outcome}</span>
+                      <code>{JSON.stringify(event.attributes)}</code>
+                    </li>
+                  ))}
+                </ol>
+              </details>
+              {handoff.phase === "failed" && <p className="handoff-error" role="alert">{handoff.message}</p>}
+              {handoff.phase === "completed" ? (
+                <button type="button" onClick={cancelHandoff}>Close confirmation</button>
+              ) : (
+                <div className="handoff-actions">
+                  <button type="button" onClick={cancelHandoff} disabled={handoff.phase === "cancelled"}>Cancel</button>
+                  <button type="button" className="primary-action" onClick={() => void confirmHandoff()} disabled={handoff.phase === "sending"}>
+                    {handoff.phase === "failed" || handoff.phase === "cancelled" ? "Retry local handoff" : "Confirm and open EventWeave"}
+                  </button>
+                </div>
+              )}
+            </section>
+          )}
         </section>
       </main>
 
       <footer>
         <span>TraceRelay</span>
-        <span>Explicit capture · local review · manual EventWeave upload</span>
+        <span>Explicit capture · local review · confirmed local handoff or file export</span>
       </footer>
     </div>
   );

@@ -33,6 +33,8 @@ The compatibility boundary is executable rather than assumed. A cross-project in
 
 Version two adds a separate local handoff contract. TraceRelay first creates the same protected JSON payload and validates it with EventWeave's production parser. It then derives a disclosure from that exact payload: bytes, events, actors, types, parent links, approved or masked attributes, and counts of fields already removed or masked. Preparing this contract sends nothing. A handoff session can send only after explicit confirmation, supports abort while in flight, and retains the reviewed payload after a failure so retry does not re-record or silently change evidence.
 
+The browser transport places only a one-time handoff ID and the initiating local origin in the target URL fragment; trace content never enters a URL, request, storage layer, or server. EventWeave announces readiness to the opener, and TraceRelay accepts that signal only from the exact target origin and popup window. EventWeave likewise accepts the import only from the declared opener and origin, parses it with its production contract, and acknowledges the matching ID. A blocked popup, timeout, cancellation, or rejected contract returns to a recoverable local state while file downloads remain usable.
+
 ```mermaid
 flowchart LR
     Stopped["Stopped protected capture"] --> Validate["Validate with EventWeave parser"]
@@ -78,6 +80,6 @@ The initial fixture remains only as a clearly labelled sample before the first r
 ## Ownership
 
 - **Atlas:** capture schema, SDK lifecycle, bounded buffer, identifiers, redaction, validation, compatibility, and core tests. The completed core boundary is implemented in `src/lib/capture-core.ts`.
-- **Lumen:** capture review, recording controls, export workflow, demo journey, accessibility, responsive behavior, browser review, and integration documentation. The completed end-to-end local workflow intentionally excludes automatic capture and upload.
+- **Lumen:** capture review, recording controls, export workflow, explicit handoff confirmation, strict-origin browser acknowledgement, demo journey, accessibility, responsive behavior, browser review, and integration documentation. The workflow intentionally excludes automatic capture, remote upload, and trace retrieval.
 
 Version-one scope and final verification are recorded in [closeout.md](./closeout.md).
