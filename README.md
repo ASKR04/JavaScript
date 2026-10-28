@@ -8,10 +8,11 @@ This repository collects original JavaScript and front-end focused projects buil
 | --- | --- | --- |
 | [SignalForge](./signalforge) | Local-first dashboard for planning portfolio-ready software projects, tracking architecture decisions, roadmap progress, and project storytelling. | React, TypeScript, Vite |
 | [EventWeave](./eventweave) | Privacy-first workflow trace explorer for validated local import, causal timelines, comparisons, and evidence-backed reports. | React, TypeScript, Vite, Web Workers |
+| [TraceRelay](./tracerelay) | Privacy-first local capture companion for reviewing and exporting EventWeave-compatible traces. | React, TypeScript, Vite |
 
 ## Active Project
 
-[EventWeave](./eventweave) was approved on 2026-09-04. Its approved product scope is feature-complete on the final closeout branch after missing the original delivery window. The closeout PR must merge into `sep_release`, followed by a separate user-reviewed promotion PR into `main`. [TraceRelay](./docs/proposals/tracerelay.md) is the next proposal and must not begin without explicit approval.
+[EventWeave](./eventweave) was promoted to `main` through PR #21 after its final closeout review. [TraceRelay](./tracerelay) was explicitly approved on 2026-09-29, began on 2026-09-30, and is feature-complete on `oct_release`. Version one remains an explicit, local, manual-export capture companion; automation and production telemetry are outside the approved scope. Promotion to `main` awaits the user's release date and time.
 
 ## Repository Goal
 
@@ -21,6 +22,12 @@ Each project in this repository is designed to be useful, documented, and struct
 
 | Project | Phase | Date | Engineering evidence | Review |
 | --- | --- | --- | --- | --- |
+| TraceRelay | Version-one closeout | 2026-10-26 | Completed scope checklist, success/failure browser regression, keyboard review, JSON/NDJSON download confirmation, 390 × 844 containment, clean logs, and retrospective | Lumen branch `codex/lumen-tracerelay-closeout-review`; review pending |
+| TraceRelay | EventWeave compatibility | 2026-10-26 | Generated JSON/NDJSON parsed by EventWeave with identical normalized order and parents; masked values preserved and credentials excluded | [PR #26](https://github.com/ASKR04/JavaScript/pull/26) merged into `oct_release` |
+| TraceRelay | Export reliability | 2026-10-25 | Testable browser-download boundary, deterministic anchor lifecycle, temporary URL revocation, and actionable permission-failure status | [PR #25](https://github.com/ASKR04/JavaScript/pull/25) merged into `oct_release` |
+| TraceRelay | Recording and export workflow | 2026-10-20 | Visible start/stop lifecycle, instrumented success/failure journeys, protected review, safe JSON/NDJSON download, accessible status, responsive browser checks, and security-updated Vite | [PR #24](https://github.com/ASKR04/JavaScript/pull/24) merged into `oct_release` |
+| TraceRelay | Capture core | 2026-10-07 | Explicit bounded lifecycle, stable identifiers, default-deny privacy protection, parent validation, isolated review snapshots, and deterministic EventWeave JSON/NDJSON | Atlas [PR #23](https://github.com/ASKR04/JavaScript/pull/23) merged into `oct_release` |
+| TraceRelay | Capture review foundation | 2026-09-30 | Responsive protected-event review, privacy-treatment details, honest export boundary, synthetic fixture, and accessibility contracts | [PR #22](https://github.com/ASKR04/JavaScript/pull/22) merged into `oct_release` |
 | EventWeave | Event filter model | 2026-09-14 | Composable actor, type, outcome, and inclusive duration predicates with canonical ordering, sorted options, missing-duration semantics, and focused tests | [PR #10](https://github.com/ASKR04/JavaScript/pull/10) merged into `sep_release` |
 | EventWeave | Investigation snapshot contract | 2026-09-15 | Versioned, bounded, trace-bound snapshots with runtime validation and stale-selection rejection; storage and UI remain pending | [PR #11](https://github.com/ASKR04/JavaScript/pull/11) merged into `sep_release` |
 | EventWeave | Cross-feature journey tests | 2026-09-21 | Checkout fixtures exercised through import, timeline, causal analysis, comparison, reporting, findings, and investigation restore | [PR #12](https://github.com/ASKR04/JavaScript/pull/12) merged into `sep_release` |
@@ -67,4 +74,4 @@ See the [EventWeave architecture notes](./eventweave/docs/architecture.md) for i
 
 ## Active Review Queue
 
-- EventWeave final closeout: integrated findings, final regression, retrospective, and next-project proposal on `codex/lumen-eventweave-closeout`.
+- TraceRelay version-one closeout: final regression evidence, retrospective, and release boundary on `codex/lumen-tracerelay-closeout-review`.
