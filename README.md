@@ -9,10 +9,11 @@ This repository collects original JavaScript and front-end focused projects buil
 | [SignalForge](./signalforge) | Local-first dashboard for planning portfolio-ready software projects, tracking architecture decisions, roadmap progress, and project storytelling. | React, TypeScript, Vite |
 | [EventWeave](./eventweave) | Privacy-first workflow trace explorer for validated local import, causal timelines, comparisons, and evidence-backed reports. | React, TypeScript, Vite, Web Workers |
 | [TraceRelay](./tracerelay) | Privacy-first local capture companion for reviewing and exporting EventWeave-compatible traces. | React, TypeScript, Vite |
+| [IncidentLens](./incidentlens) | Evidence-first synthetic incident triage that correlates explicit signals with citations, confidence, and missing-evidence disclosure. | React, TypeScript, Vite |
 
 ## Active Project
 
-[EventWeave](./eventweave) was promoted to `main` through PR #21 after its final closeout review. [TraceRelay](./tracerelay) was explicitly approved on 2026-09-29, began on 2026-09-30, and is feature-complete on `oct_release`. Version one remains an explicit, local, manual-export capture companion; automation and production telemetry are outside the approved scope. Promotion to `main` awaits the user's release date and time.
+[EventWeave](./eventweave) was promoted to `main` through PR #21 after its final closeout review. [TraceRelay](./tracerelay) was explicitly approved on 2026-09-29 and completed its version-one scope as a local, manual-export capture companion. [IncidentLens](./incidentlens) begins with public synthetic adapter contracts and deterministic evidence correlation; real connectors, company data, and VDI data are outside the approved foundation.
 
 ## Repository Goal
 
@@ -22,6 +23,7 @@ Each project in this repository is designed to be useful, documented, and struct
 
 | Project | Phase | Date | Engineering evidence | Review |
 | --- | --- | --- | --- | --- |
+| IncidentLens | Evidence foundation | 2026-10-28 | Synthetic ticket/trace/log/change/ownership contracts, deterministic earliest-abnormal correlation, topology-backed location, citations, confidence, missing evidence, fixtures, and tests | Nova branch `codex/nova-incidentlens-evidence-foundation`; November release PR deferred until `nov_release` exists |
 | TraceRelay | Version-one closeout | 2026-10-26 | Completed scope checklist, success/failure browser regression, keyboard review, JSON/NDJSON download confirmation, 390 × 844 containment, clean logs, and retrospective | Lumen branch `codex/lumen-tracerelay-closeout-review`; review pending |
 | TraceRelay | EventWeave compatibility | 2026-10-26 | Generated JSON/NDJSON parsed by EventWeave with identical normalized order and parents; masked values preserved and credentials excluded | [PR #26](https://github.com/ASKR04/JavaScript/pull/26) merged into `oct_release` |
 | TraceRelay | Export reliability | 2026-10-25 | Testable browser-download boundary, deterministic anchor lifecycle, temporary URL revocation, and actionable permission-failure status | [PR #25](https://github.com/ASKR04/JavaScript/pull/25) merged into `oct_release` |
