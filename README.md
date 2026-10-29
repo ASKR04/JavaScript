@@ -23,6 +23,7 @@ Each project in this repository is designed to be useful, documented, and struct
 
 | Project | Phase | Date | Engineering evidence | Review |
 | --- | --- | --- | --- | --- |
+| IncidentLens | Investigation workflow | 2026-10-28 | Responsive ownership path, filterable evidence timeline, selected citation details, confidence and missing-evidence disclosure, triage-not-diagnosis language, and review-gated local report | Quinn branch `codex/quinn-incidentlens-investigation-ui`; November release PR deferred until `nov_release` exists |
 | IncidentLens | Evidence foundation | 2026-10-28 | Synthetic ticket/trace/log/change/ownership contracts, deterministic earliest-abnormal correlation, topology-backed location, citations, confidence, missing evidence, fixtures, and tests | Nova branch `codex/nova-incidentlens-evidence-foundation`; November release PR deferred until `nov_release` exists |
 | TraceRelay | Version-one closeout | 2026-10-26 | Completed scope checklist, success/failure browser regression, keyboard review, JSON/NDJSON download confirmation, 390 × 844 containment, clean logs, and retrospective | Lumen branch `codex/lumen-tracerelay-closeout-review`; review pending |
 | TraceRelay | EventWeave compatibility | 2026-10-26 | Generated JSON/NDJSON parsed by EventWeave with identical normalized order and parents; masked values preserved and credentials excluded | [PR #26](https://github.com/ASKR04/JavaScript/pull/26) merged into `oct_release` |
