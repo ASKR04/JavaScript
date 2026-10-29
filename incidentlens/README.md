@@ -20,5 +20,6 @@ Quality commands: `npm run lint`, `npm test`, `npm run build`, and `npm audit`.
 - Ownership-backed local/upstream/downstream classification.
 - Evidence citations, calibrated confidence, missing-source disclosure, and public synthetic fixture.
 - Read-only foundation screen. Interactive investigation UI is the next shift.
+- Bounded, default-deny JSON import validation for public `INC-SYN-` fixtures, including cross-record trace and parent-span checks.
 
 See [architecture](./docs/architecture.md) for rules and boundaries.
