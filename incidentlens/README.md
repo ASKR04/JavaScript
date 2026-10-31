@@ -13,13 +13,17 @@ npm run dev
 
 Quality commands: `npm run lint`, `npm test`, `npm run build`, and `npm audit`.
 
+Use [`public/samples/checkout-incident.synthetic.json`](./public/samples/checkout-incident.synthetic.json) to exercise the local import workflow. It is fictional, public-safe data and never leaves the browser.
+
 ## Current scope
 
 - Typed synthetic adapter contracts and in-memory mock adapter.
 - Deterministic correlation across explicit abnormal trace, log, deployment, and configuration signals.
 - Ownership-backed local/upstream/downstream classification.
 - Evidence citations, calibrated confidence, missing-source disclosure, and public synthetic fixture.
-- Read-only foundation screen. Interactive investigation UI is the next shift.
 - Bounded, default-deny JSON import validation for public `INC-SYN-` fixtures, including cross-record trace and parent-span checks.
+- Accessible responsive investigation workspace with ownership-backed service path, source filters, ordered evidence timeline, selected citation detail, confidence rationale, and missing-evidence disclosure.
+- Human-reviewed local Markdown export that repeats uncertainty and source citations; export stays locked until the reviewer explicitly confirms the evidence boundary.
+- Explicit local file selection with cancel/retry states and complete validation issue disclosure; selected files are never uploaded.
 
 See [architecture](./docs/architecture.md) for rules and boundaries.

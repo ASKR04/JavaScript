@@ -1,0 +1,29 @@
+{
+  "ticket": {
+    "id": "INC-SYN-1042",
+    "title": "Checkout returns a retry message after payment authorization",
+    "reportedAt": "2026-10-28T14:07:00.000Z",
+    "affectedService": "checkout-api",
+    "customerImpact": "Synthetic shoppers cannot complete checkout.",
+    "symptoms": ["Retry message after submit", "No order confirmation"]
+  },
+  "spans": [
+    { "traceId": "trace-syn-01", "spanId": "span-payment", "parentSpanId": "span-checkout", "service": "payments-api", "operation": "authorize payment", "startedAt": "2026-10-28T14:02:15.000Z", "durationMs": 710, "outcome": "error", "statusCode": 503 },
+    { "traceId": "trace-syn-01", "spanId": "span-checkout", "service": "checkout-api", "operation": "POST /checkout", "startedAt": "2026-10-28T14:02:15.710Z", "durationMs": 920, "outcome": "error", "statusCode": 503 }
+  ],
+  "logs": [
+    { "id": "log-payment-503", "service": "payments-api", "timestamp": "2026-10-28T14:02:15.020Z", "level": "error", "message": "Synthetic payment gateway pool unavailable", "traceId": "trace-syn-01" },
+    { "id": "log-checkout-retry", "service": "checkout-api", "timestamp": "2026-10-28T14:02:15.730Z", "level": "warn", "message": "Checkout returned a retry-safe response", "traceId": "trace-syn-01" }
+  ],
+  "deployments": [
+    { "id": "deploy-payments-184", "service": "payments-api", "deployedAt": "2026-10-28T12:00:00.000Z", "version": "1.8.4-synthetic", "summary": "Routine public fixture deployment", "outcome": "succeeded" }
+  ],
+  "configChanges": [
+    { "id": "config-checkout-timeout", "service": "checkout-api", "changedAt": "2026-10-27T18:00:00.000Z", "key": "payment.timeout.ms", "summary": "Synthetic timeout retained at 800 ms", "outcome": "applied" }
+  ],
+  "ownership": [
+    { "service": "checkout-api", "team": "Synthetic Commerce", "tier": 1, "dependencies": ["payments-api", "catalog-api"] },
+    { "service": "payments-api", "team": "Synthetic Payments", "tier": 1, "dependencies": ["gateway-sandbox"] },
+    { "service": "receipt-worker", "team": "Synthetic Commerce", "tier": 2, "dependencies": ["checkout-api"] }
+  ]
+}
