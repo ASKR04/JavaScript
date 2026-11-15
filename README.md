@@ -13,7 +13,7 @@ This repository collects original JavaScript and front-end focused projects buil
 
 ## Active Project
 
-[EventWeave](./eventweave) was promoted to `main` through PR #21 after its final closeout review. [TraceRelay](./tracerelay) was explicitly approved on 2026-09-29 and completed its version-one scope as a local, manual-export capture companion. [IncidentLens](./incidentlens) begins with public synthetic adapter contracts and deterministic evidence correlation; real connectors, company data, and VDI data are outside the approved foundation.
+[EventWeave](./eventweave) and TraceRelay version one are complete on `main`. TraceRelay version two is adding a user-confirmed, local-only EventWeave handoff while retaining manual JSON/NDJSON export. [IncidentLens](./incidentlens) is a separate public synthetic project with typed mock adapter contracts and deterministic evidence correlation; real connectors, company data, and VDI data remain outside its approved scope.
 
 ## Repository Goal
 
@@ -23,7 +23,9 @@ Each project in this repository is designed to be useful, documented, and struct
 
 | Project | Phase | Date | Engineering evidence | Review |
 | --- | --- | --- | --- | --- |
-| IncidentLens | Evidence foundation | 2026-10-28 | Synthetic ticket/trace/log/change/ownership contracts, deterministic earliest-abnormal correlation, topology-backed location, citations, confidence, missing evidence, fixtures, and tests | Nova branch `codex/nova-incidentlens-evidence-foundation`; November release PR deferred until `nov_release` exists |
+| TraceRelay | Version-two local handoff contract | 2026-10-28 | Pre-transfer EventWeave validation, exact protected-payload disclosure, explicit confirmation state, cancellation, and recoverable retry | Atlas branch `codex/atlas-tracerelay-v2-local-handoff`; November review pending |
+| TraceRelay | Version-one promotion | 2026-10-27 | Frozen October release audit, repository-wide quality checks, production dependency review, HTTP/browser regression, and promotion | [PR #28](https://github.com/ASKR04/JavaScript/pull/28) merged into `main` |
+| IncidentLens | Evidence foundation | 2026-10-28 | Synthetic ticket/trace/log/change/ownership contracts, deterministic earliest-abnormal correlation, topology-backed location, citations, confidence, missing evidence, fixtures, and tests | [PR #31](https://github.com/ASKR04/JavaScript/pull/31) merged into `nov_release` |
 | TraceRelay | Version-one closeout | 2026-10-26 | Completed scope checklist, success/failure browser regression, keyboard review, JSON/NDJSON download confirmation, 390 × 844 containment, clean logs, and retrospective | Lumen branch `codex/lumen-tracerelay-closeout-review`; review pending |
 | TraceRelay | EventWeave compatibility | 2026-10-26 | Generated JSON/NDJSON parsed by EventWeave with identical normalized order and parents; masked values preserved and credentials excluded | [PR #26](https://github.com/ASKR04/JavaScript/pull/26) merged into `oct_release` |
 | TraceRelay | Export reliability | 2026-10-25 | Testable browser-download boundary, deterministic anchor lifecycle, temporary URL revocation, and actionable permission-failure status | [PR #25](https://github.com/ASKR04/JavaScript/pull/25) merged into `oct_release` |
