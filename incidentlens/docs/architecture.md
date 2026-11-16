@@ -6,7 +6,8 @@ IncidentLens correlates already-supplied evidence. It does not capture traffic, 
 
 ```mermaid
 flowchart LR
-  A[Synthetic adapter contracts] --> B[Normalized evidence bundle]
+  A[Bounded synthetic JSON import] --> V[Default-deny validation]
+  V --> B[Normalized evidence bundle]
   B --> C[Explicit abnormal signals]
   C --> D[Deterministic earliest event]
   B --> E[Service ownership graph]
@@ -28,6 +29,8 @@ flowchart LR
 ## Contracts
 
 `src/adapters/contracts.ts` defines separate ticket, span, log, deployment, configuration, and ownership records. `SyntheticEvidenceAdapter` is the only implementation. Real vendors and credentials are intentionally outside this increment.
+
+`src/lib/evidence-import.ts` accepts at most 256 KiB by default, rejects unknown or sensitive-looking fields, requires public `INC-SYN-` ticket identifiers, validates record limits and timestamps, and checks span/log references before returning a normalized bundle. Invalid input never reaches correlation.
 
 ## Next integration
 
